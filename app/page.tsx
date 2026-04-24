@@ -13,13 +13,12 @@ export default function HomePage() {
       <Header />
 
       <main>
-        {/* HERO SECTION */}
+        {/* HERO */}
         <section className="hero">
           <div className="container hero-grid">
-            {/* LEFT SIDE */}
             <div>
               <span className="badge">
-                Arsenal FC Independent Fan Platform
+                Arsenal FC Fan Hub
               </span>
 
               <h1 className="hero-title">
@@ -28,11 +27,11 @@ export default function HomePage() {
               </h1>
 
               <p className="hero-text">
-                Breaking Arsenal updates,
-                transfer rumours, matchday
-                reactions, live football scores
-                and Premier League standings —
-                all in one elite destination.
+                The latest Arsenal stories,
+                transfer updates, matchday
+                coverage, live scores and
+                league standings in one
+                premium destination.
               </p>
 
               <div className="btn-row">
@@ -52,38 +51,36 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* RIGHT HERO CARD */}
             <div className="panel hero-panel">
               <h2>Why ArsenalTalks?</h2>
 
               <ul className="hero-list">
                 <li>
-                  ✔ Breaking Arsenal news daily
+                  ✔ Fast Arsenal updates
                 </li>
                 <li>
-                  ✔ Transfer rumours & updates
+                  ✔ Transfer rumours daily
                 </li>
                 <li>
-                  ✔ Live football scores
+                  ✔ Live football data
                 </li>
                 <li>
-                  ✔ Fixtures & league table
+                  ✔ Fixtures & standings
                 </li>
                 <li>
-                  ✔ Fast mobile experience
+                  ✔ Built for mobile fans
                 </li>
               </ul>
             </div>
           </div>
         </section>
 
-        {/* MAIN GRID */}
+        {/* MAIN CONTENT */}
         <section className="container home-grid">
-          {/* LEFT COLUMN */}
+          {/* LEFT SIDE */}
           <section className="content-column">
             <LatestNews />
 
-            {/* QUICK LINKS */}
             <div className="panel">
               <h2>Explore More</h2>
 
@@ -110,22 +107,21 @@ export default function HomePage() {
                 </Link>
 
                 <Link
-                  href="/category/match-reports"
+                  href="/category/community"
                   className="mini-card"
                 >
-                  Reports
+                  Community
                 </Link>
               </div>
             </div>
 
-            {/* EXTRA SECTION */}
             <div className="panel">
               <h2>Fan Focus</h2>
 
               <p className="muted">
-                ArsenalTalks delivers smart,
-                fast and fan-first coverage for
-                every Gooner worldwide.
+                ArsenalTalks gives Gooners
+                sharp, clean and fast
+                coverage all season long.
               </p>
             </div>
           </section>
@@ -138,20 +134,18 @@ export default function HomePage() {
 
             <Standings />
 
-            {/* TRENDING */}
             <div className="panel">
               <h2>Trending Topics</h2>
 
               <ul className="list">
                 <li>Saka injury update</li>
-                <li>Summer striker targets</li>
-                <li>Rice top form</li>
+                <li>Summer striker race</li>
+                <li>Rice form surge</li>
                 <li>Arteta tactics</li>
-                <li>Champions League race</li>
+                <li>Top four battle</li>
               </ul>
             </div>
 
-            {/* POPULAR */}
             <div className="panel">
               <h2>Popular Sections</h2>
 
@@ -169,20 +163,19 @@ export default function HomePage() {
                 </li>
 
                 <li>
-                  <Link href="/category/injuries">
-                    Injuries
+                  <Link href="/matches">
+                    Fixtures
                   </Link>
                 </li>
 
                 <li>
-                  <Link href="/category/community">
-                    Community
+                  <Link href="/standings">
+                    Standings
                   </Link>
                 </li>
               </ul>
             </div>
 
-            {/* POLL */}
             <div className="panel">
               <h2>Fan Poll</h2>
 
@@ -202,10 +195,8 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* NEWSLETTER */}
             <Newsletter />
 
-            {/* AD SPACE */}
             <div className="panel ad-box">
               <span className="ad-label">
                 Advertisement
