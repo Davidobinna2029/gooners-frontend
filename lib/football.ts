@@ -2,28 +2,18 @@ const API_KEY =
   process.env.FOOTBALL_API_KEY;
 
 const BASE_URL =
-  "https://api.football-data.org/v4";
+  "https://v3.football.api-sports.io";
 
-/* ===================================
-   SAFE FETCH CORE
-=================================== */
 async function footballFetch(
   endpoint: string
 ) {
-  if (!API_KEY) {
-    console.error(
-      "Missing FOOTBALL_API_KEY"
-    );
-    return null;
-  }
-
   try {
     const res = await fetch(
       `${BASE_URL}${endpoint}`,
       {
         headers: {
-          "X-Auth-Token":
-            API_KEY,
+          "x-apisports-key":
+            API_KEY || "",
         },
         next: {
           revalidate: 60,
@@ -31,61 +21,39 @@ async function footballFetch(
       }
     );
 
-    if (!res.ok) {
-      console.error(
-        "Football API Error:",
-        res.status
-      );
-      return null;
-    }
+    const data =
+      await res.json();
 
-    return await res.json();
-  } catch (error) {
-    console.error(
-      "Football fetch failed"
-    );
-    return null;
+    return data.response || [];
+  } catch {
+    return [];
   }
 }
 
-/* ===================================
-   LIVE MATCHES
-=================================== */
 export async function getLiveScores() {
-  const data =
-    await footballFetch(
-      "/matches"
-    );
-
-  return data?.matches || [];
-}
-
-/* ===================================
-   PREMIER LEAGUE TABLE
-=================================== */
-export async function getStandings() {
-  const data =
-    await footballFetch(
-      "/competitions/PL/standings"
-    );
-
-  return (
-    data?.standings?.[0]
-      ?.table || []
+  return await footballFetch(
+    "/fixtures?live=all"
   );
 }
 
-/* ===================================
-   ARSENAL NEXT MATCH
-=================================== */
-export async function getNextMatch() {
+export async function getArsenalNextMatch() {
   const data =
     await footballFetch(
-      "/teams/57/matches?status=SCHEDULED&limit=1"
+      "/fixtures?team=42&next=1"
+    );
+
+  return data[0] || null;
+}
+
+export async function getPremierLeagueStandings() {
+  const data =
+    await footballFetch(
+      "/standings?league=39&season=2025"
     );
 
   return (
-    data?.matches?.[0] ||
-    null
+    data?.[0]
+      ?.league
+      ?.standings?.[0] || []
   );
 }

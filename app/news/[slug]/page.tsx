@@ -1,21 +1,19 @@
+export const dynamic = "force-dynamic";
+
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import {
-  getPostBySlug,
-  getFeaturedImage,
-} from "@/lib/wordpress";
+import Image from "next/image";
+import { getPost, getFeaturedImage } from "@/lib/wordpress";
 
-export default async function PostPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const post = await getPostBySlug(
-    params.slug
-  );
+export default async function PostPage({ params }: any) {
+  const post = await getPost(params.slug);
 
   if (!post) {
-    return <div>Post not found.</div>;
+    return (
+      <div className="container page-space">
+        <h1>Post not found</h1>
+      </div>
+    );
   }
 
   return (
@@ -24,16 +22,18 @@ export default async function PostPage({
 
       <main className="container page-space">
         <article className="article">
-          <img
-            src={getFeaturedImage(post)}
-            alt={post.title.rendered}
-            className="hero-image"
-          />
-
           <h1
             dangerouslySetInnerHTML={{
               __html: post.title.rendered,
             }}
+          />
+
+          <Image
+            src={getFeaturedImage(post)}
+            alt={post.title.rendered}
+            width={800}
+            height={450}
+            className="hero-image"
           />
 
           <div

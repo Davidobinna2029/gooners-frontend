@@ -280,6 +280,44 @@ ol {
 }
 
 /* ===================================
+   PAGINATION
+=================================== */
+.pagination {
+  margin-top: 32px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.page-btn,
+.page-number {
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: #0d1117;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #d1d5db;
+  font-weight: 800;
+  font-size: 14px;
+  transition: 0.2s ease;
+  min-width: 42px;
+  text-align: center;
+}
+
+.page-btn:hover,
+.page-number:hover {
+  background: #ef0107;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.page-number.active {
+  background: #ef0107;
+  color: #ffffff;
+  border-color: #ef0107;
+}
+
+/* ===================================
    QUICK LINKS
 =================================== */
 .link-grid {

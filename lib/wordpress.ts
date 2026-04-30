@@ -1,69 +1,87 @@
-const BASE_URL =
-  "https://arsenaltalks.com/wp-json/wp/v2";
+const SITE_URL = "https://api.arsenaltalks.com";
+const API = `${SITE_URL}/wp-json/wp/v2`;
 
+/* ===================================
+   SAFE FETCH (NO CRASHES)
+=================================== */
+async function wpFetch(endpoint: string) {
+  try {
+    const res = await fetch(`${API}${endpoint}`, {
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      console.log("WP ERROR:", res.status);
+
+      return {
+        data: [],
+        totalPages: 1,
+      };
+    }
+
+    const data = await res.json();
+
+    const totalPages =
+      Number(res.headers.get("X-WP-TotalPages")) || 1;
+
+    return {
+      data,
+      totalPages,
+    };
+  } catch (error) {
+    console.log("FETCH FAILED:", error);
+
+    return {
+      data: [],
+      totalPages: 1,
+    };
+  }
+}
+
+/* ===================================
+   GET POSTS (WITH PAGINATION)
+=================================== */
 export async function getLatestPosts(
-  page: number = 1,
-  perPage: number = 10
+  page = 1,
+  perPage = 10
 ) {
-  const res = await fetch(
-    `${BASE_URL}/posts?_embed&per_page=${perPage}&page=${page}`,
-    { next: { revalidate: 60 } }
+  return await wpFetch(
+    `/posts?_embed&page=${page}&per_page=${perPage}`
   );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch posts");
-  }
-
-  return res.json();
 }
 
-export async function getPostBySlug(slug: string) {
-  const res = await fetch(
-    `${BASE_URL}/posts?_embed&slug=${slug}`,
-    { next: { revalidate: 60 } }
-  );
+/* ===================================
+   GET SINGLE POST (FIXED SLUG)
+=================================== */
+export async function getPost(slug: string) {
+  try {
+    const res = await fetch(
+      `${API}/posts?slug=${slug}&_embed`,
+      { cache: "no-store" }
+    );
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch post");
+    if (!res.ok) {
+      console.log("POST ERROR:", res.status);
+      return null;
+    }
+
+    const data = await res.json();
+
+    return data.length > 0 ? data[0] : null;
+  } catch (error) {
+    console.log("POST FETCH FAILED:", error);
+    return null;
   }
-
-  const data = await res.json();
-  return data[0];
 }
 
-export async function getPostsByCategorySlug(
-  slug: string
-) {
-  const catRes = await fetch(
-    `${BASE_URL}/categories?slug=${slug}`,
-    { next: { revalidate: 60 } }
-  );
-
-  if (!catRes.ok) {
-    throw new Error("Failed category lookup");
-  }
-
-  const cats = await catRes.json();
-
-  if (!cats.length) return [];
-
-  const categoryId = cats[0].id;
-
-  const postRes = await fetch(
-    `${BASE_URL}/posts?_embed&categories=${categoryId}`,
-    { next: { revalidate: 60 } }
-  );
-
-  if (!postRes.ok) {
-    throw new Error("Failed category posts");
-  }
-
-  return postRes.json();
-}
-
+/* ===================================
+   FEATURED IMAGE (ROBUST)
+=================================== */
 export function getFeaturedImage(post: any) {
   return (
-    post?._embedded?.["wp:featuredmedia"]?.[0]
-      ?.source_url || "/placeholder.jpg"
+    post?._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
+    post?.jetpack_featured_media_url ||
+    post?.yoast_head_json?.og_image?.[0]?.url ||
+    "/placeholder.jpg"
   );
 }

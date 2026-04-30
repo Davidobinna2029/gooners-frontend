@@ -1,53 +1,103 @@
+export const dynamic = "force-dynamic";
+
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Link from "next/link";
+import Image from "next/image";
 import {
   getLatestPosts,
   getFeaturedImage,
 } from "@/lib/wordpress";
 
-export default async function NewsPage() {
-  const posts = await getLatestPosts();
+export default async function NewsPage({ searchParams }: any) {
+  const currentPage = Number(searchParams?.page) || 1;
+
+  const result = await getLatestPosts(currentPage, 12);
+  const posts = result.data || [];
+  const totalPages = result.totalPages || 1;
 
   return (
     <>
       <Header />
 
       <main className="container page-space">
-        <div className="panel">
-          <h2>Latest Arsenal News</h2>
+        <section className="panel">
+          <h1>Latest Arsenal News</h1>
 
-          <div className="news-list">
-            {posts.map((post: any) => (
-              <Link
-                key={post.id}
-                href={`/news/${post.slug}`}
-                className="news-card"
-              >
-                <img
-                  src={getFeaturedImage(post)}
-                  alt={post.title.rendered}
-                  className="thumb-img"
-                />
+          {posts.length === 0 ? (
+            <p>No posts available.</p>
+          ) : (
+            <>
+              <div className="bottom-grid">
+                {posts.map((post: any) => (
+                  <Link
+                    key={post.id}
+                    href={`/news/${post.slug}`}
+                    className="news-tile"
+                  >
+                    <div className="tile-thumb">
+                      <Image
+                        src={getFeaturedImage(post)}
+                        alt={post.title.rendered}
+                        fill
+                        className="tile-img"
+                      />
+                    </div>
 
-                <div>
-                  <h3
-                    dangerouslySetInnerHTML={{
-                      __html:
-                        post.title.rendered,
-                    }}
-                  />
+                    <h4
+                      dangerouslySetInnerHTML={{
+                        __html: post.title.rendered,
+                      }}
+                    />
+                  </Link>
+                ))}
+              </div>
 
-                  <p>
-                    {new Date(
-                      post.date
-                    ).toLocaleDateString()}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
+              {/* PAGINATION */}
+              <div className="pagination">
+                {currentPage > 1 && (
+                  <Link
+                    href={`/news?page=${currentPage - 1}`}
+                    className="page-btn"
+                  >
+                    ← Prev
+                  </Link>
+                )}
+
+                {Array.from(
+                  { length: totalPages },
+                  (_, i) => i + 1
+                )
+                  .slice(
+                    Math.max(0, currentPage - 2),
+                    currentPage + 1
+                  )
+                  .map((page) => (
+                    <Link
+                      key={page}
+                      href={`/news?page=${page}`}
+                      className={`page-number ${
+                        page === currentPage
+                          ? "active"
+                          : ""
+                      }`}
+                    >
+                      {page}
+                    </Link>
+                  ))}
+
+                {currentPage < totalPages && (
+                  <Link
+                    href={`/news?page=${currentPage + 1}`}
+                    className="page-btn"
+                  >
+                    Next →
+                  </Link>
+                )}
+              </div>
+            </>
+          )}
+        </section>
       </main>
 
       <Footer />
