@@ -1,67 +1,53 @@
 import Link from "next/link";
-import Image from "next/image";
 import {
   getLatestPosts,
-  getFeaturedImage,
 } from "@/lib/wordpress";
 
 export default async function LatestNews() {
-  const result =
-    await getLatestPosts(1, 5);
-
-  const posts =
-    result.data || [];
+  // Fetch posts safely (already normalized in wordpress.ts)
+  const posts = await getLatestPosts(1, 6);
 
   return (
     <div className="panel">
-      <h2>
-        Latest Arsenal News
-      </h2>
+      <h2>Latest Arsenal News</h2>
 
-      {posts.length === 0 ? (
+      {/* EMPTY STATE (CRASH PROTECTION) */}
+      {!posts || posts.length === 0 ? (
         <p className="muted">
-          No posts available.
+          No news available right now. Please check back shortly.
         </p>
       ) : (
         <div className="news-list">
-          {posts.map(
-            (post: any) => (
-              <Link
-                key={post.id}
-                href={`/news/${post.slug}`}
-                className="news-card"
-              >
-                <Image
-                  src={getFeaturedImage(
-                    post
-                  )}
-                  alt={
-                    post.title
-                      .rendered
-                  }
-                  width={140}
-                  height={92}
-                  className="thumb-img"
+          {posts.map((post: any) => (
+            <Link
+              key={post.id}
+              href={`/news/${post.slug}`}
+              className="news-card"
+            >
+              {/* IMAGE */}
+              <img
+                src={post.image || "/placeholder.jpg"}
+                alt={post.title}
+                className="thumb-img"
+                loading="lazy"
+              />
+
+              {/* CONTENT */}
+              <div>
+                <h3
+                  dangerouslySetInnerHTML={{
+                    __html: post.title,
+                  }}
                 />
 
-                <div>
-                  <h3
-                    dangerouslySetInnerHTML={{
-                      __html:
-                        post.title
-                          .rendered,
-                    }}
-                  />
-
-                  <p>
-                    {new Date(
-                      post.date
-                    ).toLocaleDateString()}
-                  </p>
-                </div>
-              </Link>
-            )
-          )}
+                <p>
+                  {post.date
+                    ? new Date(post.date).toLocaleDateString()
+                    : "No date"}
+                </p>
+              </div>
+            </Link>
+          ))}
         </div>
       )}
     </div>

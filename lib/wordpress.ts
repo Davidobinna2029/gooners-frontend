@@ -1,81 +1,84 @@
-const SITE_URL = "https://api.arsenaltalks.com";
-const API = `${SITE_URL}/wp-json/wp/v2`;
+const BASE =
+  process.env.NEXT_PUBLIC_WORDPRESS_URL ||
+  "https://api.arsenaltalks.com";
+
+const API = `${BASE}/wp-json/wp/v2`;
 
 /* ===================================
-   SAFE FETCH (NO CRASHES)
+   TIMEOUT SAFE FETCH
 =================================== */
-async function wpFetch(endpoint: string) {
-  try {
-    const res = await fetch(`${API}${endpoint}`, {
-      cache: "no-store",
-    });
+async function safeFetch(url: string, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const controller = new AbortController();
 
-    if (!res.ok) {
-      console.log("WP ERROR:", res.status);
+      const timeout = setTimeout(() => {
+        controller.abort();
+      }, 8000); // 8s max
 
-      return {
-        data: [],
-        totalPages: 1,
-      };
+      const res = await fetch(url, {
+        signal: controller.signal,
+        next: { revalidate: 60 }, // ISR caching
+      });
+
+      clearTimeout(timeout);
+
+      if (res.ok) return await res.json();
+    } catch (err) {
+      console.log(`Fetch failed attempt ${i + 1}`, err);
     }
-
-    const data = await res.json();
-
-    const totalPages =
-      Number(res.headers.get("X-WP-TotalPages")) || 1;
-
-    return {
-      data,
-      totalPages,
-    };
-  } catch (error) {
-    console.log("FETCH FAILED:", error);
-
-    return {
-      data: [],
-      totalPages: 1,
-    };
   }
+
+  return null;
 }
 
 /* ===================================
-   GET POSTS (WITH PAGINATION)
+   NORMALISE POSTS (SAFE OUTPUT)
 =================================== */
-export async function getLatestPosts(
-  page = 1,
-  perPage = 10
-) {
-  return await wpFetch(
-    `/posts?_embed&page=${page}&per_page=${perPage}`
-  );
+function normalize(posts: any[]) {
+  if (!Array.isArray(posts)) return [];
+
+  return posts.map((p) => ({
+    id: p.id,
+    slug: p.slug,
+    title: p.title?.rendered || "Untitled",
+    date: p.date || null,
+    excerpt: p.excerpt?.rendered || "",
+    image:
+      p?._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
+      p.jetpack_featured_media_url ||
+      "/placeholder.jpg",
+  }));
 }
 
 /* ===================================
-   GET SINGLE POST (FIXED SLUG)
+   GET LATEST POSTS (BULLETPROOF)
+=================================== */
+export async function getLatestPosts(page = 1, perPage = 10) {
+  const data = await safeFetch(
+    `${API}/posts?_embed&page=${page}&per_page=${perPage}`
+  );
+
+  if (!data) return []; // NEVER crash UI
+
+  return normalize(data);
+}
+
+/* ===================================
+   GET SINGLE POST (SAFE SLUG FETCH)
 =================================== */
 export async function getPost(slug: string) {
-  try {
-    const res = await fetch(
-      `${API}/posts?slug=${slug}&_embed`,
-      { cache: "no-store" }
-    );
+  const data = await safeFetch(
+    `${API}/posts?slug=${slug}&_embed`
+  );
 
-    if (!res.ok) {
-      console.log("POST ERROR:", res.status);
-      return null;
-    }
+  if (!data || !Array.isArray(data)) return null;
 
-    const data = await res.json();
-
-    return data.length > 0 ? data[0] : null;
-  } catch (error) {
-    console.log("POST FETCH FAILED:", error);
-    return null;
-  }
+  return data[0] || null;
 }
 
 /* ===================================
-   FEATURED IMAGE (ROBUST)
+   FEATURED IMAGE (MULTI-FALLBACK SYSTEM)
 =================================== */
 export function getFeaturedImage(post: any) {
   return (
