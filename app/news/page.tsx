@@ -1,106 +1,64 @@
-export const dynamic = "force-dynamic";
-
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import Link from "next/link";
-import Image from "next/image";
-import {
-  getLatestPosts,
-  getFeaturedImage,
-} from "@/lib/wordpress";
+import { getLatestPosts, getFeaturedImage } from "@/lib/wordpress";
 
-export default async function NewsPage({ searchParams }: any) {
-  const currentPage = Number(searchParams?.page) || 1;
+export const revalidate = 60;
 
-  const result = await getLatestPosts(currentPage, 12);
-  const posts = result.data || [];
-  const totalPages = result.totalPages || 1;
+export default async function NewsPage({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
+  const page = Number(searchParams.page || 1);
+  const posts = await getLatestPosts(page, 10);
 
   return (
-    <>
-      <Header />
+    <div className="panel">
+      <h2>Latest Arsenal News</h2>
 
-      <main className="container page-space">
-        <section className="panel">
-          <h1>Latest Arsenal News</h1>
+      {!posts.length && <p>No posts available.</p>}
 
-          {posts.length === 0 ? (
-            <p>No posts available.</p>
-          ) : (
-            <>
-              <div className="bottom-grid">
-                {posts.map((post: any) => (
-                  <Link
-                    key={post.id}
-                    href={`/news/${post.slug}`}
-                    className="news-tile"
-                  >
-                    <div className="tile-thumb">
-                      <Image
-                        src={getFeaturedImage(post)}
-                        alt={post.title.rendered}
-                        fill
-                        className="tile-img"
-                      />
-                    </div>
+      <div className="news-list">
+        {posts.map((post: any) => (
+          <Link
+            key={post.id}
+            href={`/news/${post.slug}`}
+            className="news-card"
+          >
+            <img
+              src={getFeaturedImage(post)}
+              className="thumb-img"
+              alt={post.title.rendered}
+            />
 
-                    <h4
-                      dangerouslySetInnerHTML={{
-                        __html: post.title.rendered,
-                      }}
-                    />
-                  </Link>
-                ))}
-              </div>
+            <div>
+              <h3
+                dangerouslySetInnerHTML={{
+                  __html: post.title.rendered,
+                }}
+              />
+              <p>
+                {new Date(post.date).toLocaleDateString()}
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
 
-              {/* PAGINATION */}
-              <div className="pagination">
-                {currentPage > 1 && (
-                  <Link
-                    href={`/news?page=${currentPage - 1}`}
-                    className="page-btn"
-                  >
-                    ← Prev
-                  </Link>
-                )}
+      <div className="pagination">
+        {page > 1 && (
+          <Link href={`/news?page=${page - 1}`}>
+            ← Prev
+          </Link>
+        )}
 
-                {Array.from(
-                  { length: totalPages },
-                  (_, i) => i + 1
-                )
-                  .slice(
-                    Math.max(0, currentPage - 2),
-                    currentPage + 1
-                  )
-                  .map((page) => (
-                    <Link
-                      key={page}
-                      href={`/news?page=${page}`}
-                      className={`page-number ${
-                        page === currentPage
-                          ? "active"
-                          : ""
-                      }`}
-                    >
-                      {page}
-                    </Link>
-                  ))}
+        <span>Page {page}</span>
 
-                {currentPage < totalPages && (
-                  <Link
-                    href={`/news?page=${currentPage + 1}`}
-                    className="page-btn"
-                  >
-                    Next →
-                  </Link>
-                )}
-              </div>
-            </>
-          )}
-        </section>
-      </main>
-
-      <Footer />
-    </>
+        {posts.length === 10 && (
+          <Link href={`/news?page=${page + 1}`}>
+            Next →
+          </Link>
+        )}
+      </div>
+    </div>
   );
 }
