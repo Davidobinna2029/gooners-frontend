@@ -9,7 +9,7 @@ export default async function LatestNews() {
 
   return (
     <div className="panel">
-      <h2>Latest Arsenal News</h2>
+      <h2>Latest News</h2>
 
       <div className="news-list">
         {posts.map((post: any) => (
@@ -20,8 +20,8 @@ export default async function LatestNews() {
           >
             <img
               src={getFeaturedImage(post)}
-              alt={post.title.rendered}
               className="thumb-img"
+              alt={post.title.rendered}
             />
 
             <div>
@@ -30,10 +30,6 @@ export default async function LatestNews() {
                   __html: post.title.rendered,
                 }}
               />
-
-              <p>
-                {new Date(post.date).toLocaleDateString()}
-              </p>
             </div>
           </Link>
         ))}

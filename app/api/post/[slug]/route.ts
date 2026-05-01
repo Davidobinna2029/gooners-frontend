@@ -1,4 +1,6 @@
-const BASE =
+import { NextResponse } from "next/server";
+
+const WORDPRESS_URL =
   process.env.NEXT_PUBLIC_WORDPRESS_URL ||
   "https://api.arsenaltalks.com";
 
@@ -8,14 +10,17 @@ export async function GET(
 ) {
   try {
     const res = await fetch(
-      `${BASE}/wp-json/wp/v2/posts?slug=${params.slug}&_embed`,
+      `${WORDPRESS_URL}/wp-json/wp/v2/posts?slug=${params.slug}&_embed`,
       { next: { revalidate: 60 } }
     );
 
-    const data = await res.json();
+    if (!res.ok) {
+      return NextResponse.json(null);
+    }
 
-    return Response.json(data[0] || null);
+    const data = await res.json();
+    return NextResponse.json(data?.[0] || null);
   } catch {
-    return Response.json(null);
+    return NextResponse.json(null);
   }
 }

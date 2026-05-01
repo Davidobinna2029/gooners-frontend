@@ -1,17 +1,17 @@
-const SITE =
+const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
   "http://localhost:3000";
 
 export async function getLatestPosts(page = 1, perPage = 10) {
   try {
     const res = await fetch(
-      `${SITE}/api/posts?page=${page}&per_page=${perPage}`,
-      { next: { revalidate: 60 } }
+      `${BASE_URL}/api/posts?page=${page}&per_page=${perPage}`,
+      { cache: "no-store" }
     );
 
     if (!res.ok) return [];
 
-    return await res.json();
+    return res.json();
   } catch {
     return [];
   }
@@ -20,13 +20,13 @@ export async function getLatestPosts(page = 1, perPage = 10) {
 export async function getPost(slug: string) {
   try {
     const res = await fetch(
-      `${SITE}/api/post/${slug}`,
-      { next: { revalidate: 60 } }
+      `${BASE_URL}/api/post/${slug}`,
+      { cache: "no-store" }
     );
 
     if (!res.ok) return null;
 
-    return await res.json();
+    return res.json();
   } catch {
     return null;
   }
