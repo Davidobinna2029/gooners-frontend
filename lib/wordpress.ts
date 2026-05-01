@@ -1,28 +1,43 @@
-const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  "http://localhost:3000";
+const isServer = typeof window === "undefined";
+
+function getBaseUrl() {
+  // Server (Vercel)
+  if (isServer) {
+    return process.env.NEXT_PUBLIC_SITE_URL || "https://arsenaltalks.com";
+  }
+
+  // Browser
+  return "";
+}
 
 export async function getLatestPosts(page = 1, perPage = 10) {
   try {
+    const base = getBaseUrl();
+
     const res = await fetch(
-      `${BASE_URL}/api/posts?page=${page}&per_page=${perPage}`,
+      `${base}/api/posts?page=${page}&per_page=${perPage}`,
       { cache: "no-store" }
     );
 
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error("API ERROR:", res.status);
+      return [];
+    }
 
     return res.json();
-  } catch {
+  } catch (err) {
+    console.error("FETCH ERROR:", err);
     return [];
   }
 }
 
 export async function getPost(slug: string) {
   try {
-    const res = await fetch(
-      `${BASE_URL}/api/post/${slug}`,
-      { cache: "no-store" }
-    );
+    const base = getBaseUrl();
+
+    const res = await fetch(`${base}/api/post/${slug}`, {
+      cache: "no-store",
+    });
 
     if (!res.ok) return null;
 
