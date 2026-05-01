@@ -1,22 +1,19 @@
-const isServer = typeof window === "undefined";
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://arsenaltalks.com";
 
-function getBaseUrl() {
-  // Server (Vercel)
-  if (isServer) {
-    return process.env.NEXT_PUBLIC_SITE_URL || "https://arsenaltalks.com";
-  }
-
-  // Browser
-  return "";
+function fixImageUrl(url?: string): string {
+  if (!url) return "/placeholder.jpg";
+  return url.replace("http://", "https://");
 }
 
-export async function getLatestPosts(page = 1, perPage = 10) {
+// 🔥 ALWAYS use your internal API (NOT WordPress)
+export async function getLatestPosts(perPage: number = 8) {
   try {
-    const base = getBaseUrl();
-
     const res = await fetch(
-      `${base}/api/posts?page=${page}&per_page=${perPage}`,
-      { cache: "no-store" }
+      `${SITE_URL}/api/posts?per_page=${perPage}`,
+      {
+        cache: "no-store",
+      }
     );
 
     if (!res.ok) {
@@ -24,33 +21,49 @@ export async function getLatestPosts(page = 1, perPage = 10) {
       return [];
     }
 
-    return res.json();
-  } catch (err) {
-    console.error("FETCH ERROR:", err);
+    const posts = await res.json();
+
+    return posts.map((post: any) => ({
+      ...post,
+      featured_image: fixImageUrl(
+        post._embedded?.["wp:featuredmedia"]?.[0]?.source_url
+      ),
+    }));
+  } catch (error) {
+    console.error("Latest posts error:", error);
     return [];
   }
 }
 
 export async function getPost(slug: string) {
   try {
-    const base = getBaseUrl();
-
-    const res = await fetch(`${base}/api/post/${slug}`, {
-      cache: "no-store",
-    });
+    const res = await fetch(
+      `${SITE_URL}/api/post/${slug}`,
+      {
+        cache: "no-store",
+      }
+    );
 
     if (!res.ok) return null;
 
-    return res.json();
-  } catch {
+    const post = await res.json();
+
+    if (!post) return null;
+
+    return {
+      ...post,
+      featured_image: fixImageUrl(
+        post._embedded?.["wp:featuredmedia"]?.[0]?.source_url
+      ),
+    };
+  } catch (error) {
+    console.error("Single post error:", error);
     return null;
   }
 }
 
-export function getFeaturedImage(post: any) {
-  return (
-    post?._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
-    post?.jetpack_featured_media_url ||
-    "/placeholder.jpg"
+export function getFeaturedImage(post: any): string {
+  return fixImageUrl(
+    post?._embedded?.["wp:featuredmedia"]?.[0]?.source_url
   );
 }
