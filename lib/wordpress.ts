@@ -1,69 +1,38 @@
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://arsenaltalks.com";
+// app/api/post/[slug]/route.ts
 
-function fixImageUrl(url?: string): string {
-  if (!url) return "/placeholder.jpg";
-  return url.replace("http://", "https://");
-}
+import { NextResponse } from "next/server";
+import { getCache, setCache } from "@/lib/fallbackStore";
 
-// 🔥 ALWAYS use your internal API (NOT WordPress)
-export async function getLatestPosts(perPage: number = 8) {
+const WP =
+  process.env.WORDPRESS_API_URL ||
+  "https://api.arsenaltalks.com/wp-json/wp/v2/posts";
+
+export async function GET(
+  req: Request,
+  { params }: { params: { slug: string } }
+) {
+  const key = `post:${params.slug}`;
+
   try {
-    const res = await fetch(
-      `${SITE_URL}/api/posts?per_page=${perPage}`,
-      {
-        cache: "no-store",
-      }
-    );
+    const res = await fetch(`${WP}?slug=${params.slug}&_embed`, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+      cache: "no-store",
+    });
 
-    if (!res.ok) {
-      console.error("API ERROR:", res.status);
-      return [];
+    if (res.ok) {
+      const data = await res.json();
+      const post = data[0] || null;
+
+      if (post) setCache(key, post);
+
+      return NextResponse.json(post);
     }
-
-    const posts = await res.json();
-
-    return posts.map((post: any) => ({
-      ...post,
-      featured_image: fixImageUrl(
-        post._embedded?.["wp:featuredmedia"]?.[0]?.source_url
-      ),
-    }));
-  } catch (error) {
-    console.error("Latest posts error:", error);
-    return [];
+  } catch (err) {
+    console.error("Post fetch error:", err);
   }
-}
 
-export async function getPost(slug: string) {
-  try {
-    const res = await fetch(
-      `${SITE_URL}/api/post/${slug}`,
-      {
-        cache: "no-store",
-      }
-    );
+  const cached = getCache<any>(key);
+  if (cached) return NextResponse.json(cached);
 
-    if (!res.ok) return null;
-
-    const post = await res.json();
-
-    if (!post) return null;
-
-    return {
-      ...post,
-      featured_image: fixImageUrl(
-        post._embedded?.["wp:featuredmedia"]?.[0]?.source_url
-      ),
-    };
-  } catch (error) {
-    console.error("Single post error:", error);
-    return null;
-  }
-}
-
-export function getFeaturedImage(post: any): string {
-  return fixImageUrl(
-    post?._embedded?.["wp:featuredmedia"]?.[0]?.source_url
-  );
+  return NextResponse.json(null);
 }

@@ -1,48 +1,24 @@
-import Link from "next/link";
-import {
-  getLatestPosts,
-  getFeaturedImage,
-} from "@/lib/wordpress";
+// app/news/page.tsx
 
-export default async function NewsPage({
-  searchParams,
-}: {
-  searchParams: { page?: string };
-}) {
-  const page = Number(searchParams.page || 1);
-  const posts = await getLatestPosts(page, 10);
+import { getLatestPosts } from "@/lib/wordpress";
+import Link from "next/link";
+
+export default async function NewsPage() {
+  const posts = await getLatestPosts();
 
   return (
-    <div className="panel">
-      <h2>Latest Arsenal News</h2>
+    <div>
+      <h1>Latest News</h1>
 
-      <div className="news-list">
-        {posts.map((post: any) => (
-          <Link
-            key={post.id}
-            href={`/news/${post.slug}`}
-            className="news-card"
-          >
-            <img
-              src={getFeaturedImage(post)}
-              className="thumb-img"
-              alt={post.title.rendered}
-            />
+      {posts.length === 0 && <p>No posts available</p>}
 
-            <div>
-              <h3
-                dangerouslySetInnerHTML={{
-                  __html: post.title.rendered,
-                }}
-              />
-
-              <p>
-                {new Date(post.date).toLocaleDateString()}
-              </p>
-            </div>
+      {posts.map((post: any) => (
+        <div key={post.id}>
+          <Link href={`/news/${post.slug}`}>
+            {post.title.rendered}
           </Link>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 }

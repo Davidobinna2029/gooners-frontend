@@ -1,7 +1,6 @@
-import {
-  getPost,
-  getFeaturedImage,
-} from "@/lib/wordpress";
+// app/news/[slug]/page.tsx
+
+import { getPost } from "@/lib/wordpress";
 
 export default async function PostPage({
   params,
@@ -10,28 +9,12 @@ export default async function PostPage({
 }) {
   const post = await getPost(params.slug);
 
-  if (!post) {
-    return <h1>Post not found</h1>;
-  }
+  if (!post) return <h1>Post not found</h1>;
 
   return (
-    <article className="article">
-      <h1
-        dangerouslySetInnerHTML={{
-          __html: post.title.rendered,
-        }}
-      />
-
-      <img
-        src={getFeaturedImage(post)}
-        className="hero-image"
-      />
-
-      <div
-        dangerouslySetInnerHTML={{
-          __html: post.content.rendered,
-        }}
-      />
+    <article>
+      <h1>{post.title.rendered}</h1>
+      <div dangerouslySetInnerHTML={{ __html: post.content.rendered }} />
     </article>
   );
 }
