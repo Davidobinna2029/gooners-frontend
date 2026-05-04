@@ -1,7 +1,8 @@
 async function getPost(slug: string) {
-  const res = await fetch(`/api/post/${slug}`, {
-    cache: "no-store",
-  });
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SITE_URL}/api/post/${slug}`,
+    { cache: "no-store" }
+  );
 
   return res.json();
 }
@@ -18,9 +19,7 @@ export default async function PostPage({
   return (
     <article>
       <h1 dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
-
-      <img src={post.featured_image} alt="" />
-
+      <img src={post.featured_image} />
       <div dangerouslySetInnerHTML={{ __html: post.content.rendered }} />
     </article>
   );

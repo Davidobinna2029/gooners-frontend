@@ -1,34 +1,27 @@
-import {
-  getPremierLeagueStandings,
-} from "@/lib/football";
+"use client";
 
-export default async function Standings() {
-  const table =
-    await getPremierLeagueStandings();
+import { useEffect, useState } from "react";
+
+export default function Standings() {
+  const [table, setTable] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("/api/football")
+      .then((res) => res.json())
+      .then((data) => {
+        setTable(data.standings?.standings?.[0]?.table || []);
+      });
+  }, []);
 
   return (
     <div className="panel">
-      <h2>Premier League Table</h2>
+      <h2>Premier League</h2>
 
-      <div className="table-list">
-        {table
-          .slice(0, 10)
-          .map((club: any) => (
-            <div
-              key={club.team.id}
-              className="table-row"
-            >
-              <span>
-                {club.rank}.{" "}
-                {club.team.name}
-              </span>
-
-              <strong>
-                {club.points}
-              </strong>
-            </div>
-          ))}
-      </div>
+      {table.map((team: any) => (
+        <div key={team.team.id}>
+          {team.position}. {team.team.name} ({team.points})
+        </div>
+      ))}
     </div>
   );
 }

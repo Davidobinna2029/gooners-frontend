@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
-  request: NextRequest,
+  req: NextRequest,
   context: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await context.params;
@@ -9,12 +9,25 @@ export async function GET(
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_WORDPRESS_URL}/wp-json/wp/v2/posts?slug=${slug}&_embed`,
-      { cache: "no-store" }
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+        },
+        cache: "no-store",
+      }
     );
 
     const data = await res.json();
+    const post = data[0];
 
-    return NextResponse.json(data[0] || null);
+    if (!post) return NextResponse.json(null);
+
+    return NextResponse.json({
+      ...post,
+      featured_image:
+        post._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
+        "/placeholder.jpg",
+    });
   } catch (error) {
     console.error("Post API Error:", error);
     return NextResponse.json(null);
