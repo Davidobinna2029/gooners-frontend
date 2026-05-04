@@ -1,22 +1,23 @@
-// app/news/page.tsx
+async function getPosts() {
+  const res = await fetch("/api/posts", {
+    cache: "no-store",
+  });
 
-import { getLatestPosts } from "@/lib/wordpress";
-import Link from "next/link";
+  return res.json();
+}
 
 export default async function NewsPage() {
-  const posts = await getLatestPosts();
+  const posts = await getPosts();
 
   return (
     <div>
       <h1>Latest News</h1>
 
-      {posts.length === 0 && <p>No posts available</p>}
-
       {posts.map((post: any) => (
         <div key={post.id}>
-          <Link href={`/news/${post.slug}`}>
-            {post.title.rendered}
-          </Link>
+          <a href={`/news/${post.slug}`}>
+            <h2 dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
+          </a>
         </div>
       ))}
     </div>

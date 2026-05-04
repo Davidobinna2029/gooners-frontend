@@ -1,35 +1,34 @@
 import { NextResponse } from "next/server";
 
-const WORDPRESS_URL =
-  process.env.NEXT_PUBLIC_WORDPRESS_URL ||
-  "https://api.arsenaltalks.com";
+const SITE_URL = process.env.NEXT_PUBLIC_WORDPRESS_URL;
 
 export async function GET(
   req: Request,
   { params }: { params: { slug: string } }
 ) {
   try {
-    // 1. Get category ID
+    // get category ID
     const catRes = await fetch(
-      `${WORDPRESS_URL}/wp-json/wp/v2/categories?slug=${params.slug}`
+      `${SITE_URL}/wp-json/wp/v2/categories?slug=${params.slug}`
     );
 
-    const categories = await catRes.json();
-    const categoryId = categories?.[0]?.id;
+    const cats = await catRes.json();
+    const catId = cats[0]?.id;
 
-    if (!categoryId) {
+    if (!catId) {
       return NextResponse.json([]);
     }
 
-    // 2. Fetch posts in that category
-    const postsRes = await fetch(
-      `${WORDPRESS_URL}/wp-json/wp/v2/posts?categories=${categoryId}&_embed`
+    // fetch posts in category
+    const postRes = await fetch(
+      `${SITE_URL}/wp-json/wp/v2/posts?categories=${catId}&_embed`
     );
 
-    const posts = await postsRes.json();
+    const posts = await postRes.json();
 
     return NextResponse.json(posts);
-  } catch {
+  } catch (err) {
+    console.error("Category error:", err);
     return NextResponse.json([]);
   }
 }

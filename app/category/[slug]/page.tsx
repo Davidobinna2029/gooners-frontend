@@ -1,41 +1,29 @@
-import Link from "next/link";
-import { getFeaturedImage } from "@/lib/wordpress";
+async function getPosts(slug: string) {
+  const res = await fetch(`/api/category/${slug}`, {
+    cache: "no-store",
+  });
+
+  return res.json();
+}
 
 export default async function CategoryPage({
   params,
 }: {
   params: { slug: string };
 }) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/api/category/${params.slug}`,
-    { cache: "no-store" }
-  );
-
-  const posts = await res.json();
+  const posts = await getPosts(params.slug);
 
   return (
-    <div className="panel">
-      <h2>{params.slug.replace("-", " ")}</h2>
+    <div>
+      <h1>{params.slug}</h1>
 
-      <div className="news-list">
-        {posts.map((post: any) => (
-          <Link
-            key={post.id}
-            href={`/news/${post.slug}`}
-            className="news-card"
-          >
-            <img
-              src={getFeaturedImage(post)}
-              className="thumb-img"
-            />
-            <h3
-              dangerouslySetInnerHTML={{
-                __html: post.title.rendered,
-              }}
-            />
-          </Link>
-        ))}
-      </div>
+      {posts.map((post: any) => (
+        <div key={post.id}>
+          <a href={`/news/${post.slug}`}>
+            <h2 dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
+          </a>
+        </div>
+      ))}
     </div>
   );
 }
