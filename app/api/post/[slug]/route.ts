@@ -1,38 +1,22 @@
-// app/api/post/[slug]/route.ts
-
-import { NextResponse } from "next/server";
-import { getCache, setCache } from "@/lib/fallbackStore";
-
-const WP =
-  process.env.WORDPRESS_API_URL ||
-  "https://api.arsenaltalks.com/wp-json/wp/v2/posts";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
-  req: Request,
-  { params }: { params: { slug: string } }
+  request: NextRequest,
+  context: { params: Promise<{ slug: string }> }
 ) {
-  const key = `post:${params.slug}`;
+  const { slug } = await context.params;
 
   try {
-    const res = await fetch(`${WP}?slug=${params.slug}&_embed`, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-      cache: "no-store",
-    });
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_WORDPRESS_URL}/wp-json/wp/v2/posts?slug=${slug}&_embed`,
+      { cache: "no-store" }
+    );
 
-    if (res.ok) {
-      const data = await res.json();
-      const post = data[0] || null;
+    const data = await res.json();
 
-      if (post) setCache(key, post);
-
-      return NextResponse.json(post);
-    }
-  } catch (err) {
-    console.error("Post fetch error:", err);
+    return NextResponse.json(data[0] || null);
+  } catch (error) {
+    console.error("Post API Error:", error);
+    return NextResponse.json(null);
   }
-
-  const cached = getCache<any>(key);
-  if (cached) return NextResponse.json(cached);
-
-  return NextResponse.json(null);
 }

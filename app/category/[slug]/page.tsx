@@ -1,29 +1,22 @@
-async function getPosts(slug: string) {
-  const res = await fetch(`/api/category/${slug}`, {
-    cache: "no-store",
-  });
+import { NextRequest, NextResponse } from "next/server";
 
-  return res.json();
-}
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ slug: string }> }
+) {
+  const { slug } = await context.params;
 
-export default async function CategoryPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const posts = await getPosts(params.slug);
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_WORDPRESS_URL}/wp-json/wp/v2/posts?categories=${slug}&_embed`,
+      { cache: "no-store" }
+    );
 
-  return (
-    <div>
-      <h1>{params.slug}</h1>
+    const data = await res.json();
 
-      {posts.map((post: any) => (
-        <div key={post.id}>
-          <a href={`/news/${post.slug}`}>
-            <h2 dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
-          </a>
-        </div>
-      ))}
-    </div>
-  );
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("Category API Error:", error);
+    return NextResponse.json([]);
+  }
 }
