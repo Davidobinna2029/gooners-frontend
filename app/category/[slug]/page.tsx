@@ -22,11 +22,7 @@ export default async function CategoryPage({
       {posts.map((post: any) => (
         <div key={post.id}>
           <a href={`/news/${post.slug}`}>
-            <h2
-              dangerouslySetInnerHTML={{
-                __html: post.title.rendered,
-              }}
-            />
+            <h2 dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
           </a>
         </div>
       ))}
