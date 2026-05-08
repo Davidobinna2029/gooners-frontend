@@ -8,18 +8,23 @@ const headers = {
   "X-Auth-Token": API_KEY || "",
 };
 
-async function safeFetch(url: string) {
+async function fetchAPI(
+  endpoint: string
+) {
   try {
-    const res = await fetch(url, {
-      headers,
-      next: {
-        revalidate: 60,
-      },
-    });
+    const res = await fetch(
+      `${BASE_URL}${endpoint}`,
+      {
+        headers,
+        next: {
+          revalidate: 60,
+        },
+      }
+    );
 
     if (!res.ok) {
       console.error(
-        "Football API Status:",
+        "Football API Error:",
         res.status
       );
 
@@ -28,26 +33,31 @@ async function safeFetch(url: string) {
 
     return await res.json();
   } catch (error) {
-    console.error(
-      "Football Fetch Error:",
-      error
-    );
+    console.error(error);
 
     return null;
   }
 }
 
+/* =========================
+   LIVE SCORES
+========================= */
+
 export async function getLiveScores() {
-  const data = await safeFetch(
-    `${BASE_URL}/matches`
+  const data = await fetchAPI(
+    "/matches"
   );
 
   return data?.matches || [];
 }
 
+/* =========================
+   EPL STANDINGS
+========================= */
+
 export async function getStandings() {
-  const data = await safeFetch(
-    `${BASE_URL}/competitions/PL/standings`
+  const data = await fetchAPI(
+    "/competitions/PL/standings"
   );
 
   return (
@@ -56,9 +66,13 @@ export async function getStandings() {
   );
 }
 
+/* =========================
+   ARSENAL NEXT MATCH
+========================= */
+
 export async function getArsenalNextMatch() {
-  const data = await safeFetch(
-    `${BASE_URL}/teams/57/matches?status=SCHEDULED`
+  const data = await fetchAPI(
+    "/teams/57/matches?limit=1&status=SCHEDULED"
   );
 
   return (
