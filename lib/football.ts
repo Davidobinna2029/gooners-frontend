@@ -1,45 +1,113 @@
-const BASE_URL = "https://api.football-data.org/v4";
+const API_KEY =
+  process.env.FOOTBALL_API_KEY;
+
+const BASE_URL =
+  "https://api.football-data.org/v4";
 
 const headers = {
-  "X-Auth-Token": process.env.FOOTBALL_API_KEY!,
+  "X-Auth-Token": API_KEY || "",
 };
 
-// ✅ Premier League standings
-export async function getStandings() {
-  const res = await fetch(`${BASE_URL}/competitions/PL/standings`, {
-    headers,
-    cache: "no-store",
-  });
-
-  return res.json();
-}
-
-// ✅ All matches (used for live + next)
-export async function getMatches() {
-  const res = await fetch(`${BASE_URL}/teams/57/matches`, {
-    headers,
-    cache: "no-store",
-  });
-
-  return res.json();
-}
-
-// ✅ 🔥 THIS FIXES YOUR ERROR
 export async function getLiveScores() {
-  const data = await getMatches();
+  try {
+    const res = await fetch(
+      `${BASE_URL}/matches`,
+      {
+        headers,
+        next: {
+          revalidate: 60,
+        },
+      }
+    );
 
-  return data.matches?.filter(
-    (match: any) => match.status === "LIVE"
-  ) || [];
+    if (!res.ok) {
+      throw new Error(
+        "Failed to fetch live scores"
+      );
+    }
+
+    const data =
+      await res.json();
+
+    return (
+      data.matches || []
+    );
+  } catch (error) {
+    console.error(
+      "LiveScores Error:",
+      error
+    );
+
+    return [];
+  }
 }
 
-// ✅ 🔥 THIS FIXES YOUR ERROR
+export async function getStandings() {
+  try {
+    const res = await fetch(
+      `${BASE_URL}/competitions/PL/standings`,
+      {
+        headers,
+        next: {
+          revalidate: 300,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error(
+        "Failed to fetch standings"
+      );
+    }
+
+    const data =
+      await res.json();
+
+    return (
+      data.standings?.[0]
+        ?.table || []
+    );
+  } catch (error) {
+    console.error(
+      "Standings Error:",
+      error
+    );
+
+    return [];
+  }
+}
+
 export async function getArsenalNextMatch() {
-  const data = await getMatches();
+  try {
+    const res = await fetch(
+      `${BASE_URL}/teams/57/matches?status=SCHEDULED&limit=1`,
+      {
+        headers,
+        next: {
+          revalidate: 300,
+        },
+      }
+    );
 
-  const upcoming = data.matches?.filter(
-    (match: any) => match.status === "SCHEDULED"
-  );
+    if (!res.ok) {
+      throw new Error(
+        "Failed to fetch next match"
+      );
+    }
 
-  return upcoming?.[0] || null;
+    const data =
+      await res.json();
+
+    return (
+      data.matches?.[0] ||
+      null
+    );
+  } catch (error) {
+    console.error(
+      "NextMatch Error:",
+      error
+    );
+
+    return null;
+  }
 }
