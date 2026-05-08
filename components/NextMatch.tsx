@@ -3,7 +3,7 @@ import {
 } from "@/lib/football";
 
 export default async function NextMatch() {
-  const match =
+  const match: any =
     await getArsenalNextMatch();
 
   return (
@@ -19,19 +19,19 @@ export default async function NextMatch() {
         <>
           <p>
             {
-              match.homeTeam
+              match?.homeTeam
                 ?.name
             }{" "}
             vs{" "}
             {
-              match.awayTeam
+              match?.awayTeam
                 ?.name
             }
           </p>
 
           <p className="muted">
             {new Date(
-              match.utcDate
+              match?.utcDate
             ).toLocaleString()}
           </p>
         </>
