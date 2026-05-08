@@ -4,10 +4,6 @@ const API_KEY =
 const BASE_URL =
   "https://api.football-data.org/v4";
 
-const headers = {
-  "X-Auth-Token": API_KEY || "",
-};
-
 async function fetchAPI(
   endpoint: string
 ) {
@@ -15,10 +11,11 @@ async function fetchAPI(
     const res = await fetch(
       `${BASE_URL}${endpoint}`,
       {
-        headers,
-        next: {
-          revalidate: 60,
+        headers: {
+          "X-Auth-Token":
+            API_KEY || "",
         },
+        cache: "no-store",
       }
     );
 
@@ -43,19 +40,7 @@ async function fetchAPI(
 }
 
 /* =========================
-   LIVE MATCHES
-========================= */
-
-export async function getLiveScores() {
-  const data = await fetchAPI(
-    "/matches"
-  );
-
-  return data?.matches || [];
-}
-
-/* =========================
-   EPL TABLE
+   EPL STANDINGS
 ========================= */
 
 export async function getStandings() {
@@ -70,23 +55,17 @@ export async function getStandings() {
 }
 
 /* =========================
-   NEXT ARSENAL MATCH
+   LIVE SCORES
+========================= */
+
+export async function getLiveScores() {
+  return [];
+}
+
+/* =========================
+   NEXT MATCH
 ========================= */
 
 export async function getArsenalNextMatch() {
-  const data = await fetchAPI(
-    "/teams/57/matches"
-  );
-
-  const matches =
-    data?.matches || [];
-
-  const upcoming =
-    matches.find(
-      (match: any) =>
-        match.status ===
-        "SCHEDULED"
-    );
-
-  return upcoming || null;
+  return null;
 }
