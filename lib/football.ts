@@ -33,14 +33,17 @@ async function fetchAPI(
 
     return await res.json();
   } catch (error) {
-    console.error(error);
+    console.error(
+      "Football Fetch Error:",
+      error
+    );
 
     return null;
   }
 }
 
 /* =========================
-   LIVE SCORES
+   LIVE MATCHES
 ========================= */
 
 export async function getLiveScores() {
@@ -52,7 +55,7 @@ export async function getLiveScores() {
 }
 
 /* =========================
-   EPL STANDINGS
+   EPL TABLE
 ========================= */
 
 export async function getStandings() {
@@ -67,16 +70,23 @@ export async function getStandings() {
 }
 
 /* =========================
-   ARSENAL NEXT MATCH
+   NEXT ARSENAL MATCH
 ========================= */
 
 export async function getArsenalNextMatch() {
   const data = await fetchAPI(
-    "/teams/57/matches?limit=1&status=SCHEDULED"
+    "/teams/57/matches"
   );
 
-  return (
-    data?.matches?.[0] ||
-    null
-  );
+  const matches =
+    data?.matches || [];
+
+  const upcoming =
+    matches.find(
+      (match: any) =>
+        match.status ===
+        "SCHEDULED"
+    );
+
+  return upcoming || null;
 }
