@@ -1,26 +1,52 @@
-async function getPost(slug: string) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/api/post/${slug}`,
-    { cache: "no-store" }
-  );
+import { getPost } from "@/lib/wordpress";
 
-  return res.json();
-}
-
-export default async function PostPage({
+export default async function SingleNewsPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{
+    slug: string;
+  }>;
 }) {
-  const post = await getPost(params.slug);
+  const { slug } =
+    await params;
 
-  if (!post) return <p>Post not found</p>;
+  const post: any =
+    await getPost(slug);
+
+  if (!post) {
+    return <div>Post not found</div>;
+  }
+
+  const image =
+    post?._embedded?.[
+      "wp:featuredmedia"
+    ]?.[0]?.source_url;
 
   return (
-    <article>
-      <h1 dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
-      <img src={post.featured_image} />
-      <div dangerouslySetInnerHTML={{ __html: post.content.rendered }} />
-    </article>
+    <main className="article-page">
+      {image && (
+        <img
+          src={image}
+          alt={
+            post.title.rendered
+          }
+        />
+      )}
+
+      <h1
+        dangerouslySetInnerHTML={{
+          __html:
+            post.title.rendered,
+        }}
+      />
+
+      <div
+        dangerouslySetInnerHTML={{
+          __html:
+            post.content
+              .rendered,
+        }}
+      />
+    </main>
   );
 }

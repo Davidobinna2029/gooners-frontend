@@ -1,25 +1,48 @@
-async function getPosts() {
-  const res = await fetch("/api/posts", {
-    cache: "no-store",
-  });
-
-  return res.json();
-}
+import Link from "next/link";
+import { getPosts } from "@/lib/wordpress";
 
 export default async function NewsPage() {
-  const posts = await getPosts();
+  const posts: any = await getPosts();
 
   return (
-    <div>
-      <h1>Latest News</h1>
+    <main className="container">
+      <h1>Arsenal News</h1>
 
-      {posts.map((post: any) => (
-        <div key={post.id}>
-          <a href={`/news/${post.slug}`}>
-            <h2 dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
-          </a>
-        </div>
-      ))}
-    </div>
+      <div className="news-grid">
+        {posts.map((post: any) => {
+          const image =
+            post?._embedded?.[
+              "wp:featuredmedia"
+            ]?.[0]?.source_url;
+
+          return (
+            <article key={post.id}>
+              {image && (
+                <img
+                  src={image}
+                  alt={
+                    post.title.rendered
+                  }
+                />
+              )}
+
+              <h2>
+                <Link
+                  href={`/news/${post.slug}`}
+                >
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        post.title
+                          .rendered,
+                    }}
+                  />
+                </Link>
+              </h2>
+            </article>
+          );
+        })}
+      </div>
+    </main>
   );
 }

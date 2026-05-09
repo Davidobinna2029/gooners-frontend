@@ -1,58 +1,80 @@
-const SITE_URL =
-  process.env.NEXT_PUBLIC_WORDPRESS_URL || "https://arsenaltalks.com";
+const WORDPRESS_API =
+  "https://api.arsenaltalks.com/wp-json/wp/v2";
 
-const API_BASE = `${SITE_URL}/wp-json/wp/v2`;
-
-function fixImage(url?: string) {
-  if (!url) return "/placeholder.jpg";
-  return url.replace("http://", "https://");
-}
-
-// 🔥 bulletproof fetch
-async function safeFetch(url: string) {
+export async function getPosts() {
   try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-        Accept: "application/json",
-      },
-      next: { revalidate: 120 },
-    });
+    const res = await fetch(
+      `${WORDPRESS_API}/posts?_embed&per_page=10`,
+      {
+        next: { revalidate: 60 },
+      }
+    );
 
-    if (!res.ok) throw new Error("WP blocked");
+    if (!res.ok) {
+      throw new Error("Failed to fetch posts");
+    }
 
     return await res.json();
-  } catch (err) {
-    console.error("WordPress fetch failed:", err);
+  } catch (error) {
+    console.error("Posts API Error:", error);
     return [];
   }
 }
 
-export async function getLatestPosts(limit = 8) {
-  const data = await safeFetch(
-    `${API_BASE}/posts?_embed&per_page=${limit}`
-  );
+export async function getPost(slug: string) {
+  try {
+    const res = await fetch(
+      `${WORDPRESS_API}/posts?slug=${slug}&_embed`,
+      {
+        next: { revalidate: 60 },
+      }
+    );
 
-  return data.map((post: any) => ({
-    ...post,
-    featured_image: fixImage(
-      post._embedded?.["wp:featuredmedia"]?.[0]?.source_url
-    ),
-  }));
+    if (!res.ok) {
+      throw new Error("Failed to fetch single post");
+    }
+
+    const data = await res.json();
+
+    return data[0];
+  } catch (error) {
+    console.error("Single Post Error:", error);
+    return null;
+  }
 }
 
-export async function getPost(slug: string) {
-  const data = await safeFetch(
-    `${API_BASE}/posts?slug=${slug}&_embed`
-  );
+export async function getCategoryPosts(
+  slug: string
+) {
+  try {
+    const categoryRes = await fetch(
+      `${WORDPRESS_API}/categories?slug=${slug}`,
+      {
+        next: { revalidate: 60 },
+      }
+    );
 
-  const post = data?.[0];
-  if (!post) return null;
+    const categoryData =
+      await categoryRes.json();
 
-  return {
-    ...post,
-    featured_image: fixImage(
-      post._embedded?.["wp:featuredmedia"]?.[0]?.source_url
-    ),
-  };
+    const category = categoryData[0];
+
+    if (!category) return [];
+
+    const postsRes = await fetch(
+      `${WORDPRESS_API}/posts?categories=${category.id}&_embed`,
+      {
+        next: { revalidate: 60 },
+      }
+    );
+
+    return await postsRes.json();
+  } catch (error) {
+    console.error(
+      "Category Posts Error:",
+      error
+    );
+
+    return [];
+  }
 }

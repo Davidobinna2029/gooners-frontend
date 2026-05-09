@@ -1,29 +1,51 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { getPosts } from "@/lib/wordpress";
 
-export default function LatestNews() {
-  const [posts, setPosts] = useState<any[]>([]);
-
-  useEffect(() => {
-    fetch("/api/posts")
-      .then((res) => res.json())
-      .then(setPosts);
-  }, []);
+export default async function LatestNews() {
+  const posts: any = await getPosts();
 
   return (
-    <div className="panel">
-      <h2>Latest News</h2>
+    <section className="latest-news">
+      <h2>Latest Arsenal News</h2>
 
-      <div className="news-list">
-        {posts.map((post) => (
-          <Link key={post.id} href={`/news/${post.slug}`}>
-            <img src={post.featured_image} alt="" />
-            <h3 dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
-          </Link>
-        ))}
+      <div className="news-grid">
+        {posts.map((post: any) => {
+          const image =
+            post?._embedded?.[
+              "wp:featuredmedia"
+            ]?.[0]?.source_url;
+
+          return (
+            <article
+              key={post.id}
+              className="news-card"
+            >
+              {image && (
+                <img
+                  src={image}
+                  alt={
+                    post.title.rendered
+                  }
+                />
+              )}
+
+              <h3>
+                <Link
+                  href={`/news/${post.slug}`}
+                >
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        post.title
+                          .rendered,
+                    }}
+                  />
+                </Link>
+              </h3>
+            </article>
+          );
+        })}
       </div>
-    </div>
+    </section>
   );
 }
