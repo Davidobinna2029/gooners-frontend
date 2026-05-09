@@ -1,8 +1,9 @@
-const API_KEY =
-  process.env.FOOTBALL_API_KEY;
-
 const BASE_URL =
-  "https://api.football-data.org/v4";
+  "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1";
+
+/* =========================
+   SAFE FETCH
+========================= */
 
 async function fetchAPI(
   endpoint: string
@@ -11,17 +12,13 @@ async function fetchAPI(
     const res = await fetch(
       `${BASE_URL}${endpoint}`,
       {
-        headers: {
-          "X-Auth-Token":
-            API_KEY || "",
-        },
         cache: "no-store",
       }
     );
 
     if (!res.ok) {
       console.error(
-        "Football API Error:",
+        "ESPN API Error:",
         res.status
       );
 
@@ -31,7 +28,7 @@ async function fetchAPI(
     return await res.json();
   } catch (error) {
     console.error(
-      "Football Fetch Error:",
+      "ESPN Fetch Error:",
       error
     );
 
@@ -40,32 +37,63 @@ async function fetchAPI(
 }
 
 /* =========================
-   EPL STANDINGS
-========================= */
-
-export async function getStandings() {
-  const data = await fetchAPI(
-    "/competitions/PL/standings"
-  );
-
-  return (
-    data?.standings?.[0]
-      ?.table || []
-  );
-}
-
-/* =========================
    LIVE SCORES
 ========================= */
 
 export async function getLiveScores() {
-  return [];
+  const data = await fetchAPI(
+    "/scoreboard"
+  );
+
+  return (
+    data?.events || []
+  );
 }
 
 /* =========================
-   NEXT MATCH
+   EPL STANDINGS
+========================= */
+
+export async function getStandings() {
+  const data = await fetch(
+    "https://site.api.espn.com/apis/v2/sports/soccer/eng.1/standings",
+    {
+      cache: "no-store",
+    }
+  );
+
+  const json =
+    await data.json();
+
+  return (
+    json?.children?.[0]
+      ?.standings?.entries ||
+    []
+  );
+}
+
+/* =========================
+   NEXT ARSENAL MATCH
 ========================= */
 
 export async function getArsenalNextMatch() {
-  return null;
+  const data = await fetchAPI(
+    "/scoreboard"
+  );
+
+  const matches =
+    data?.events || [];
+
+  const arsenalMatch =
+    matches.find(
+      (match: any) =>
+        match?.competitions?.[0]
+          ?.competitors?.some(
+            (team: any) =>
+              team.team.displayName ===
+              "Arsenal"
+          )
+    );
+
+  return arsenalMatch || null;
 }

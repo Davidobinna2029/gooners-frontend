@@ -6,36 +6,44 @@ export default async function NextMatch() {
   const match: any =
     await getArsenalNextMatch();
 
-  return (
-    <div className="panel">
-      <h2>Next Match</h2>
+  if (!match) {
+    return (
+      <div className="panel">
+        <h2>Next Match</h2>
 
-      {!match ? (
         <p className="muted">
           No upcoming match
           available.
         </p>
-      ) : (
-        <>
-          <p>
-            {
-              match?.homeTeam
-                ?.name
-            }{" "}
-            vs{" "}
-            {
-              match?.awayTeam
-                ?.name
-            }
-          </p>
+      </div>
+    );
+  }
 
-          <p className="muted">
-            {new Date(
-              match?.utcDate
-            ).toLocaleString()}
-          </p>
-        </>
-      )}
+  const teams =
+    match.competitions?.[0]
+      ?.competitors;
+
+  return (
+    <div className="panel">
+      <h2>Next Match</h2>
+
+      <p>
+        {
+          teams?.[0]?.team
+            ?.displayName
+        }{" "}
+        vs{" "}
+        {
+          teams?.[1]?.team
+            ?.displayName
+        }
+      </p>
+
+      <p className="muted">
+        {new Date(
+          match.date
+        ).toLocaleString()}
+      </p>
     </div>
   );
 }

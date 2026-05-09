@@ -1,27 +1,65 @@
-"use client";
+import {
+  getStandings,
+} from "@/lib/football";
 
-import { useEffect, useState } from "react";
-
-export default function Standings() {
-  const [table, setTable] = useState<any[]>([]);
-
-  useEffect(() => {
-    fetch("/api/football")
-      .then((res) => res.json())
-      .then((data) => {
-        setTable(data.standings?.standings?.[0]?.table || []);
-      });
-  }, []);
+export default async function Standings() {
+  const table: any =
+    await getStandings();
 
   return (
     <div className="panel">
-      <h2>Premier League</h2>
+      <h2>
+        Premier League
+        Standings
+      </h2>
 
-      {table.map((team: any) => (
-        <div key={team.team.id}>
-          {team.position}. {team.team.name} ({team.points})
-        </div>
-      ))}
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Club</th>
+              <th>Pts</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {table
+              ?.slice(0, 10)
+              ?.map(
+                (
+                  club: any,
+                  index: number
+                ) => (
+                  <tr key={index}>
+                    <td>
+                      {index + 1}
+                    </td>
+
+                    <td>
+                      {
+                        club.team
+                          ?.displayName
+                      }
+                    </td>
+
+                    <td>
+                      {
+                        club.stats?.find(
+                          (
+                            s: any
+                          ) =>
+                            s.name ===
+                            "points"
+                        )?.value
+                      }
+                    </td>
+                  </tr>
+                )
+              )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

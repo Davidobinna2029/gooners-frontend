@@ -3,49 +3,53 @@ import {
 } from "@/lib/football";
 
 export default async function LiveScores() {
-  const games = await getLiveScores();
+  const matches: any =
+    await getLiveScores();
 
   return (
     <div className="panel">
       <h2>Live Scores</h2>
 
-      <div className="score-list">
-        {games.length === 0 && (
-          <p className="muted">
-            No live matches now.
-          </p>
-        )}
+      {!matches?.length ? (
+        <p className="muted">
+          No live games.
+        </p>
+      ) : (
+        matches
+          ?.slice(0, 5)
+          ?.map(
+            (
+              match: any,
+              index: number
+            ) => {
+              const teams =
+                match
+                  ?.competitions?.[0]
+                  ?.competitors;
 
-        {games.slice(0, 8).map(
-          (game: any) => (
-            <div
-              key={game.fixture.id}
-              className="score-card"
-            >
-              <span>
-                {game.teams.home.name}
-              </span>
-
-              <strong>
-                {game.goals.home} -{" "}
-                {game.goals.away}
-              </strong>
-
-              <span>
-                {game.teams.away.name}
-              </span>
-
-              <small>
-                {
-                  game.fixture.status
-                    .elapsed
-                }
-                '
-              </small>
-            </div>
+              return (
+                <div
+                  key={index}
+                  className="score-item"
+                >
+                  <p>
+                    {
+                      teams?.[0]
+                        ?.team
+                        ?.displayName
+                    }{" "}
+                    vs{" "}
+                    {
+                      teams?.[1]
+                        ?.team
+                        ?.displayName
+                    }
+                  </p>
+                </div>
+              );
+            }
           )
-        )}
-      </div>
+      )}
     </div>
   );
 }
