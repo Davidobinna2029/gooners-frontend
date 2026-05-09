@@ -12,17 +12,16 @@ async function fetchAPI(
     const res = await fetch(
       `${BASE_URL}${endpoint}`,
       {
-        cache: "no-store",
+        next: {
+          revalidate: 60,
+        },
       }
     );
 
     if (!res.ok) {
-      console.error(
-        "ESPN API Error:",
-        res.status
+      throw new Error(
+        `ESPN API Error: ${res.status}`
       );
-
-      return null;
     }
 
     return await res.json();
@@ -41,35 +40,45 @@ async function fetchAPI(
 ========================= */
 
 export async function getLiveScores() {
-  const data = await fetchAPI(
-    "/scoreboard"
-  );
+  const data =
+    await fetchAPI(
+      "/scoreboard"
+    );
 
-  return (
-    data?.events || []
-  );
+  return data?.events || [];
 }
 
 /* =========================
-   EPL STANDINGS
+   STANDINGS
 ========================= */
 
 export async function getStandings() {
-  const data = await fetch(
-    "https://site.api.espn.com/apis/v2/sports/soccer/eng.1/standings",
-    {
-      cache: "no-store",
-    }
-  );
+  try {
+    const res = await fetch(
+      "https://site.api.espn.com/apis/v2/sports/soccer/eng.1/standings",
+      {
+        next: {
+          revalidate: 300,
+        },
+      }
+    );
 
-  const json =
-    await data.json();
+    const data =
+      await res.json();
 
-  return (
-    json?.children?.[0]
-      ?.standings?.entries ||
-    []
-  );
+    return (
+      data?.children?.[0]
+        ?.standings?.entries ||
+      []
+    );
+  } catch (error) {
+    console.error(
+      "Standings Error:",
+      error
+    );
+
+    return [];
+  }
 }
 
 /* =========================
@@ -77,9 +86,10 @@ export async function getStandings() {
 ========================= */
 
 export async function getArsenalNextMatch() {
-  const data = await fetchAPI(
-    "/scoreboard"
-  );
+  const data =
+    await fetchAPI(
+      "/scoreboard"
+    );
 
   const matches =
     data?.events || [];
@@ -90,7 +100,8 @@ export async function getArsenalNextMatch() {
         match?.competitions?.[0]
           ?.competitors?.some(
             (team: any) =>
-              team.team.displayName ===
+              team.team
+                .displayName ===
               "Arsenal"
           )
     );
