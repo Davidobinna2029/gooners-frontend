@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 
 import {
   getPosts,
@@ -11,9 +10,11 @@ export default async function LatestNews() {
 
   return (
     <section className="latest-news">
-      <h2>
-        Latest Arsenal News
-      </h2>
+      <div className="section-header">
+        <h2>
+          Latest Arsenal News
+        </h2>
+      </div>
 
       <div className="news-grid">
         {posts?.map(
@@ -23,6 +24,7 @@ export default async function LatestNews() {
                 "wp:featuredmedia"
               ]?.[0]
                 ?.source_url ||
+              post?.jetpack_featured_media_url ||
               "/fallback.jpg";
 
             return (
@@ -34,28 +36,27 @@ export default async function LatestNews() {
                   href={`/news/${post.slug}`}
                 >
                   <div className="news-image">
-                    <Image
+                    <img
                       src={image}
                       alt={
                         post.title
                           .rendered
                       }
-                      width={1200}
-                      height={700}
-                      priority
                     />
                   </div>
 
-                  <h3>
-                    <span
-                      dangerouslySetInnerHTML={{
-                        __html:
-                          post
-                            .title
-                            .rendered,
-                      }}
-                    />
-                  </h3>
+                  <div className="news-content">
+                    <h3>
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html:
+                            post
+                              .title
+                              .rendered,
+                        }}
+                      />
+                    </h3>
+                  </div>
                 </Link>
               </article>
             );

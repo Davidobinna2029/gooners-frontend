@@ -6,7 +6,6 @@ import {
 } from "react";
 
 import Link from "next/link";
-import Image from "next/image";
 
 export default function InfiniteNews() {
   const [posts, setPosts] =
@@ -74,6 +73,7 @@ export default function InfiniteNews() {
             "wp:featuredmedia"
           ]?.[0]
             ?.source_url ||
+          post?.jetpack_featured_media_url ||
           "/fallback.jpg";
 
         return (
@@ -85,33 +85,35 @@ export default function InfiniteNews() {
               href={`/news/${post.slug}`}
             >
               <div className="news-image">
-                <Image
+                <img
                   src={image}
                   alt={
                     post.title
                       .rendered
                   }
-                  width={1200}
-                  height={700}
                 />
               </div>
 
-              <h3>
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html:
-                      post.title
-                        .rendered,
-                  }}
-                />
-              </h3>
+              <div className="news-content">
+                <h3>
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        post.title
+                          .rendered,
+                    }}
+                  />
+                </h3>
+              </div>
             </Link>
           </article>
         );
       })}
 
       {loading && (
-        <p>Loading more news...</p>
+        <p className="loading-text">
+          Loading more news...
+        </p>
       )}
     </div>
   );
