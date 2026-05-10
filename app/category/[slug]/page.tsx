@@ -1,189 +1,49 @@
-const API_URL =
-  process.env.NEXT_PUBLIC_WORDPRESS_API;
+import NewsCard from "@/components/NewsCard";
 
-if (!API_URL) {
-  throw new Error(
-    "NEXT_PUBLIC_WORDPRESS_API missing"
+import {
+  getCategoryPosts,
+} from "@/lib/wordpress";
+
+interface Props {
+  params: Promise<{
+    slug: string;
+  }>;
+}
+
+export default async function CategoryPage({
+  params,
+}: Props) {
+  const { slug } =
+    await params;
+
+  const posts =
+    await getCategoryPosts(
+      slug
+    );
+
+  return (
+    <div className="container page-space">
+      <section className="section-block">
+        <div className="section-title-row">
+          <h2>
+            {slug.replace(
+              /-/g,
+              " "
+            )}
+          </h2>
+        </div>
+
+        <div className="news-grid">
+          {posts.map(
+            (post: any) => (
+              <NewsCard
+                key={post.id}
+                post={post}
+              />
+            )
+          )}
+        </div>
+      </section>
+    </div>
   );
-}
-
-function cleanExcerpt(
-  html: string
-) {
-  return html
-    ?.replace(/<[^>]+>/g, "")
-    ?.trim();
-}
-
-function normalizePost(post: any) {
-  const featuredImage =
-    post?._embedded?.[
-      "wp:featuredmedia"
-    ]?.[0]?.source_url ||
-    post?.jetpack_featured_media_url ||
-    "/fallback.jpg";
-
-  return {
-    id: post.id,
-    slug: post.slug,
-
-    title: {
-      rendered:
-        post.title?.rendered ||
-        "",
-    },
-
-    excerpt: {
-      rendered: cleanExcerpt(
-        post.excerpt?.rendered ||
-          ""
-      ),
-    },
-
-    content: {
-      rendered:
-        post.content?.rendered ||
-        "",
-    },
-
-    featuredImage,
-  };
-}
-
-export async function getPosts(
-  page = 1
-) {
-  try {
-    const res = await fetch(
-      `${API_URL}/posts?_embed&per_page=10&page=${page}`,
-      {
-        next: {
-          revalidate: 60,
-        },
-      }
-    );
-
-    if (!res.ok) {
-      throw new Error(
-        "Posts fetch failed"
-      );
-    }
-
-    const data =
-      await res.json();
-
-    return data.map(
-      normalizePost
-    );
-  } catch (error) {
-    console.error(error);
-
-    return [];
-  }
-}
-
-export async function getPost(
-  slug: string
-) {
-  try {
-    const res = await fetch(
-      `${API_URL}/posts?slug=${slug}&_embed`,
-      {
-        cache: "no-store",
-      }
-    );
-
-    if (!res.ok) {
-      throw new Error(
-        "Single post fetch failed"
-      );
-    }
-
-    const data =
-      await res.json();
-
-    if (!data.length) {
-      return null;
-    }
-
-    return normalizePost(
-      data[0]
-    );
-  } catch (error) {
-    console.error(error);
-
-    return null;
-  }
-}
-
-export async function getCategories() {
-  try {
-    const res = await fetch(
-      `${API_URL}/categories?per_page=20`,
-      {
-        next: {
-          revalidate: 3600,
-        },
-      }
-    );
-
-    if (!res.ok) {
-      throw new Error(
-        "Categories fetch failed"
-      );
-    }
-
-    return res.json();
-  } catch (error) {
-    console.error(error);
-
-    return [];
-  }
-}
-
-export async function getCategoryPosts(
-  slug: string
-) {
-  try {
-    const categoryRes =
-      await fetch(
-        `${API_URL}/categories?slug=${slug}`,
-        {
-          next: {
-            revalidate: 3600,
-          },
-        }
-      );
-
-    const categories =
-      await categoryRes.json();
-
-    if (!categories.length) {
-      return [];
-    }
-
-    const categoryId =
-      categories[0].id;
-
-    const postsRes =
-      await fetch(
-        `${API_URL}/posts?categories=${categoryId}&_embed&per_page=20`,
-        {
-          next: {
-            revalidate: 60,
-          },
-        }
-      );
-
-    const posts =
-      await postsRes.json();
-
-    return posts.map(
-      normalizePost
-    );
-  } catch (error) {
-    console.error(error);
-
-    return [];
-  }
 }
