@@ -3,26 +3,33 @@ const API_URL =
 
 if (!API_URL) {
   throw new Error(
-    "NEXT_PUBLIC_WORDPRESS_API missing"
+    "Missing NEXT_PUBLIC_WORDPRESS_API"
   );
 }
 
-function cleanExcerpt(
+function stripHtml(
   html: string
 ) {
   return html
-    ?.replace(/<[^>]+>/g, "")
+    ?.replace(/<[^>]*>?/gm, "")
     ?.trim();
 }
 
-function normalizePost(post: any) {
-  const featuredImage =
+function getFeaturedImage(
+  post: any
+) {
+  return (
     post?._embedded?.[
       "wp:featuredmedia"
     ]?.[0]?.source_url ||
     post?.jetpack_featured_media_url ||
-    "/fallback.jpg";
+    "/fallback.jpg"
+  );
+}
 
+function normalizePost(
+  post: any
+) {
   return {
     id: post.id,
     slug: post.slug,
@@ -34,7 +41,7 @@ function normalizePost(post: any) {
     },
 
     excerpt: {
-      rendered: cleanExcerpt(
+      rendered: stripHtml(
         post.excerpt?.rendered ||
           ""
       ),
@@ -46,7 +53,8 @@ function normalizePost(post: any) {
         "",
     },
 
-    featuredImage,
+    featuredImage:
+      getFeaturedImage(post),
   };
 }
 
@@ -65,18 +73,21 @@ export async function getPosts(
 
     if (!res.ok) {
       throw new Error(
-        "Posts fetch failed"
+        "Failed to fetch posts"
       );
     }
 
-    const data =
+    const posts =
       await res.json();
 
-    return data.map(
+    return posts.map(
       normalizePost
     );
   } catch (error) {
-    console.error(error);
+    console.error(
+      "Posts Error:",
+      error
+    );
 
     return [];
   }
@@ -95,7 +106,7 @@ export async function getPost(
 
     if (!res.ok) {
       throw new Error(
-        "Single post fetch failed"
+        "Failed to fetch post"
       );
     }
 
@@ -110,7 +121,10 @@ export async function getPost(
       data[0]
     );
   } catch (error) {
-    console.error(error);
+    console.error(
+      "Single Post Error:",
+      error
+    );
 
     return null;
   }
@@ -126,12 +140,6 @@ export async function getCategories() {
         },
       }
     );
-
-    if (!res.ok) {
-      throw new Error(
-        "Categories fetch failed"
-      );
-    }
 
     return res.json();
   } catch (error) {
@@ -155,15 +163,17 @@ export async function getCategoryPosts(
         }
       );
 
-    const categories =
+    const categoryData =
       await categoryRes.json();
 
-    if (!categories.length) {
+    if (
+      !categoryData.length
+    ) {
       return [];
     }
 
     const categoryId =
-      categories[0].id;
+      categoryData[0].id;
 
     const postsRes =
       await fetch(

@@ -5,17 +5,19 @@ import {
 } from "@/lib/wordpress";
 
 interface Props {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function NewsPage({
   params,
 }: Props) {
-  const post = await getPost(
-    params.slug
-  );
+  const { slug } =
+    await params;
+
+  const post =
+    await getPost(slug);
 
   if (!post) {
     return (

@@ -3,13 +3,13 @@
 import Link from "next/link";
 import Image from "next/image";
 
-interface NewsCardProps {
+interface Props {
   post: any;
 }
 
 export default function NewsCard({
   post,
-}: NewsCardProps) {
+}: Props) {
   return (
     <Link
       href={`/news/${post.slug}`}
@@ -18,10 +18,11 @@ export default function NewsCard({
       <div className="news-image">
         <Image
           src={
-            post.featuredImage ||
-            "/fallback.jpg"
+            post.featuredImage
           }
-          alt={post.title.rendered}
+          alt={
+            post.title.rendered
+          }
           fill
           className="object-cover"
         />
@@ -35,15 +36,13 @@ export default function NewsCard({
           }}
         />
 
-        <p
-          dangerouslySetInnerHTML={{
-            __html:
-              post.excerpt.rendered
-                .replace(/<[^>]+>/g, "")
-                .slice(0, 120) +
-              "...",
-          }}
-        />
+        <p>
+          {post.excerpt.rendered.slice(
+            0,
+            110
+          )}
+          ...
+        </p>
       </div>
     </Link>
   );
