@@ -3,19 +3,49 @@ const API_URL =
 
 if (!API_URL) {
   throw new Error(
-    "NEXT_PUBLIC_WORDPRESS_API is missing"
+    "NEXT_PUBLIC_WORDPRESS_API missing"
   );
+}
+
+function cleanExcerpt(
+  html: string
+) {
+  return html
+    ?.replace(/<[^>]+>/g, "")
+    ?.trim();
 }
 
 function normalizePost(post: any) {
   const featuredImage =
-    post?._embedded?.["wp:featuredmedia"]?.[0]
-      ?.source_url ||
+    post?._embedded?.[
+      "wp:featuredmedia"
+    ]?.[0]?.source_url ||
     post?.jetpack_featured_media_url ||
     "/fallback.jpg";
 
   return {
-    ...post,
+    id: post.id,
+    slug: post.slug,
+
+    title: {
+      rendered:
+        post.title?.rendered ||
+        "",
+    },
+
+    excerpt: {
+      rendered: cleanExcerpt(
+        post.excerpt?.rendered ||
+          ""
+      ),
+    },
+
+    content: {
+      rendered:
+        post.content?.rendered ||
+        "",
+    },
+
     featuredImage,
   };
 }
@@ -35,18 +65,18 @@ export async function getPosts(
 
     if (!res.ok) {
       throw new Error(
-        "Failed to fetch posts"
+        "Posts fetch failed"
       );
     }
 
-    const posts = await res.json();
+    const data =
+      await res.json();
 
-    return posts.map(normalizePost);
-  } catch (error) {
-    console.error(
-      "WordPress Posts Error:",
-      error
+    return data.map(
+      normalizePost
     );
+  } catch (error) {
+    console.error(error);
 
     return [];
   }
@@ -59,30 +89,28 @@ export async function getPost(
     const res = await fetch(
       `${API_URL}/posts?slug=${slug}&_embed`,
       {
-        next: {
-          revalidate: 60,
-        },
+        cache: "no-store",
       }
     );
 
     if (!res.ok) {
       throw new Error(
-        "Failed to fetch post"
+        "Single post fetch failed"
       );
     }
 
-    const data = await res.json();
+    const data =
+      await res.json();
 
     if (!data.length) {
       return null;
     }
 
-    return normalizePost(data[0]);
-  } catch (error) {
-    console.error(
-      "Single Post Error:",
-      error
+    return normalizePost(
+      data[0]
     );
+  } catch (error) {
+    console.error(error);
 
     return null;
   }
@@ -101,16 +129,13 @@ export async function getCategories() {
 
     if (!res.ok) {
       throw new Error(
-        "Failed to fetch categories"
+        "Categories fetch failed"
       );
     }
 
     return res.json();
   } catch (error) {
-    console.error(
-      "Categories Error:",
-      error
-    );
+    console.error(error);
 
     return [];
   }
@@ -120,40 +145,44 @@ export async function getCategoryPosts(
   slug: string
 ) {
   try {
-    const catRes = await fetch(
-      `${API_URL}/categories?slug=${slug}`,
-      {
-        next: {
-          revalidate: 3600,
-        },
-      }
-    );
+    const categoryRes =
+      await fetch(
+        `${API_URL}/categories?slug=${slug}`,
+        {
+          next: {
+            revalidate: 3600,
+          },
+        }
+      );
 
-    const cats = await catRes.json();
+    const categories =
+      await categoryRes.json();
 
-    if (!cats.length) {
+    if (!categories.length) {
       return [];
     }
 
-    const categoryId = cats[0].id;
+    const categoryId =
+      categories[0].id;
 
-    const postRes = await fetch(
-      `${API_URL}/posts?categories=${categoryId}&_embed&per_page=12`,
-      {
-        next: {
-          revalidate: 60,
-        },
-      }
+    const postsRes =
+      await fetch(
+        `${API_URL}/posts?categories=${categoryId}&_embed&per_page=20`,
+        {
+          next: {
+            revalidate: 60,
+          },
+        }
+      );
+
+    const posts =
+      await postsRes.json();
+
+    return posts.map(
+      normalizePost
     );
-
-    const posts = await postRes.json();
-
-    return posts.map(normalizePost);
   } catch (error) {
-    console.error(
-      "Category Posts Error:",
-      error
-    );
+    console.error(error);
 
     return [];
   }

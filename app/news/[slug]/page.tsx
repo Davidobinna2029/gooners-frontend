@@ -20,26 +20,27 @@ export default async function NewsPage({
   if (!post) {
     return (
       <div className="container page-space">
-        Post not found.
+        <h1>
+          Post not found
+        </h1>
       </div>
     );
   }
 
   return (
     <article className="article-page">
-      <div className="article-hero-image">
-        <Image
-          src={
-            post.featuredImage ||
-            "/fallback.jpg"
-          }
-          alt={post.title.rendered}
-          width={1400}
-          height={800}
-          className="hero-image"
-          priority
-        />
-      </div>
+      <Image
+        src={
+          post.featuredImage
+        }
+        alt={
+          post.title.rendered
+        }
+        width={1400}
+        height={800}
+        className="hero-image"
+        priority
+      />
 
       <h1
         dangerouslySetInnerHTML={{
@@ -50,7 +51,8 @@ export default async function NewsPage({
 
       <div
         dangerouslySetInnerHTML={{
-          __html: post.content.rendered,
+          __html:
+            post.content.rendered,
         }}
       />
     </article>
