@@ -3,7 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import { Swiper, SwiperSlide } from "swiper/react";
+import {
+  Swiper,
+  SwiperSlide,
+} from "swiper/react";
 
 import {
   Autoplay,
@@ -14,16 +17,14 @@ import "swiper/css";
 import "swiper/css/pagination";
 
 interface Props {
-  posts?: any[];
+  posts: any[];
 }
 
 export default function HeroCarousel({
-  posts = [],
+  posts,
 }: Props) {
-  if (!posts.length) return null;
-
   return (
-    <section className="hero-carousel">
+    <div className="hero-carousel">
       <Swiper
         modules={[
           Autoplay,
@@ -37,64 +38,64 @@ export default function HeroCarousel({
         }}
         loop
       >
-        {posts.map((post: any) => {
-          const image =
-            post?._embedded?.[
-              "wp:featuredmedia"
-            ]?.[0]?.source_url ||
-            "/fallback.jpg";
-
-          return (
-            <SwiperSlide
-              key={post.id}
+        {posts.map((post) => (
+          <SwiperSlide
+            key={post.id}
+          >
+            <Link
+              href={`/news/${post.slug}`}
+              className="hero-slide"
             >
-              <Link
-                href={`/news/${post.slug}`}
-                className="hero-slide"
-              >
-                <Image
-                  src={image}
-                  alt={
-                    post.title.rendered
-                  }
-                  fill
-                  priority
-                  className="hero-slide-image"
-                />
+              <Image
+                src={
+                  post.featuredImage ||
+                  "/fallback.jpg"
+                }
+                alt={
+                  post.title.rendered
+                }
+                fill
+                priority
+                className="hero-slide-image"
+              />
 
-                <div className="hero-slide-overlay">
-                  <div className="container">
-                    <div className="hero-slide-content">
-                      <span>
-                        Arsenal News
-                      </span>
+              <div className="hero-slide-overlay">
+                <div className="container">
+                  <div className="hero-slide-content">
+                    <span>
+                      Breaking News
+                    </span>
 
-                      <h1
-                        dangerouslySetInnerHTML={{
-                          __html:
-                            post.title
-                              .rendered,
-                        }}
-                      />
+                    <h1
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          post.title
+                            .rendered,
+                      }}
+                    />
 
-                      <p
-                        dangerouslySetInnerHTML={{
-                          __html:
-                            post.excerpt
-                              .rendered.replace(
-                                /<[^>]+>/g,
-                                ""
-                              ),
-                        }}
-                      />
-                    </div>
+                    <p
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          post.excerpt.rendered
+                            .replace(
+                              /<[^>]+>/g,
+                              ""
+                            )
+                            .slice(
+                              0,
+                              180
+                            ) +
+                          "...",
+                      }}
+                    />
                   </div>
                 </div>
-              </Link>
-            </SwiperSlide>
-          );
-        })}
+              </div>
+            </Link>
+          </SwiperSlide>
+        ))}
       </Swiper>
-    </section>
+    </div>
   );
 }

@@ -7,6 +7,19 @@ if (!API_URL) {
   );
 }
 
+function normalizePost(post: any) {
+  const featuredImage =
+    post?._embedded?.["wp:featuredmedia"]?.[0]
+      ?.source_url ||
+    post?.jetpack_featured_media_url ||
+    "/fallback.jpg";
+
+  return {
+    ...post,
+    featuredImage,
+  };
+}
+
 export async function getPosts(
   page = 1
 ) {
@@ -22,11 +35,13 @@ export async function getPosts(
 
     if (!res.ok) {
       throw new Error(
-        `Failed to fetch posts`
+        "Failed to fetch posts"
       );
     }
 
-    return res.json();
+    const posts = await res.json();
+
+    return posts.map(normalizePost);
   } catch (error) {
     console.error(
       "WordPress Posts Error:",
@@ -58,7 +73,11 @@ export async function getPost(
 
     const data = await res.json();
 
-    return data[0];
+    if (!data.length) {
+      return null;
+    }
+
+    return normalizePost(data[0]);
   } catch (error) {
     console.error(
       "Single Post Error:",
@@ -127,7 +146,9 @@ export async function getCategoryPosts(
       }
     );
 
-    return postRes.json();
+    const posts = await postRes.json();
+
+    return posts.map(normalizePost);
   } catch (error) {
     console.error(
       "Category Posts Error:",

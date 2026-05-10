@@ -1,37 +1,45 @@
-import { getPost } from "@/lib/wordpress";
+import Image from "next/image";
 
-export default async function SingleNewsPage({
-  params,
-}: {
-  params: Promise<{
+import {
+  getPost,
+} from "@/lib/wordpress";
+
+interface Props {
+  params: {
     slug: string;
-  }>;
-}) {
-  const { slug } =
-    await params;
+  };
+}
 
-  const post: any =
-    await getPost(slug);
+export default async function NewsPage({
+  params,
+}: Props) {
+  const post = await getPost(
+    params.slug
+  );
 
   if (!post) {
-    return <div>Post not found</div>;
+    return (
+      <div className="container page-space">
+        Post not found.
+      </div>
+    );
   }
 
-  const image =
-    post?._embedded?.[
-      "wp:featuredmedia"
-    ]?.[0]?.source_url;
-
   return (
-    <main className="article-page">
-      {image && (
-        <img
-          src={image}
-          alt={
-            post.title.rendered
+    <article className="article-page">
+      <div className="article-hero-image">
+        <Image
+          src={
+            post.featuredImage ||
+            "/fallback.jpg"
           }
+          alt={post.title.rendered}
+          width={1400}
+          height={800}
+          className="hero-image"
+          priority
         />
-      )}
+      </div>
 
       <h1
         dangerouslySetInnerHTML={{
@@ -42,11 +50,9 @@ export default async function SingleNewsPage({
 
       <div
         dangerouslySetInnerHTML={{
-          __html:
-            post.content
-              .rendered,
+          __html: post.content.rendered,
         }}
       />
-    </main>
+    </article>
   );
 }
