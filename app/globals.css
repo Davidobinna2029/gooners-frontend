@@ -9,11 +9,15 @@
 
 html,
 body {
-  background: #0d1117;
+  background: #0b0f14;
   color: #ffffff;
   font-family: Arial, Helvetica, sans-serif;
   scroll-behavior: smooth;
   overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
 }
 
 img {
@@ -43,13 +47,13 @@ ol {
 =================================== */
 .container {
   width: 100%;
-  max-width: 1240px;
+  max-width: 1320px;
   margin: auto;
-  padding: 0 18px;
+  padding: 0 20px;
 }
 
 .page-space {
-  padding: 30px 0 60px;
+  padding: 40px 0 80px;
 }
 
 /* ===================================
@@ -59,27 +63,28 @@ ol {
   position: sticky;
   top: 0;
   z-index: 999;
-  background: rgba(13, 17, 23, 0.96);
-  backdrop-filter: blur(10px);
+  background: rgba(11, 15, 20, 0.96);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
 .navbar {
-  height: 72px;
+  height: 78px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .logo {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 900;
   color: #ef0107;
+  letter-spacing: -1px;
 }
 
 .nav-links {
   display: flex;
-  gap: 20px;
+  gap: 24px;
 }
 
 .nav-links a {
@@ -94,11 +99,11 @@ ol {
 }
 
 /* ===================================
-   HERO
+   ELITE HERO
 =================================== */
-.hero-section {
+.elite-hero {
   position: relative;
-  height: 60vh;
+  height: 78vh;
   background-image: url("/fallback.jpg");
   background-size: cover;
   background-position: center;
@@ -108,36 +113,90 @@ ol {
 
 .hero-overlay {
   width: 100%;
-  padding: 50px 20px;
   background: linear-gradient(
     transparent,
-    rgba(0,0,0,0.95)
+    rgba(0,0,0,0.96)
   );
+  padding: 90px 0 50px;
 }
 
-.hero-overlay h1 {
-  font-size: 54px;
+.hero-content {
+  max-width: 920px;
+}
+
+.breaking-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ef0107;
+  color: #fff;
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-size: 12px;
   font-weight: 900;
-  margin-bottom: 10px;
+  margin-bottom: 22px;
 }
 
-.hero-overlay p {
-  font-size: 18px;
+.hero-content h1 {
+  font-size: 72px;
+  line-height: 1;
+  font-weight: 900;
+  margin-bottom: 24px;
+  letter-spacing: -2px;
+}
+
+.hero-content p {
+  max-width: 720px;
+  font-size: 19px;
+  line-height: 1.8;
   color: #d1d5db;
-  max-width: 650px;
-  line-height: 1.6;
 }
 
 /* ===================================
-   SECTION
+   HOMEPAGE LAYOUT
 =================================== */
-.section-header {
-  margin-bottom: 24px;
+.homepage-layout {
+  display: grid;
+  grid-template-columns: 2fr 380px;
+  gap: 30px;
+  margin-top: 40px;
+  margin-bottom: 80px;
 }
 
-.section-header h2 {
-  font-size: 34px;
+.homepage-main {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.homepage-sidebar {
+  position: sticky;
+  top: 95px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ===================================
+   SECTION TITLES
+=================================== */
+.section-block {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-title-row h2 {
+  font-size: 38px;
   font-weight: 900;
+  letter-spacing: -1px;
 }
 
 /* ===================================
@@ -153,11 +212,11 @@ ol {
 }
 
 .news-card {
-  background: #161b22;
-  border-radius: 18px;
+  background: #141a21;
+  border-radius: 22px;
   overflow: hidden;
-  transition: 0.25s ease;
   border: 1px solid rgba(255,255,255,0.05);
+  transition: 0.25s ease;
 }
 
 .news-card:hover {
@@ -178,60 +237,154 @@ ol {
 }
 
 .news-content {
-  padding: 18px;
+  padding: 20px;
 }
 
 .news-content h3 {
-  font-size: 20px;
+  font-size: 21px;
   line-height: 1.45;
   font-weight: 800;
+}
+
+/* ===================================
+   SIDEBAR
+=================================== */
+.sidebar-card {
+  background: #141a21;
+  border-radius: 22px;
+  padding: 22px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.sidebar-title {
+  font-size: 24px;
+  font-weight: 900;
+  margin-bottom: 22px;
+}
+
+/* ===================================
+   LIVE SCORES
+=================================== */
+.score-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.score-card {
+  background: #0f141b;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.score-card div {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.score-card div:last-child {
+  margin-bottom: 0;
+}
+
+.score-card strong {
+  font-size: 15px;
+}
+
+.score-card span {
+  font-weight: 900;
+}
+
+/* ===================================
+   TABLE
+=================================== */
+.table-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.table-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #0f141b;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.table-row span {
+  font-size: 15px;
+}
+
+.table-row strong {
+  color: #ef0107;
+}
+
+/* ===================================
+   NEXT MATCH
+=================================== */
+.next-match-card {
+  text-align: center;
+}
+
+.next-match-card h3 {
+  font-size: 24px;
+  margin: 16px 0;
+}
+
+.vs-text {
+  color: #ef0107;
+  font-weight: 900;
+  font-size: 18px;
 }
 
 /* ===================================
    ARTICLE PAGE
 =================================== */
 .article-page {
-  max-width: 850px;
+  max-width: 900px;
   margin: auto;
-  padding: 30px 18px 80px;
+  padding: 40px 20px 80px;
 }
 
 .article-page img {
   width: 100%;
-  border-radius: 18px;
-  margin-bottom: 24px;
+  border-radius: 24px;
+  margin-bottom: 30px;
 }
 
 .article-page h1 {
-  font-size: 44px;
-  line-height: 1.2;
-  margin-bottom: 24px;
+  font-size: 52px;
+  line-height: 1.15;
+  margin-bottom: 28px;
   font-weight: 900;
+  letter-spacing: -1px;
 }
 
 .article-page p {
   color: #d1d5db;
-  font-size: 18px;
-  line-height: 1.9;
-  margin-bottom: 22px;
+  font-size: 19px;
+  line-height: 1.95;
+  margin-bottom: 24px;
 }
 
 /* ===================================
    LOADING
 =================================== */
-.loading-text {
+.loading-text,
+.empty-text {
   text-align: center;
-  padding: 30px;
   color: #9ca3af;
-  font-weight: 700;
+  padding: 20px;
 }
 
 /* ===================================
    FOOTER
 =================================== */
 .footer {
-  margin-top: 50px;
-  padding: 30px 20px;
+  margin-top: 60px;
+  padding: 40px 20px;
   text-align: center;
   color: #9ca3af;
   border-top: 1px solid rgba(255,255,255,0.06);
@@ -245,7 +398,7 @@ ol {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0d1117;
+  background: #0b0f14;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -256,23 +409,26 @@ ol {
 /* ===================================
    RESPONSIVE
 =================================== */
-@media (max-width: 980px) {
-  .hero-overlay h1 {
-    font-size: 42px;
+@media (max-width: 1100px) {
+  .homepage-layout {
+    grid-template-columns: 1fr;
   }
 
-  .article-page h1 {
-    font-size: 36px;
+  .homepage-sidebar {
+    position: static;
+  }
+
+  .hero-content h1 {
+    font-size: 54px;
   }
 }
 
 @media (max-width: 768px) {
   .navbar {
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
     height: auto;
-    padding: 16px 0;
+    padding: 18px 0;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 14px;
   }
 
@@ -281,28 +437,24 @@ ol {
     gap: 14px;
   }
 
-  .hero-section {
-    height: 50vh;
+  .elite-hero {
+    height: 65vh;
   }
 
-  .hero-overlay h1 {
-    font-size: 34px;
+  .hero-content h1 {
+    font-size: 42px;
   }
 
-  .hero-overlay p {
+  .hero-content p {
     font-size: 16px;
   }
 
-  .section-header h2 {
-    font-size: 28px;
-  }
-
-  .news-content h3 {
-    font-size: 18px;
+  .section-title-row h2 {
+    font-size: 30px;
   }
 
   .article-page h1 {
-    font-size: 30px;
+    font-size: 38px;
   }
 
   .article-page p {
@@ -311,12 +463,16 @@ ol {
 }
 
 @media (max-width: 480px) {
-  .hero-overlay {
-    padding: 35px 16px;
+  .elite-hero {
+    height: 58vh;
   }
 
-  .hero-overlay h1 {
-    font-size: 28px;
+  .hero-overlay {
+    padding: 60px 0 30px;
+  }
+
+  .hero-content h1 {
+    font-size: 32px;
   }
 
   .news-grid {
@@ -324,10 +480,14 @@ ol {
   }
 
   .article-page {
-    padding: 24px 16px 60px;
+    padding: 30px 16px 60px;
   }
 
   .article-page h1 {
+    font-size: 30px;
+  }
+
+  .logo {
     font-size: 26px;
   }
 }

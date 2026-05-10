@@ -3,53 +3,65 @@ import {
 } from "@/lib/football";
 
 export default async function LiveScores() {
-  const matches: any =
+  const games: any =
     await getLiveScores();
 
   return (
-    <div className="panel">
-      <h2>Live Scores</h2>
-
-      {!matches?.length ? (
-        <p className="muted">
-          No live games.
+    <div className="score-list">
+      {games.length === 0 && (
+        <p className="empty-text">
+          No live games currently.
         </p>
-      ) : (
-        matches
-          ?.slice(0, 5)
-          ?.map(
-            (
-              match: any,
-              index: number
-            ) => {
-              const teams =
-                match
-                  ?.competitions?.[0]
-                  ?.competitors;
-
-              return (
-                <div
-                  key={index}
-                  className="score-item"
-                >
-                  <p>
-                    {
-                      teams?.[0]
-                        ?.team
-                        ?.displayName
-                    }{" "}
-                    vs{" "}
-                    {
-                      teams?.[1]
-                        ?.team
-                        ?.displayName
-                    }
-                  </p>
-                </div>
-              );
-            }
-          )
       )}
+
+      {games
+        .slice(0, 5)
+        .map((match: any) => {
+          const home =
+            match?.competitions?.[0]
+              ?.competitors?.[0];
+
+          const away =
+            match?.competitions?.[0]
+              ?.competitors?.[1];
+
+          return (
+            <div
+              key={match.id}
+              className="score-card"
+            >
+              <div>
+                <strong>
+                  {
+                    home?.team
+                      ?.displayName
+                  }
+                </strong>
+
+                <span>
+                  {
+                    home?.score
+                  }
+                </span>
+              </div>
+
+              <div>
+                <strong>
+                  {
+                    away?.team
+                      ?.displayName
+                  }
+                </strong>
+
+                <span>
+                  {
+                    away?.score
+                  }
+                </span>
+              </div>
+            </div>
+          );
+        })}
     </div>
   );
 }

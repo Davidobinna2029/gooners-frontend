@@ -7,59 +7,38 @@ export default async function Standings() {
     await getStandings();
 
   return (
-    <div className="panel">
-      <h2>
-        Premier League
-        Standings
-      </h2>
+    <div className="table-list">
+      {table
+        .slice(0, 10)
+        .map((club: any) => {
+          const stats =
+            club?.stats || [];
 
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Club</th>
-              <th>Pts</th>
-            </tr>
-          </thead>
+          const points =
+            stats.find(
+              (s: any) =>
+                s.name ===
+                "points"
+            )?.value;
 
-          <tbody>
-            {table
-              ?.slice(0, 10)
-              ?.map(
-                (
-                  club: any,
-                  index: number
-                ) => (
-                  <tr key={index}>
-                    <td>
-                      {index + 1}
-                    </td>
+          return (
+            <div
+              key={club.team.id}
+              className="table-row"
+            >
+              <span>
+                {
+                  club.team
+                    .displayName
+                }
+              </span>
 
-                    <td>
-                      {
-                        club.team
-                          ?.displayName
-                      }
-                    </td>
-
-                    <td>
-                      {
-                        club.stats?.find(
-                          (
-                            s: any
-                          ) =>
-                            s.name ===
-                            "points"
-                        )?.value
-                      }
-                    </td>
-                  </tr>
-                )
-              )}
-          </tbody>
-        </table>
-      </div>
+              <strong>
+                {points} pts
+              </strong>
+            </div>
+          );
+        })}
     </div>
   );
 }

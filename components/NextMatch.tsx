@@ -8,42 +8,39 @@ export default async function NextMatch() {
 
   if (!match) {
     return (
-      <div className="panel">
-        <h2>Next Match</h2>
-
-        <p className="muted">
-          No upcoming match
-          available.
-        </p>
-      </div>
+      <p className="empty-text">
+        No upcoming Arsenal match.
+      </p>
     );
   }
 
-  const teams =
-    match.competitions?.[0]
-      ?.competitors;
+  const home =
+    match?.competitions?.[0]
+      ?.competitors?.[0];
+
+  const away =
+    match?.competitions?.[0]
+      ?.competitors?.[1];
 
   return (
-    <div className="panel">
-      <h2>Next Match</h2>
-
-      <p>
+    <div className="next-match-card">
+      <h3>
         {
-          teams?.[0]?.team
-            ?.displayName
-        }{" "}
-        vs{" "}
-        {
-          teams?.[1]?.team
+          home?.team
             ?.displayName
         }
-      </p>
+      </h3>
 
-      <p className="muted">
-        {new Date(
-          match.date
-        ).toLocaleString()}
-      </p>
+      <span className="vs-text">
+        VS
+      </span>
+
+      <h3>
+        {
+          away?.team
+            ?.displayName
+        }
+      </h3>
     </div>
   );
 }
