@@ -1,45 +1,99 @@
-const WORDPRESS_API =
-  "https://api.arsenaltalks.com/wp-json/wp/v2";
+const API_URL =
+  process.env.NEXT_PUBLIC_WORDPRESS_API;
 
-export async function getPosts() {
+if (!API_URL) {
+  throw new Error(
+    "NEXT_PUBLIC_WORDPRESS_API is missing"
+  );
+}
+
+export async function getPosts(
+  page = 1
+) {
   try {
     const res = await fetch(
-      `${WORDPRESS_API}/posts?_embed&per_page=10`,
+      `${API_URL}/posts?_embed&per_page=10&page=${page}`,
       {
-        next: { revalidate: 60 },
+        next: {
+          revalidate: 60,
+        },
       }
     );
 
     if (!res.ok) {
-      throw new Error("Failed to fetch posts");
+      throw new Error(
+        `Failed to fetch posts`
+      );
     }
 
-    return await res.json();
+    return res.json();
   } catch (error) {
-    console.error("Posts API Error:", error);
+    console.error(
+      "WordPress Posts Error:",
+      error
+    );
+
     return [];
   }
 }
 
-export async function getPost(slug: string) {
+export async function getPost(
+  slug: string
+) {
   try {
     const res = await fetch(
-      `${WORDPRESS_API}/posts?slug=${slug}&_embed`,
+      `${API_URL}/posts?slug=${slug}&_embed`,
       {
-        next: { revalidate: 60 },
+        next: {
+          revalidate: 60,
+        },
       }
     );
 
     if (!res.ok) {
-      throw new Error("Failed to fetch single post");
+      throw new Error(
+        "Failed to fetch post"
+      );
     }
 
     const data = await res.json();
 
     return data[0];
   } catch (error) {
-    console.error("Single Post Error:", error);
+    console.error(
+      "Single Post Error:",
+      error
+    );
+
     return null;
+  }
+}
+
+export async function getCategories() {
+  try {
+    const res = await fetch(
+      `${API_URL}/categories?per_page=20`,
+      {
+        next: {
+          revalidate: 3600,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error(
+        "Failed to fetch categories"
+      );
+    }
+
+    return res.json();
+  } catch (error) {
+    console.error(
+      "Categories Error:",
+      error
+    );
+
+    return [];
   }
 }
 
@@ -47,28 +101,33 @@ export async function getCategoryPosts(
   slug: string
 ) {
   try {
-    const categoryRes = await fetch(
-      `${WORDPRESS_API}/categories?slug=${slug}`,
+    const catRes = await fetch(
+      `${API_URL}/categories?slug=${slug}`,
       {
-        next: { revalidate: 60 },
+        next: {
+          revalidate: 3600,
+        },
       }
     );
 
-    const categoryData =
-      await categoryRes.json();
+    const cats = await catRes.json();
 
-    const category = categoryData[0];
+    if (!cats.length) {
+      return [];
+    }
 
-    if (!category) return [];
+    const categoryId = cats[0].id;
 
-    const postsRes = await fetch(
-      `${WORDPRESS_API}/posts?categories=${category.id}&_embed`,
+    const postRes = await fetch(
+      `${API_URL}/posts?categories=${categoryId}&_embed&per_page=12`,
       {
-        next: { revalidate: 60 },
+        next: {
+          revalidate: 60,
+        },
       }
     );
 
-    return await postsRes.json();
+    return postRes.json();
   } catch (error) {
     console.error(
       "Category Posts Error:",
