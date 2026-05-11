@@ -24,6 +24,7 @@ export default function NewsCard({
             post.title.rendered
           }
           fill
+          unoptimized
           className="object-cover"
         />
       </div>
@@ -39,7 +40,7 @@ export default function NewsCard({
         <p>
           {post.excerpt.rendered.slice(
             0,
-            110
+            120
           )}
           ...
         </p>

@@ -11,19 +11,55 @@ function stripHtml(
   html: string
 ) {
   return html
-    ?.replace(/<[^>]*>?/gm, "")
+    ?.replace(/<[^>]+>/g, "")
     ?.trim();
+}
+
+function repairImageUrl(
+  url?: string
+) {
+  if (!url) {
+    return "/fallback.jpg";
+  }
+
+  let fixed = url;
+
+  // Fix http images
+  fixed = fixed.replace(
+    "http://",
+    "https://"
+  );
+
+  // Fix relative URLs
+  if (
+    fixed.startsWith("/")
+  ) {
+    fixed = `https://arsenaltalks.com${fixed}`;
+  }
+
+  return fixed;
 }
 
 function getFeaturedImage(
   post: any
 ) {
-  return (
+  const embedded =
     post?._embedded?.[
       "wp:featuredmedia"
-    ]?.[0]?.source_url ||
-    post?.jetpack_featured_media_url ||
-    "/fallback.jpg"
+    ]?.[0]?.source_url;
+
+  const jetpack =
+    post?.jetpack_featured_media_url;
+
+  const ogImage =
+    post?.yoast_head_json
+      ?.og_image?.[0]?.url;
+
+  return repairImageUrl(
+    embedded ||
+      jetpack ||
+      ogImage ||
+      "/fallback.jpg"
   );
 }
 
@@ -77,17 +113,14 @@ export async function getPosts(
       );
     }
 
-    const posts =
+    const data =
       await res.json();
 
-    return posts.map(
+    return data.map(
       normalizePost
     );
   } catch (error) {
-    console.error(
-      "Posts Error:",
-      error
-    );
+    console.error(error);
 
     return [];
   }
@@ -121,10 +154,7 @@ export async function getPost(
       data[0]
     );
   } catch (error) {
-    console.error(
-      "Single Post Error:",
-      error
-    );
+    console.error(error);
 
     return null;
   }
@@ -163,17 +193,17 @@ export async function getCategoryPosts(
         }
       );
 
-    const categoryData =
+    const categories =
       await categoryRes.json();
 
     if (
-      !categoryData.length
+      !categories.length
     ) {
       return [];
     }
 
     const categoryId =
-      categoryData[0].id;
+      categories[0].id;
 
     const postsRes =
       await fetch(

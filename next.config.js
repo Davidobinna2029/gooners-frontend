@@ -6,17 +6,22 @@ const nextConfig = {
       {
         protocol: "https",
         hostname:
-          "api.arsenaltalks.com",
-      },
-      {
-        protocol: "https",
-        hostname:
           "arsenaltalks.com",
       },
       {
         protocol: "https",
         hostname:
+          "api.arsenaltalks.com",
+      },
+      {
+        protocol: "https",
+        hostname:
           "i0.wp.com",
+      },
+      {
+        protocol: "https",
+        hostname:
+          "secure.gravatar.com",
       },
     ],
   },

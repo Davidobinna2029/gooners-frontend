@@ -9,11 +9,13 @@ import {
 } from "swiper/react";
 
 import {
-  Autoplay,
+  Navigation,
   Pagination,
+  Autoplay,
 } from "swiper/modules";
 
 import "swiper/css";
+import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 interface Props {
@@ -24,78 +26,73 @@ export default function HeroCarousel({
   posts,
 }: Props) {
   return (
-    <div className="hero-carousel">
+    <section className="hero-carousel">
       <Swiper
         modules={[
-          Autoplay,
+          Navigation,
           Pagination,
+          Autoplay,
         ]}
-        autoplay={{
-          delay: 5000,
-        }}
+        navigation
         pagination={{
           clickable: true,
         }}
+        autoplay={{
+          delay: 5000,
+        }}
         loop
       >
-        {posts.map((post) => (
-          <SwiperSlide
-            key={post.id}
-          >
-            <Link
-              href={`/news/${post.slug}`}
-              className="hero-slide"
+        {posts.map(
+          (post) => (
+            <SwiperSlide
+              key={post.id}
             >
-              <Image
-                src={
-                  post.featuredImage ||
-                  "/fallback.jpg"
-                }
-                alt={
-                  post.title.rendered
-                }
-                fill
-                priority
-                className="hero-slide-image"
-              />
-
-              <div className="hero-slide-overlay">
-                <div className="container">
-                  <div className="hero-slide-content">
-                    <span>
-                      Breaking News
-                    </span>
-
-                    <h1
-                      dangerouslySetInnerHTML={{
-                        __html:
-                          post.title
-                            .rendered,
-                      }}
-                    />
-
-                    <p
-                      dangerouslySetInnerHTML={{
-                        __html:
-                          post.excerpt.rendered
-                            .replace(
-                              /<[^>]+>/g,
-                              ""
-                            )
-                            .slice(
-                              0,
-                              180
-                            ) +
-                          "...",
-                      }}
-                    />
-                  </div>
+              <Link
+                href={`/news/${post.slug}`}
+                className="hero-slide"
+              >
+                <div className="hero-image-wrapper">
+                  <Image
+                    src={
+                      post.featuredImage
+                    }
+                    alt={
+                      post.title
+                        .rendered
+                    }
+                    fill
+                    unoptimized
+                    className="hero-image"
+                    priority
+                  />
                 </div>
-              </div>
-            </Link>
-          </SwiperSlide>
-        ))}
+
+                <div className="hero-slide-overlay">
+                  <span className="breaking-tag">
+                    BREAKING
+                  </span>
+
+                  <h1
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        post.title
+                          .rendered,
+                    }}
+                  />
+
+                  <p>
+                    {post.excerpt.rendered.slice(
+                      0,
+                      150
+                    )}
+                    ...
+                  </p>
+                </div>
+              </Link>
+            </SwiperSlide>
+          )
+        )}
       </Swiper>
-    </div>
+    </section>
   );
 }

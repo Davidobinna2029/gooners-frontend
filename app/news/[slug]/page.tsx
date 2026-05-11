@@ -40,6 +40,7 @@ export default async function NewsPage({
         }
         width={1400}
         height={800}
+        unoptimized
         className="hero-image"
         priority
       />
