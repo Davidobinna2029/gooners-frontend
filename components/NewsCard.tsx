@@ -13,9 +13,9 @@ export default function NewsCard({
   return (
     <Link
       href={`/news/${post.slug}`}
-      className="news-card"
+      className="portal-news-card"
     >
-      <div className="news-image">
+      <div className="portal-thumb">
         <Image
           src={
             post.featuredImage
@@ -25,11 +25,11 @@ export default function NewsCard({
           }
           fill
           unoptimized
-          className="object-cover"
+          className="portal-thumb-image"
         />
       </div>
 
-      <div className="news-content">
+      <div className="portal-news-content">
         <h3
           dangerouslySetInnerHTML={{
             __html:

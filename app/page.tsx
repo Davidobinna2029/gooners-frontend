@@ -1,100 +1,69 @@
 import HeroCarousel from "@/components/HeroCarousel";
-import BreakingTicker from "@/components/BreakingTicker";
-import CategorySection from "@/components/CategorySection";
-import InfiniteNews from "@/components/InfiniteNews";
+import NewsCard from "@/components/NewsCard";
 
 import LiveScores from "@/components/LiveScores";
-import Standings from "@/components/Standings";
+import LeagueTable from "@/components/LeagueTable";
 import NextMatch from "@/components/NextMatch";
 
-const API =
-  process.env
-    .NEXT_PUBLIC_WORDPRESS_API;
-
-async function getHeroPosts() {
-  const res = await fetch(
-    `${API}/posts?_embed&per_page=5`,
-    {
-      next: {
-        revalidate: 60,
-      },
-    }
-  );
-
-  return res.json();
-}
+import {
+  getPosts,
+} from "@/lib/wordpress";
 
 export default async function HomePage() {
+  const posts =
+    await getPosts(1);
+
   const heroPosts =
-    await getHeroPosts();
+    posts.slice(0, 4);
+
+  const latestPosts =
+    posts.slice(4, 10);
 
   return (
-    <main>
-      <BreakingTicker />
-
+    <>
       <HeroCarousel
         posts={heroPosts}
       />
 
-      <section className="container homepage-layout">
-        <div className="homepage-main">
-          <CategorySection
-            title="Transfer News"
-            slug="transfer-news"
-          />
+      <div className="container">
+        <div className="portal-layout">
+          <main className="portal-main">
+            <section className="portal-section">
+              <div className="section-heading">
+                <h2>
+                  Latest Arsenal
+                  News
+                </h2>
+              </div>
 
-          <CategorySection
-            title="Matchday"
-            slug="matchday"
-          />
+              <div className="portal-news-list">
+                {latestPosts.map(
+                  (
+                    post: any
+                  ) => (
+                    <NewsCard
+                      key={
+                        post.id
+                      }
+                      post={
+                        post
+                      }
+                    />
+                  )
+                )}
+              </div>
+            </section>
+          </main>
 
-          <CategorySection
-            title="Arsenal Women"
-            slug="arsenal-women"
-          />
-
-          <CategorySection
-            title="Opinion"
-            slug="opinion"
-          />
-
-          <section>
-            <div className="section-title-row">
-              <h2>
-                Latest Stories
-              </h2>
-            </div>
-
-            <InfiniteNews />
-          </section>
-        </div>
-
-        <aside className="homepage-sidebar">
-          <div className="sidebar-card">
-            <div className="sidebar-title">
-              Live Scores
-            </div>
-
+          <aside className="portal-sidebar">
             <LiveScores />
-          </div>
-
-          <div className="sidebar-card">
-            <div className="sidebar-title">
-              Premier League Table
-            </div>
-
-            <Standings />
-          </div>
-
-          <div className="sidebar-card">
-            <div className="sidebar-title">
-              Arsenal Next Match
-            </div>
 
             <NextMatch />
-          </div>
-        </aside>
-      </section>
-    </main>
+
+            <LeagueTable />
+          </aside>
+        </div>
+      </div>
+    </>
   );
 }

@@ -1,22 +1,52 @@
 import Link from "next/link";
+import {
+  getCategories,
+} from "@/lib/wordpress";
 
-export default function Header() {
+export default async function Header() {
+  const categories =
+    await getCategories();
+
   return (
     <header className="site-header">
-      <div className="container navbar">
+      <div className="topbar">
+        <div className="container topbar-inner">
+          <Link
+            href="/"
+            className="logo"
+          >
+            ArsenalTalks
+          </Link>
 
-        <Link href="/" className="logo">
-          ArsenalTalks
-        </Link>
+          <nav className="nav-menu">
+            <Link href="/">
+              Home
+            </Link>
 
-        <nav className="nav-links">
-          <Link href="/">Home</Link>
-          <Link href="/news">News</Link>
-          <Link href="/matches">Matches</Link>
-          <Link href="/live-scores">Live Scores</Link>
-          <Link href="/standings">Standings</Link>
-        </nav>
+            <Link href="/news">
+              News
+            </Link>
 
+            {categories
+              ?.slice(0, 6)
+              ?.map(
+                (
+                  cat: any
+                ) => (
+                  <Link
+                    key={
+                      cat.id
+                    }
+                    href={`/category/${cat.slug}`}
+                  >
+                    {
+                      cat.name
+                    }
+                  </Link>
+                )
+              )}
+          </nav>
+        </div>
       </div>
     </header>
   );
