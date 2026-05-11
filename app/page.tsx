@@ -9,7 +9,6 @@ import NextMatch from "@/components/NextMatch";
 
 import {
   getPosts,
-  getFeaturedPosts,
   getCategories,
 } from "@/lib/wordpress";
 
@@ -21,9 +20,6 @@ import {
 
 export default async function HomePage() {
   const posts = await getPosts(1);
-
-  const featuredPosts =
-    await getFeaturedPosts();
 
   const categories =
     await getCategories();
@@ -39,22 +35,17 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* HERO */}
+      {/* HERO CAROUSEL */}
       <HeroCarousel
-        posts={featuredPosts}
+        posts={posts.slice(0, 5)}
       />
 
-      {/* MAIN */}
       <div className="container">
         <div className="homepage-layout">
-          {/* LEFT */}
+          {/* MAIN CONTENT */}
           <main className="homepage-main">
-            {/* CATEGORIES */}
+            {/* CATEGORY MENU */}
             <section className="section-block">
-              <div className="section-title-row">
-                <h2>Categories</h2>
-              </div>
-
               <div className="nav-links">
                 <Link href="/">
                   Home
@@ -115,22 +106,18 @@ export default async function HomePage() {
                           }}
                         />
 
-                        <p
-                          dangerouslySetInnerHTML={{
-                            __html:
-                              post.excerpt
-                                ?.rendered
-                                ?.replace(
-                                  /<[^>]+>/g,
-                                  ""
-                                )
-                                ?.slice(
-                                  0,
-                                  120
-                                ) +
-                              "...",
-                          }}
-                        />
+                        <p>
+                          {post.excerpt?.rendered
+                            ?.replace(
+                              /<[^>]+>/g,
+                              ""
+                            )
+                            ?.slice(
+                              0,
+                              120
+                            )}
+                          ...
+                        </p>
                       </div>
                     </Link>
                   ))}
@@ -140,7 +127,9 @@ export default async function HomePage() {
             {/* LATEST NEWS */}
             <section className="section-block">
               <div className="section-title-row">
-                <h2>Latest News</h2>
+                <h2>
+                  Latest News
+                </h2>
               </div>
 
               <InfiniteNews
