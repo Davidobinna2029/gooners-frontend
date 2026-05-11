@@ -1,12 +1,13 @@
 const API_URL =
-  process.env.NEXT_PUBLIC_WORDPRESS_API_URL ||
+  process.env
+    .NEXT_PUBLIC_WORDPRESS_API ||
   "https://api.arsenaltalks.com/wp-json/wp/v2";
 
 async function fetchAPI(
   endpoint: string
 ) {
-  try {
-    const response = await fetch(
+  const response =
+    await fetch(
       `${API_URL}${endpoint}`,
       {
         next: {
@@ -15,27 +16,18 @@ async function fetchAPI(
       }
     );
 
-    if (!response.ok) {
-      throw new Error(
-        `WordPress API Error: ${response.status}`
-      );
-    }
-
-    return response.json();
-  } catch (error) {
-    console.error(
-      "WordPress Fetch Error:",
-      error
+  if (!response.ok) {
+    throw new Error(
+      "Failed to fetch API"
     );
-
-    return [];
   }
+
+  return response.json();
 }
 
-/* =========================================
-   FORMAT POST
-========================================= */
-function formatPost(post: any) {
+function formatPost(
+  post: any
+) {
   return {
     ...post,
 
@@ -47,67 +39,90 @@ function formatPost(post: any) {
   };
 }
 
-/* =========================================
+/* ===================================
    GET POSTS
-========================================= */
+=================================== */
+
 export async function getPosts(
   page = 1
 ) {
-  const posts = await fetchAPI(
-    `/posts?_embed&per_page=10&page=${page}`
-  );
+  const posts =
+    await fetchAPI(
+      `/posts?_embed&per_page=10&page=${page}`
+    );
 
   return posts.map(formatPost);
 }
 
-/* =========================================
-   GET POST BY SLUG
-========================================= */
+/* ===================================
+   FEATURED POSTS
+=================================== */
+
+export async function getFeaturedPosts() {
+  const posts =
+    await fetchAPI(
+      `/posts?_embed&per_page=5`
+    );
+
+  return posts.map(formatPost);
+}
+
+/* ===================================
+   SINGLE POST
+=================================== */
+
 export async function getPostBySlug(
   slug: string
 ) {
-  const posts = await fetchAPI(
-    `/posts?_embed&slug=${slug}`
-  );
+  const posts =
+    await fetchAPI(
+      `/posts?_embed&slug=${slug}`
+    );
 
-  if (!posts.length) {
+  if (!posts.length)
     return null;
-  }
 
-  return formatPost(posts[0]);
+  return formatPost(
+    posts[0]
+  );
 }
 
-/* =========================================
-   GET CATEGORIES
-========================================= */
+/* ===================================
+   CATEGORIES
+=================================== */
+
 export async function getCategories() {
   return fetchAPI(
-    "/categories?per_page=20"
+    `/categories?per_page=20`
   );
 }
 
-/* =========================================
-   GET POSTS BY CATEGORY
-========================================= */
-export async function getPostsByCategory(
-  slug: string,
-  page = 1
+/* ===================================
+   CATEGORY POSTS
+=================================== */
+
+export async function getCategoryPosts(
+  slug: string
 ) {
   const categories =
     await fetchAPI(
       `/categories?slug=${slug}`
     );
 
-  if (!categories.length) {
+  if (
+    !categories ||
+    !categories.length
+  ) {
     return [];
   }
 
   const categoryId =
     categories[0].id;
 
-  const posts = await fetchAPI(
-    `/posts?_embed&categories=${categoryId}&per_page=10&page=${page}`
-  );
+  const posts =
+    await fetchAPI(
+      `/posts?_embed&categories=${categoryId}&per_page=20`
+    );
 
   return posts.map(formatPost);
 }
