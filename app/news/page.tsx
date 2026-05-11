@@ -1,13 +1,24 @@
 import InfiniteNews from "@/components/InfiniteNews";
 
-export default function NewsPage() {
-  return (
-    <main className="container">
-      <h1>
-        Arsenal News
-      </h1>
+import {
+  getPosts,
+} from "@/lib/wordpress";
 
-      <InfiniteNews />
+export default async function NewsPage() {
+  const posts =
+    await getPosts(1);
+
+  return (
+    <main className="container page-space">
+      <div className="section-title-row">
+        <h2>
+          Latest News
+        </h2>
+      </div>
+
+      <InfiniteNews
+        initialPosts={posts}
+      />
     </main>
   );
 }

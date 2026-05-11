@@ -1,6 +1,3 @@
-import Link from "next/link";
-import Image from "next/image";
-
 import HeroCarousel from "@/components/HeroCarousel";
 import InfiniteNews from "@/components/InfiniteNews";
 import LiveScores from "@/components/LiveScores";
@@ -9,150 +6,90 @@ import NextMatch from "@/components/NextMatch";
 
 import {
   getPosts,
+  getFeaturedPosts,
   getCategories,
 } from "@/lib/wordpress";
 
-import {
-  getLiveScores,
-  getStandings,
-  getNextMatch,
-} from "@/lib/football";
-
 export default async function HomePage() {
-  const posts = await getPosts(1);
+  const posts =
+    await getPosts(1);
+
+  const featuredPosts =
+    await getFeaturedPosts();
 
   const categories =
     await getCategories();
 
-  const liveScores =
-    await getLiveScores();
-
-  const standings =
-    await getStandings();
-
-  const nextMatch =
-    await getNextMatch();
-
   return (
     <>
-      {/* HERO CAROUSEL */}
       <HeroCarousel
-        posts={posts.slice(0, 5)}
+        posts={featuredPosts}
       />
 
-      <div className="container">
-        <div className="homepage-layout">
-          {/* MAIN CONTENT */}
-          <main className="homepage-main">
-            {/* CATEGORY MENU */}
-            <section className="section-block">
-              <div className="nav-links">
-                <Link href="/">
-                  Home
-                </Link>
+      <div className="container homepage-layout">
+        <main className="homepage-main">
+          <section className="section-block">
+            <div className="section-title-row">
+              <h2>
+                Latest Arsenal News
+              </h2>
+            </div>
 
-                {categories?.map(
-                  (category: any) => (
-                    <Link
-                      key={category.id}
+            <InfiniteNews
+              initialPosts={posts}
+            />
+          </section>
+
+          {categories?.length >
+            0 && (
+            <section className="section-block">
+              <div className="section-title-row">
+                <h2>
+                  Categories
+                </h2>
+              </div>
+
+              <div className="category-grid">
+                {categories.map(
+                  (
+                    category: any
+                  ) => (
+                    <a
+                      key={
+                        category.id
+                      }
                       href={`/category/${category.slug}`}
+                      className="category-card"
                     >
-                      {category.name}
-                    </Link>
+                      <div className="category-content">
+                        <h3>
+                          {
+                            category.name
+                          }
+                        </h3>
+
+                        <p>
+                          {
+                            category.count
+                          }{" "}
+                          posts
+                        </p>
+                      </div>
+                    </a>
                   )
                 )}
               </div>
             </section>
+          )}
+        </main>
 
-            {/* TOP STORIES */}
-            <section className="section-block">
-              <div className="section-title-row">
-                <h2>
-                  Top Arsenal Stories
-                </h2>
-              </div>
+        <aside className="homepage-sidebar">
+          <LiveScores />
 
-              <div className="news-grid">
-                {posts
-                  ?.slice(0, 6)
-                  ?.map((post: any) => (
-                    <Link
-                      href={`/news/${post.slug}`}
-                      key={post.id}
-                      className="news-card"
-                    >
-                      <div className="news-image">
-                        <Image
-                          src={
-                            post.featuredImage ||
-                            "/fallback.jpg"
-                          }
-                          alt={
-                            post.title
-                              ?.rendered
-                          }
-                          fill
-                          unoptimized
-                          className="object-cover"
-                        />
-                      </div>
+          <Standings />
 
-                      <div className="news-content">
-                        <h3
-                          dangerouslySetInnerHTML={{
-                            __html:
-                              post.title
-                                ?.rendered,
-                          }}
-                        />
-
-                        <p>
-                          {post.excerpt?.rendered
-                            ?.replace(
-                              /<[^>]+>/g,
-                              ""
-                            )
-                            ?.slice(
-                              0,
-                              120
-                            )}
-                          ...
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-              </div>
-            </section>
-
-            {/* LATEST NEWS */}
-            <section className="section-block">
-              <div className="section-title-row">
-                <h2>
-                  Latest News
-                </h2>
-              </div>
-
-              <InfiniteNews
-                initialPosts={posts}
-              />
-            </section>
-          </main>
-
-          {/* SIDEBAR */}
-          <aside className="homepage-sidebar">
-            <LiveScores
-              matches={liveScores}
-            />
-
-            <Standings
-              standings={standings}
-            />
-
-            <NextMatch
-              match={nextMatch}
-            />
-          </aside>
-        </div>
+          <NextMatch />
+        </aside>
       </div>
     </>
   );

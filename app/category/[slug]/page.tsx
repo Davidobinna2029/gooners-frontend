@@ -1,7 +1,7 @@
-import NewsCard from "@/components/NewsCard";
+import InfiniteNews from "@/components/InfiniteNews";
 
 import {
-  getPostsByCategory,
+  getCategoryPosts,
 } from "@/lib/wordpress";
 
 interface Props {
@@ -17,7 +17,7 @@ export default async function CategoryPage({
     await params;
 
   const posts =
-    await getPostsByCategory(
+    await getCategoryPosts(
       slug
     );
 
@@ -32,14 +32,9 @@ export default async function CategoryPage({
         </h2>
       </div>
 
-      <div className="news-grid">
-        {posts.map((post: any) => (
-          <NewsCard
-            key={post.id}
-            post={post}
-          />
-        ))}
-      </div>
+      <InfiniteNews
+        initialPosts={posts}
+      />
     </main>
   );
 }
