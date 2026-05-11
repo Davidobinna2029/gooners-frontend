@@ -1,7 +1,7 @@
-import NewsCard from "@/components/NewsCard";
+import Image from "next/image";
 
 import {
-  getPostsByCategory,
+  getPostBySlug,
 } from "@/lib/wordpress";
 
 interface Props {
@@ -10,36 +10,51 @@ interface Props {
   }>;
 }
 
-export default async function CategoryPage({
+export default async function PostPage({
   params,
 }: Props) {
   const { slug } =
     await params;
 
-  const posts =
-    await getPostsByCategory(
+  const post =
+    await getPostBySlug(
       slug
     );
 
-  return (
-    <main className="container page-space">
-      <div className="section-title-row">
-        <h2>
-          {slug.replace(
-            "-",
-            " "
-          )}
-        </h2>
+  if (!post) {
+    return (
+      <div className="container page-space">
+        <h1>Post not found</h1>
       </div>
+    );
+  }
 
-      <div className="news-grid">
-        {posts.map((post: any) => (
-          <NewsCard
-            key={post.id}
-            post={post}
-          />
-        ))}
-      </div>
-    </main>
+  return (
+    <article className="article-page">
+      <Image
+        src={
+          post.featuredImage ||
+          "/fallback.jpg"
+        }
+        alt={
+          post.title.rendered
+        }
+        width={1200}
+        height={700}
+        className="article-featured-image"
+        unoptimized
+      />
+
+      <h1>
+        {post.title.rendered}
+      </h1>
+
+      <div
+        dangerouslySetInnerHTML={{
+          __html:
+            post.content.rendered,
+        }}
+      />
+    </article>
   );
 }
