@@ -1,7 +1,7 @@
 import Image from "next/image";
 
 import {
-  getPost,
+  getPostBySlug,
 } from "@/lib/wordpress";
 
 interface Props {
@@ -10,21 +10,21 @@ interface Props {
   }>;
 }
 
-export default async function NewsPage({
+export default async function NewsPostPage({
   params,
 }: Props) {
   const { slug } =
     await params;
 
   const post =
-    await getPost(slug);
+    await getPostBySlug(
+      slug
+    );
 
   if (!post) {
     return (
       <div className="container page-space">
-        <h1>
-          Post not found
-        </h1>
+        <h1>Post not found</h1>
       </div>
     );
   }
@@ -33,24 +33,20 @@ export default async function NewsPage({
     <article className="article-page">
       <Image
         src={
-          post.featuredImage
+          post.featuredImage ||
+          "/fallback.jpg"
         }
         alt={
           post.title.rendered
         }
-        width={1400}
-        height={800}
+        width={1200}
+        height={700}
         unoptimized
-        className="hero-image"
-        priority
       />
 
-      <h1
-        dangerouslySetInnerHTML={{
-          __html:
-            post.title.rendered,
-        }}
-      />
+      <h1>
+        {post.title.rendered}
+      </h1>
 
       <div
         dangerouslySetInnerHTML={{
