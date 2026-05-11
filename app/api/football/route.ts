@@ -3,19 +3,20 @@ import { NextResponse } from "next/server";
 import {
   getLiveScores,
   getStandings,
-  getArsenalNextMatch,
+  getNextMatch,
 } from "@/lib/football";
 
 export async function GET() {
   try {
-    const liveScores =
-      await getLiveScores();
-
-    const standings =
-      await getStandings();
-
-    const nextMatch =
-      await getArsenalNextMatch();
+    const [
+      liveScores,
+      standings,
+      nextMatch,
+    ] = await Promise.all([
+      getLiveScores(),
+      getStandings(),
+      getNextMatch(),
+    ]);
 
     return NextResponse.json({
       liveScores,
@@ -23,17 +24,16 @@ export async function GET() {
       nextMatch,
     });
   } catch (error) {
-    console.error(
-      "Football API Error:",
-      error
-    );
+    console.error(error);
 
     return NextResponse.json(
       {
         error:
           "Failed to fetch football data",
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }

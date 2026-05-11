@@ -1,46 +1,50 @@
 import {
-  getArsenalNextMatch,
+  getNextMatch,
 } from "@/lib/football";
 
 export default async function NextMatch() {
   const match: any =
-    await getArsenalNextMatch();
+    await getNextMatch();
 
   if (!match) {
     return (
-      <p className="empty-text">
-        No upcoming Arsenal match.
-      </p>
+      <div className="sidebar-card">
+        <h3 className="sidebar-title">
+          Next Match
+        </h3>
+
+        <p>No upcoming match.</p>
+      </div>
     );
   }
 
-  const home =
-    match?.competitions?.[0]
-      ?.competitors?.[0];
-
-  const away =
-    match?.competitions?.[0]
-      ?.competitors?.[1];
-
   return (
-    <div className="next-match-card">
-      <h3>
-        {
-          home?.team
-            ?.displayName
-        }
+    <div className="sidebar-card">
+      <h3 className="sidebar-title">
+        Next Match
       </h3>
 
-      <span className="vs-text">
-        VS
-      </span>
+      <div className="next-match-card">
+        <p>
+          {match.homeTeam}
+        </p>
 
-      <h3>
-        {
-          away?.team
-            ?.displayName
-        }
-      </h3>
+        <div className="vs-text">
+          VS
+        </div>
+
+        <p>
+          {match.awayTeam}
+        </p>
+
+        <br />
+
+        <small>
+          {new Date(
+            match.date
+          ).toLocaleString()}
+        </small>
+      </div>
     </div>
   );
 }
