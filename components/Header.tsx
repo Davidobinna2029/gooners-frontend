@@ -1,4 +1,5 @@
 import Link from "next/link";
+
 import {
   getCategories,
 } from "@/lib/wordpress";
@@ -9,8 +10,8 @@ export default async function Header() {
 
   return (
     <header className="site-header">
-      <div className="topbar">
-        <div className="container topbar-inner">
+      <div className="container">
+        <nav className="navbar">
           <Link
             href="/"
             className="logo"
@@ -18,35 +19,31 @@ export default async function Header() {
             ArsenalTalks
           </Link>
 
-          <nav className="nav-menu">
+          <div className="nav-links">
             <Link href="/">
               Home
             </Link>
 
-            <Link href="/news">
-              News
-            </Link>
-
             {categories
-              ?.slice(0, 6)
-              ?.map(
+              ?.slice(0, 8)
+              .map(
                 (
-                  cat: any
+                  category: any
                 ) => (
                   <Link
                     key={
-                      cat.id
+                      category.id
                     }
-                    href={`/category/${cat.slug}`}
+                    href={`/category/${category.slug}`}
                   >
                     {
-                      cat.name
+                      category.name
                     }
                   </Link>
                 )
               )}
-          </nav>
-        </div>
+          </div>
+        </nav>
       </div>
     </header>
   );
