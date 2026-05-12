@@ -1,13 +1,6 @@
 import Link from "next/link";
 
-import {
-  getCategories,
-} from "@/lib/wordpress";
-
-export default async function Header() {
-  const categories =
-    await getCategories();
-
+export default function Header() {
   return (
     <header className="site-header">
       <div className="container">
@@ -24,24 +17,21 @@ export default async function Header() {
               Home
             </Link>
 
-            {categories
-              ?.slice(0, 8)
-              .map(
-                (
-                  category: any
-                ) => (
-                  <Link
-                    key={
-                      category.id
-                    }
-                    href={`/category/${category.slug}`}
-                  >
-                    {
-                      category.name
-                    }
-                  </Link>
-                )
-              )}
+            <Link href="/news">
+              News
+            </Link>
+
+            <Link href="/category/transfers">
+              Transfers
+            </Link>
+
+            <Link href="/category/premier-league">
+              Premier League
+            </Link>
+
+            <Link href="/category/champions-league">
+              Champions League
+            </Link>
           </div>
         </nav>
       </div>
