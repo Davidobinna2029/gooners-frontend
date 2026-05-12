@@ -1,6 +1,5 @@
-"use client";
-
 import Link from "next/link";
+
 import Image from "next/image";
 
 interface Props {
@@ -13,37 +12,46 @@ export default function NewsCard({
   return (
     <Link
       href={`/news/${post.slug}`}
-      className="portal-news-card"
+      className="news-card"
     >
-      <div className="portal-thumb">
+      <div className="news-image relative">
         <Image
           src={
-            post.featuredImage
+            post.featuredImage ||
+            "/fallback.jpg"
           }
           alt={
             post.title.rendered
           }
           fill
           unoptimized
-          className="portal-thumb-image"
+          className="object-cover"
         />
       </div>
 
-      <div className="portal-news-content">
+      <div className="news-content">
         <h3
           dangerouslySetInnerHTML={{
             __html:
-              post.title.rendered,
+              post.title
+                .rendered,
           }}
         />
 
-        <p>
-          {post.excerpt.rendered.slice(
-            0,
-            120
-          )}
-          ...
-        </p>
+        <p
+          dangerouslySetInnerHTML={{
+            __html:
+              post.excerpt?.rendered
+                ?.replace(
+                  /<[^>]+>/g,
+                  ""
+                )
+                ?.slice(
+                  0,
+                  120
+                ) + "...",
+          }}
+        />
       </div>
     </Link>
   );

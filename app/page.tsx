@@ -1,4 +1,4 @@
-import HeroCarousel from "@/components/HeroCarousel";
+import HeroMagazine from "@/components/HeroMagazine";
 import InfiniteNews from "@/components/InfiniteNews";
 import LiveScores from "@/components/LiveScores";
 import Standings from "@/components/Standings";
@@ -7,7 +7,6 @@ import NextMatch from "@/components/NextMatch";
 import {
   getPosts,
   getFeaturedPosts,
-  getCategories,
 } from "@/lib/wordpress";
 
 export default async function HomePage() {
@@ -17,12 +16,9 @@ export default async function HomePage() {
   const featuredPosts =
     await getFeaturedPosts();
 
-  const categories =
-    await getCategories();
-
   return (
     <>
-      <HeroCarousel
+      <HeroMagazine
         posts={featuredPosts}
       />
 
@@ -31,7 +27,7 @@ export default async function HomePage() {
           <section className="section-block">
             <div className="section-title-row">
               <h2>
-                Latest Arsenal News
+                Latest News
               </h2>
             </div>
 
@@ -39,48 +35,6 @@ export default async function HomePage() {
               initialPosts={posts}
             />
           </section>
-
-          {categories?.length >
-            0 && (
-            <section className="section-block">
-              <div className="section-title-row">
-                <h2>
-                  Categories
-                </h2>
-              </div>
-
-              <div className="category-grid">
-                {categories.map(
-                  (
-                    category: any
-                  ) => (
-                    <a
-                      key={
-                        category.id
-                      }
-                      href={`/category/${category.slug}`}
-                      className="category-card"
-                    >
-                      <div className="category-content">
-                        <h3>
-                          {
-                            category.name
-                          }
-                        </h3>
-
-                        <p>
-                          {
-                            category.count
-                          }{" "}
-                          posts
-                        </p>
-                      </div>
-                    </a>
-                  )
-                )}
-              </div>
-            </section>
-          )}
         </main>
 
         <aside className="homepage-sidebar">
