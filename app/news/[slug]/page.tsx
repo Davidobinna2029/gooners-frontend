@@ -10,7 +10,7 @@ interface Props {
   }>;
 }
 
-export default async function NewsPostPage({
+export default async function NewsArticlePage({
   params,
 }: Props) {
   const { slug } =
@@ -23,30 +23,36 @@ export default async function NewsPostPage({
 
   if (!post) {
     return (
-      <div className="container page-space">
-        <h1>Post not found</h1>
-      </div>
+      <main className="container page-space">
+        <h1>
+          Post not found
+        </h1>
+      </main>
     );
   }
 
   return (
     <article className="article-page">
-      <Image
-        src={
-          post.featuredImage ||
-          "/fallback.jpg"
-        }
-        alt={
-          post.title.rendered
-        }
-        width={1200}
-        height={700}
-        unoptimized
-      />
+      <div className="article-featured">
+        <Image
+          src={
+            post.featuredImage
+          }
+          alt={
+            post.title.rendered
+          }
+          fill
+          unoptimized
+          className="object-cover"
+        />
+      </div>
 
-      <h1>
-        {post.title.rendered}
-      </h1>
+      <h1
+        dangerouslySetInnerHTML={{
+          __html:
+            post.title.rendered,
+        }}
+      />
 
       <div
         dangerouslySetInnerHTML={{

@@ -1,92 +1,166 @@
 const API_URL =
-  process.env.NEXT_PUBLIC_WORDPRESS_API_URL ||
-  "https://arsenaltalks.com/wp-json/wp/v2";
+  process.env.WORDPRESS_API_URL;
 
-interface WPPost {
-  id: number;
-  slug: string;
-  title: { rendered: string };
-  content: { rendered: string };
-  excerpt: { rendered: string };
-  _embedded?: any;
-  [key: string]: any;
-}
-
-interface WPCategory {
-  id: number;
-  slug: string;
-  name: string;
-}
-
-function getFeaturedImage(post: WPPost): string | null {
-  const media = post?._embedded?.["wp:featuredmedia"]?.[0];
-  if (media?.source_url && media.source_url.startsWith("http")) {
-    return media.source_url;
-  }
-  return null;
-}
-
-function formatPost(post: WPPost) {
-  return {
-    ...post,
-    featuredImage: getFeaturedImage(post),
-  };
-}
-
-async function safeFetch<T>(url: string, revalidate = 60): Promise<T | null> {
+export async function getPosts(
+  page = 1
+) {
   try {
-    const res = await fetch(url, {
-      next: { revalidate },
-    });
-    if (!res.ok) throw new Error(`Failed: ${res.status}`);
-    return (await res.json()) as T;
+    const res = await fetch(
+      `${API_URL}/posts?_embed&per_page=10&page=${page}`,
+      {
+        cache: "no-store",
+      }
+    );
+
+    if (!res.ok) {
+      return [];
+    }
+
+    const posts = await res.json();
+
+    return posts.map(
+      formatPost
+    );
   } catch (error) {
-    console.error("Fetch error:", error);
+    console.log(error);
+
+    return [];
+  }
+}
+
+export async function getFeaturedPosts() {
+  try {
+    const res = await fetch(
+      `${API_URL}/posts?_embed&per_page=5`,
+      {
+        cache: "no-store",
+      }
+    );
+
+    if (!res.ok) {
+      return [];
+    }
+
+    const posts = await res.json();
+
+    return posts.map(
+      formatPost
+    );
+  } catch (error) {
+    console.log(error);
+
+    return [];
+  }
+}
+
+export async function getCategories() {
+  try {
+    const res = await fetch(
+      `${API_URL}/categories?per_page=20`,
+      {
+        cache: "no-store",
+      }
+    );
+
+    if (!res.ok) {
+      return [];
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+
+    return [];
+  }
+}
+
+export async function getCategoryPosts(
+  slug: string
+) {
+  try {
+    const catRes = await fetch(
+      `${API_URL}/categories?slug=${slug}`,
+      {
+        cache: "no-store",
+      }
+    );
+
+    const cats =
+      await catRes.json();
+
+    if (!cats.length) {
+      return [];
+    }
+
+    const categoryId =
+      cats[0].id;
+
+    const postRes = await fetch(
+      `${API_URL}/posts?_embed&categories=${categoryId}&per_page=20`,
+      {
+        cache: "no-store",
+      }
+    );
+
+    if (!postRes.ok) {
+      return [];
+    }
+
+    const posts =
+      await postRes.json();
+
+    return posts.map(
+      formatPost
+    );
+  } catch (error) {
+    console.log(error);
+
+    return [];
+  }
+}
+
+export async function getPostBySlug(
+  slug: string
+) {
+  try {
+    const res = await fetch(
+      `${API_URL}/posts?_embed&slug=${slug}`,
+      {
+        cache: "no-store",
+      }
+    );
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const posts =
+      await res.json();
+
+    if (!posts.length) {
+      return null;
+    }
+
+    return formatPost(
+      posts[0]
+    );
+  } catch (error) {
+    console.log(error);
+
     return null;
   }
 }
 
-export async function getPosts(page = 1) {
-  const posts = await safeFetch<WPPost[]>(
-    `${API_URL}/posts?_embed&per_page=10&page=${page}`,
-    60
-  );
-  return posts ? posts.map(formatPost) : [];
-}
+function formatPost(
+  post: any
+) {
+  return {
+    ...post,
 
-export async function getFeaturedPosts() {
-  const posts = await safeFetch<WPPost[]>(
-    `${API_URL}/posts?_embed&per_page=5`,
-    60
-  );
-  return posts ? posts.map(formatPost) : [];
-}
-
-export async function getPost(slug: string) {
-  const posts = await safeFetch<WPPost[]>(
-    `${API_URL}/posts?_embed&slug=${slug}`,
-    60
-  );
-  return posts && posts.length > 0 ? formatPost(posts[0]) : null;
-}
-
-export async function getCategories() {
-  return (
-    (await safeFetch<WPCategory[]>(
-      `${API_URL}/categories?per_page=20`,
-      3600
-    )) || []
-  );
-}
-
-export async function getCategoryPosts(slug: string) {
-  const categories = await getCategories();
-  const category = categories.find((cat) => cat.slug === slug);
-  if (!category) return [];
-
-  const posts = await safeFetch<WPPost[]>(
-    `${API_URL}/posts?_embed&categories=${category.id}`,
-    60
-  );
-  return posts ? posts.map(formatPost) : [];
+    featuredImage:
+      post?._embedded?.[
+        "wp:featuredmedia"
+      ]?.[0]?.source_url ||
+      "/fallback.jpg",
+  };
 }
