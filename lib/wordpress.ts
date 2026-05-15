@@ -1,84 +1,92 @@
 const API_URL =
+  process.env.NEXT_PUBLIC_WORDPRESS_API_URL ||
   "https://arsenaltalks.com/wp-json/wp/v2";
 
-export async function getPosts(page = 1) {
-  const res = await fetch(
-    `${API_URL}/posts?_embed&per_page=10&page=${page}`,
-    {
-      next: { revalidate: 60 },
-    }
-  );
+interface WPPost {
+  id: number;
+  slug: string;
+  title: { rendered: string };
+  content: { rendered: string };
+  excerpt: { rendered: string };
+  _embedded?: any;
+  [key: string]: any;
+}
 
-  return await res.json();
+interface WPCategory {
+  id: number;
+  slug: string;
+  name: string;
+}
+
+function getFeaturedImage(post: WPPost): string | null {
+  const media = post?._embedded?.["wp:featuredmedia"]?.[0];
+  if (media?.source_url && media.source_url.startsWith("http")) {
+    return media.source_url;
+  }
+  return null;
+}
+
+function formatPost(post: WPPost) {
+  return {
+    ...post,
+    featuredImage: getFeaturedImage(post),
+  };
+}
+
+async function safeFetch<T>(url: string, revalidate = 60): Promise<T | null> {
+  try {
+    const res = await fetch(url, {
+      next: { revalidate },
+    });
+    if (!res.ok) throw new Error(`Failed: ${res.status}`);
+    return (await res.json()) as T;
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return null;
+  }
+}
+
+export async function getPosts(page = 1) {
+  const posts = await safeFetch<WPPost[]>(
+    `${API_URL}/posts?_embed&per_page=10&page=${page}`,
+    60
+  );
+  return posts ? posts.map(formatPost) : [];
 }
 
 export async function getFeaturedPosts() {
-  const res = await fetch(
+  const posts = await safeFetch<WPPost[]>(
     `${API_URL}/posts?_embed&per_page=5`,
-    {
-      next: { revalidate: 60 },
-    }
+    60
   );
+  return posts ? posts.map(formatPost) : [];
+}
 
-  return await res.json();
+export async function getPost(slug: string) {
+  const posts = await safeFetch<WPPost[]>(
+    `${API_URL}/posts?_embed&slug=${slug}`,
+    60
+  );
+  return posts && posts.length > 0 ? formatPost(posts[0]) : null;
 }
 
 export async function getCategories() {
-  const res = await fetch(
-    `${API_URL}/categories?per_page=20`,
-    {
-      next: { revalidate: 3600 },
-    }
-  );
-
-  return await res.json();
-}
-
-export async function getCategoryPosts(
-  slug: string
-) {
-  const catRes = await fetch(
-    `${API_URL}/categories?slug=${slug}`
-  );
-
-  const categories = await catRes.json();
-
-  if (!categories.length) {
-    return [];
-  }
-
-  const categoryId = categories[0].id;
-
-  const postRes = await fetch(
-    `${API_URL}/posts?_embed&categories=${categoryId}&per_page=20`,
-    {
-      next: { revalidate: 60 },
-    }
-  );
-
-  return await postRes.json();
-}
-
-export async function getPostBySlug(
-  slug: string
-) {
-  const res = await fetch(
-    `${API_URL}/posts?_embed&slug=${slug}`,
-    {
-      next: { revalidate: 60 },
-    }
-  );
-
-  const posts = await res.json();
-
-  return posts[0];
-}
-
-export function getFeaturedImage(
-  post: any
-) {
   return (
-    post?._embedded?.["wp:featuredmedia"]?.[0]
-      ?.source_url || "/fallback.jpg"
+    (await safeFetch<WPCategory[]>(
+      `${API_URL}/categories?per_page=20`,
+      3600
+    )) || []
   );
+}
+
+export async function getCategoryPosts(slug: string) {
+  const categories = await getCategories();
+  const category = categories.find((cat) => cat.slug === slug);
+  if (!category) return [];
+
+  const posts = await safeFetch<WPPost[]>(
+    `${API_URL}/posts?_embed&categories=${category.id}`,
+    60
+  );
+  return posts ? posts.map(formatPost) : [];
 }

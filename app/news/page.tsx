@@ -4,13 +4,30 @@ import {
   getPosts,
 } from "@/lib/wordpress";
 
+export const dynamic =
+  "force-dynamic";
+
 export default async function NewsPage() {
-  const posts =
-    await getPosts(1);
+  let posts: any[] = [];
+
+  try {
+    posts = await getPosts(1);
+  } catch (error) {
+    console.log(
+      "Failed to fetch posts",
+      error
+    );
+  }
 
   return (
     <main className="container page-space">
-      <h1 className="page-title">
+      <h1
+        style={{
+          fontSize: "48px",
+          fontWeight: 900,
+          marginBottom: "30px",
+        }}
+      >
         Latest Arsenal News
       </h1>
 
