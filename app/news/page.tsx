@@ -10,11 +10,9 @@ export default async function NewsPage() {
 
   return (
     <main className="container page-space">
-      <div className="section-title-row">
-        <h2>
-          Latest News
-        </h2>
-      </div>
+      <h1 className="page-title">
+        Latest Arsenal News
+      </h1>
 
       <InfiniteNews
         initialPosts={posts}

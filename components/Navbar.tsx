@@ -1,21 +1,8 @@
 import Link from "next/link";
 
-const API =
-  process.env
-    .NEXT_PUBLIC_WORDPRESS_API;
-
-async function getCategories() {
-  const res = await fetch(
-    `${API}/categories?per_page=8`,
-    {
-      next: {
-        revalidate: 120,
-      },
-    }
-  );
-
-  return res.json();
-}
+import {
+  getCategories,
+} from "@/lib/wordpress";
 
 export default async function Navbar() {
   const categories =
@@ -23,30 +10,48 @@ export default async function Navbar() {
 
   return (
     <header className="site-header">
-      <div className="container navbar">
-        <Link
-          href="/"
-          className="logo"
-        >
-          ArsenalTalks
-        </Link>
+      {/* TOP HEADER */}
 
-        <nav className="nav-links">
-          <Link href="/">
-            Home
+      <div className="top-header">
+        <div className="container top-header-inner">
+          <Link
+            href="/"
+            className="logo"
+          >
+            ArsenalTalks
           </Link>
 
-          {categories.map(
-            (cat: any) => (
-              <Link
-                key={cat.id}
-                href={`/category/${cat.slug}`}
-              >
-                {cat.name}
-              </Link>
-            )
-          )}
-        </nav>
+          <div className="site-tagline">
+            Where Gooners Speak Football
+          </div>
+        </div>
+      </div>
+
+      {/* NAVIGATION */}
+
+      <div className="menu-wrapper">
+        <div className="container">
+          <nav className="navbar">
+            <Link href="/">
+              Home
+            </Link>
+
+            <Link href="/news">
+              Latest News
+            </Link>
+
+            {categories
+              ?.slice(0, 8)
+              .map((cat: any) => (
+                <Link
+                  key={cat.id}
+                  href={`/category/${cat.slug}`}
+                >
+                  {cat.name}
+                </Link>
+              ))}
+          </nav>
+        </div>
       </div>
     </header>
   );
