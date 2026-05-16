@@ -1,163 +1,163 @@
-import Link from "next/link";
-import Image from "next/image";
+import Header from "@/components/layout/Header";
 
-import Header from "@/components/Header";
+import Hero from "@/components/home/Hero";
+
+import FeaturedGrid from "@/components/home/FeaturedGrid";
+
+import CategoryRail from "@/components/home/CategoryRail";
+
+import TrendingList from "@/components/home/TrendingList";
+
+import BreakingTicker from "@/components/home/BreakingTicker";
+
+import VideoHighlights from "@/components/home/VideoHighlights";
+
+import LiveScores from "@/components/sports/LiveScores";
+
+import StickyScoreStrip from "@/components/sports/StickyScoreStrip";
+
+import Standings from "@/components/sports/Standings";
+
+import NextMatch from "@/components/sports/NextMatch";
+
+import { getPosts } from "@/lib/wordpress";
 
 import {
-  getPosts,
-  getFeaturedPosts,
-} from "@/lib/wordpress";
+  getLiveMatches,
+  getStandings,
+  getNextMatch,
+  getUCLMatches,
+} from "@/lib/sports";
 
-import LiveScores from "@/components/LiveScores";
-import Standings from "@/components/Standings";
-import NextMatch from "@/components/NextMatch";
+import { buildHomepage } from "@/lib/orchestrator/homepage";
 
+/**
+ * SEO
+ */
+export const metadata = {
+  title:
+    "ArsenalTalks - Arsenal News, Transfers & Live Football",
+
+  description:
+    "Latest Arsenal news, transfer updates, live scores, standings and Champions League coverage.",
+};
+
+/**
+ * PAGE
+ */
 export default async function HomePage() {
-  const featured =
-    await getFeaturedPosts();
-
+  /**
+   * CONTENT
+   */
   const posts =
     await getPosts();
 
-  const hero =
-    featured?.[0];
+  /**
+   * SPORTS
+   */
+  const liveMatches =
+    await getLiveMatches();
+
+  const standings =
+    await getStandings();
+
+  const nextMatch =
+    await getNextMatch();
+
+  const uclMatches =
+    await getUCLMatches();
+
+  /**
+   * HOMEPAGE ORCHESTRATION
+   */
+  const homepage =
+    buildHomepage(posts);
 
   return (
     <>
+      {/* HEADER */}
       <Header />
 
-      {/* HERO */}
+      {/* STICKY SCORES */}
+      <StickyScoreStrip
+        matches={liveMatches}
+      />
 
-      <section className="hero-section">
-        <div className="hero-image-wrap">
-          {hero?.featuredImage ? (
-            <Image
-              src={
-                hero.featuredImage
-              }
-              alt={
-                hero.title.rendered
-              }
-              fill
-              unoptimized
-              className="hero-image"
-            />
-          ) : (
-            <img
-              src="/fallback.jpg"
-              className="hero-image"
-            />
-          )}
-        </div>
+      {/* BREAKING TICKER */}
+      <BreakingTicker
+        posts={homepage.trending.slice(
+          0,
+          5
+        )}
+      />
 
-        <div className="hero-overlay">
-          <div className="container">
-            <div className="hero-content">
-              <span>
-                Breaking News
-              </span>
+      <main className="homepage">
+        {/* HERO */}
+        <Hero
+          post={homepage.hero}
+        />
 
-              <h1
-                dangerouslySetInnerHTML={{
-                  __html:
-                    hero?.title
-                      ?.rendered ||
-                    "",
-                }}
-              />
+        {/* FEATURED */}
+        <FeaturedGrid
+          posts={homepage.featured}
+        />
 
-              <Link
-                href={`/post/${hero?.slug}`}
-                className="hero-btn"
-              >
-                Read More
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+        {/* LIVE SCORES */}
+        <LiveScores
+          matches={liveMatches}
+        />
 
-      {/* MAIN */}
+        {/* TRANSFER NEWS */}
+        <CategoryRail
+          title="Transfer News"
+          posts={
+            homepage.rails
+              .transferNews
+          }
+        />
 
-      <main className="container homepage">
-        {/* LEFT */}
+        {/* INJURY NEWS */}
+        <CategoryRail
+          title="Injury News"
+          posts={
+            homepage.rails
+              .injuryNews
+          }
+        />
 
-        <section className="main-content">
-          <div className="block">
-            <div className="block-title red">
-              Latest Arsenal News
-            </div>
+        {/* UCL NEWS */}
+        <CategoryRail
+          title="Champions League"
+          posts={
+            homepage.rails.uclNews
+          }
+        />
 
-            <div className="news-list">
-              {posts.map(
-                (post: any) => (
-                  <Link
-                    key={post.id}
-                    href={`/post/${post.slug}`}
-                    className="news-row"
-                  >
-                    <div className="news-text">
-                      <h3
-                        dangerouslySetInnerHTML={{
-                          __html:
-                            post.title
-                              .rendered,
-                        }}
-                      />
-                    </div>
+        {/* UCL MATCHES */}
+        <LiveScores
+          matches={uclMatches}
+        />
 
-                    <div className="news-thumb">
-                      {post.featuredImage ? (
-                        <Image
-                          src={
-                            post.featuredImage
-                          }
-                          alt={
-                            post.title
-                              .rendered
-                          }
-                          fill
-                          unoptimized
-                          className="cover"
-                        />
-                      ) : (
-                        <img src="/fallback.jpg" />
-                      )}
-                    </div>
-                  </Link>
-                )
-              )}
-            </div>
-          </div>
+        {/* VIDEO */}
+        <VideoHighlights />
+
+        {/* TRENDING */}
+        <TrendingList
+          posts={
+            homepage.trending
+          }
+        />
+
+        {/* FOOTBALL WIDGETS */}
+        <section className="sports-widgets">
+          <Standings
+            table={standings}
+          />
+
+          <NextMatch
+            match={nextMatch}
+          />
         </section>
-
-        {/* RIGHT */}
-
-        <aside className="sidebar">
-          <div className="sidebar-box">
-            <div className="sidebar-title">
-              Live Scores
-            </div>
-
-            <LiveScores />
-          </div>
-
-          <div className="sidebar-box">
-            <div className="sidebar-title">
-              Next Match
-            </div>
-
-            <NextMatch />
-          </div>
-
-          <div className="sidebar-box">
-            <div className="sidebar-title">
-              League Standings
-            </div>
-
-            <Standings />
-          </div>
-        </aside>
       </main>
     </>
   );

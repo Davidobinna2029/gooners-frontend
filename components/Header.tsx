@@ -17,20 +17,28 @@ export default function Header() {
               Home
             </Link>
 
-            <Link href="/news">
-              News
+            <Link href="/category/transfer-news">
+              Transfer News
             </Link>
 
-            <Link href="/category/transfers">
-              Transfers
+            <Link href="https://shop.arsenaltalks.com">
+              Shop
             </Link>
 
-            <Link href="/category/premier-league">
-              Premier League
+            <Link href="/category/opinions">
+              Opinions
             </Link>
 
-            <Link href="/category/champions-league">
-              Champions League
+            <Link href="/category/injury-news">
+              Injury News
+            </Link>
+
+            <Link href="/about">
+              About
+            </Link>
+
+            <Link href="/contact">
+              Contact
             </Link>
           </div>
         </nav>

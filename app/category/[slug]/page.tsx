@@ -1,40 +1,38 @@
-import InfiniteNews from "@/components/InfiniteNews";
+import { getCategoryPosts } from "@/lib/wordpress";
 
-import {
-  getCategoryPosts,
-} from "@/lib/wordpress";
+import Header from "@/components/layout/Header";
 
-interface Props {
-  params: Promise<{
-    slug: string;
-  }>;
-}
+import NewsCard from "@/components/news/NewsCard";
 
 export default async function CategoryPage({
   params,
-}: Props) {
-  const { slug } =
-    await params;
-
+}: any) {
   const posts =
     await getCategoryPosts(
-      slug
+      params.slug
     );
 
   return (
-    <main className="container page-space">
-      <div className="section-title-row">
-        <h2>
-          {slug.replace(
+    <>
+      <Header />
+
+      <main className="category-page">
+        <h1>
+          {params.slug.replace(
             "-",
             " "
           )}
-        </h2>
-      </div>
+        </h1>
 
-      <InfiniteNews
-        initialPosts={posts}
-      />
-    </main>
+        <div className="category-grid">
+          {posts.map((post: any) => (
+            <NewsCard
+              key={post.id}
+              post={post}
+            />
+          ))}
+        </div>
+      </main>
+    </>
   );
 }
