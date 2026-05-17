@@ -1,25 +1,25 @@
 import Image from "next/image";
+
 import { notFound } from "next/navigation";
 
 import Header from "@/components/layout/Header";
 
 import { getPost } from "@/lib/wordpress";
 
-interface PageProps {
-  params: {
+interface Props {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
-/**
- * SEO METADATA
- */
 export async function generateMetadata({
   params,
-}: PageProps) {
-  const post = await getPost(
-    params.slug
-  );
+}: Props) {
+  const { slug } =
+    await params;
+
+  const post =
+    await getPost(slug);
 
   if (!post) {
     return {
@@ -27,54 +27,27 @@ export async function generateMetadata({
     };
   }
 
-  const cleanExcerpt =
-    post.excerpt
-      ?.replace(/<[^>]+>/g, "")
-      ?.slice(0, 160) || "";
-
   return {
-    title: `${post.title} | ArsenalTalks`,
+    title: `${post.title.rendered} | ArsenalTalks`,
 
-    description: cleanExcerpt,
-
-    openGraph: {
-      title: post.title,
-
-      description: cleanExcerpt,
-
-      images: [
-        {
-          url:
-            post.featuredImage ||
-            "/placeholder.jpg",
-        },
-      ],
-    },
-
-    twitter: {
-      card: "summary_large_image",
-
-      title: post.title,
-
-      description: cleanExcerpt,
-
-      images: [
-        post.featuredImage ||
-          "/placeholder.jpg",
-      ],
-    },
+    description:
+      post.excerpt?.rendered
+        ?.replace(
+          /<[^>]+>/g,
+          ""
+        )
+        ?.slice(0, 160),
   };
 }
 
-/**
- * PAGE
- */
 export default async function NewsPage({
   params,
-}: PageProps) {
-  const post = await getPost(
-    params.slug
-  );
+}: Props) {
+  const { slug } =
+    await params;
+
+  const post =
+    await getPost(slug);
 
   if (!post) {
     notFound();
@@ -85,23 +58,27 @@ export default async function NewsPage({
       <Header />
 
       <main className="article-page">
-        {/* HERO IMAGE */}
-        {post.featuredImage && (
-          <div className="article-image">
-            <Image
-              src={post.featuredImage}
-              alt={post.title}
-              fill
-              priority
-              className="object-cover"
-            />
-          </div>
-        )}
+        {/* FEATURED IMAGE */}
+        <div className="article-image">
+          <Image
+            src={
+              post.featuredImage ||
+              "/fallback.jpg"
+            }
+            alt={
+              post.title.rendered
+            }
+            fill
+            priority
+            unoptimized
+            className="object-cover"
+          />
+        </div>
 
         {/* META */}
         <div className="article-meta">
           <span>
-            {post.author}
+            {post.category}
           </span>
 
           <span>•</span>
@@ -111,20 +88,28 @@ export default async function NewsPage({
               post.date
             ).toLocaleDateString()}
           </span>
+
+          <span>•</span>
+
+          <span>
+            By {post.author}
+          </span>
         </div>
 
         {/* TITLE */}
         <h1
           dangerouslySetInnerHTML={{
-            __html: post.title,
+            __html:
+              post.title.rendered,
           }}
         />
 
         {/* CONTENT */}
-        <div
+        <article
           className="article-content"
           dangerouslySetInnerHTML={{
-            __html: post.content,
+            __html:
+              post.content.rendered,
           }}
         />
       </main>

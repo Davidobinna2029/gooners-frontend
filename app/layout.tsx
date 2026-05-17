@@ -3,7 +3,7 @@ import "@/styles/globals.css";
 export const metadata = {
   title: "ArsenalTalks",
   description:
-    "Arsenal News, Transfers, UCL & Live Football",
+    "Arsenal News Platform",
 };
 
 export default function RootLayout({
