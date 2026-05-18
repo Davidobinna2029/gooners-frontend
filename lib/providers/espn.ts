@@ -1,91 +1,95 @@
 const BASE_URL =
-  process.env.SPORTS_API_URL!;
+  "https://site.api.espn.com/apis/site/v2/sports/soccer";
 
-const API_KEY =
-  process.env.SPORTS_API_KEY;
-
-/**
- * GENERIC ESPN FETCHER
- */
-async function fetchESPN(
-  endpoint: string
-) {
+export async function getLiveScores() {
   try {
-    const res = await fetch(
-      `${BASE_URL}${endpoint}`,
-      {
-        headers: API_KEY
-          ? {
-              Authorization: API_KEY,
-            }
-          : {},
-
-        next: {
-          revalidate: 60,
-        },
-      }
-    );
-
-    if (!res.ok) {
-      throw new Error(
-        `ESPN Error: ${res.status}`
+    const response =
+      await fetch(
+        `${BASE_URL}/eng.1/scoreboard`,
+        {
+          next: {
+            revalidate: 60,
+          },
+        }
       );
+
+    if (!response.ok) {
+      return [];
     }
 
-    return res.json();
+    const data =
+      await response.json();
+
+    return data.events || [];
   } catch (error) {
     console.error(
-      "ESPN Provider Error:",
+      "ESPN Scores Error:",
       error
     );
 
-    return null;
+    return [];
   }
 }
 
-/**
- * LIVE MATCHES
- */
-export async function getESPNLiveMatches() {
-  const data = await fetchESPN(
-    "/eng.1/scoreboard"
-  );
+export async function getStandings() {
+  try {
+    const response =
+      await fetch(
+        `${BASE_URL}/eng.1/standings`,
+        {
+          next: {
+            revalidate: 300,
+          },
+        }
+      );
 
-  return data?.events || [];
+    if (!response.ok) {
+      return [];
+    }
+
+    const data =
+      await response.json();
+
+    return (
+      data?.children?.[0]
+        ?.standings?.entries || []
+    );
+  } catch (error) {
+    console.error(
+      "ESPN Standings Error:",
+      error
+    );
+
+    return [];
+  }
 }
 
-/**
- * EPL STANDINGS
- */
-export async function getESPNStandings() {
-  const data = await fetchESPN(
-    "/eng.1/standings"
-  );
+export async function getFixtures() {
+  try {
+    const response =
+      await fetch(
+        `${BASE_URL}/eng.1/schedule`,
+        {
+          next: {
+            revalidate: 300,
+          },
+        }
+      );
 
-  return (
-    data?.children?.[0]?.standings
-      ?.entries || []
-  );
-}
+    if (!response.ok) {
+      return [];
+    }
 
-/**
- * UCL MATCHES
- */
-export async function getESPNUCLMatches() {
-  const data = await fetchESPN(
-    "/uefa.champions/scoreboard"
-  );
+    const data =
+      await response.json();
 
-  return data?.events || [];
-}
+    return data.events || [];
+  } catch (error) {
+    console.error(
+      "ESPN Fixtures Error:",
+      error
+    );
 
-/**
- * NEXT ARSENAL MATCH
- */
-export async function getESPNNextMatch() {
-  const data = await fetchESPN(
-    "/eng.1/teams/arsenal"
-  );
-
-  return data || null;
+    return [];
+  }
 }

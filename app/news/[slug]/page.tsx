@@ -78,7 +78,7 @@ export default async function NewsPage({
         {/* META */}
         <div className="article-meta">
           <span>
-            {post.category}
+            {post.categories}
           </span>
 
           <span>•</span>
