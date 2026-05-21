@@ -1,4 +1,4 @@
-import "@/styles/globals.css";
+import "../styles/globals.css";   // ✅ corrected import path
 
 import type { Metadata } from "next";
 
@@ -54,17 +54,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const posts =
-    await getPosts();
+  const posts = await getPosts();
 
   return (
     <html lang="en">
       <body>
         <Header />
 
-        <BreakingTicker
-          posts={posts.slice(0, 6)}
-        />
+        <BreakingTicker posts={posts.slice(0, 6)} />
 
         <main>
           {children}

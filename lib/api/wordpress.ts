@@ -10,12 +10,17 @@ export async function getPosts(page = 1): Promise<WordPressPost[]> {
   try {
     const response = await fetch(
       `${API_URL}/wp-json/wp/v2/posts?_embed&per_page=12&page=${page}`,
-      {
-        next: { revalidate: 60 },
-      }
+      { next: { revalidate: 60 } }
     );
 
     if (!response.ok) {
+      console.error("WordPress Posts Error:", response.status, response.statusText);
+      return [];
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType?.includes("application/json")) {
+      console.error("Invalid response type:", contentType);
       return [];
     }
 
@@ -31,12 +36,17 @@ export async function getPostBySlug(slug: string): Promise<WordPressPost | null>
   try {
     const response = await fetch(
       `${API_URL}/wp-json/wp/v2/posts?_embed&slug=${slug}`,
-      {
-        next: { revalidate: 60 },
-      }
+      { next: { revalidate: 60 } }
     );
 
     if (!response.ok) {
+      console.error("Single Post Error:", response.status, response.statusText);
+      return null;
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType?.includes("application/json")) {
+      console.error("Invalid response type:", contentType);
       return null;
     }
 
@@ -56,10 +66,19 @@ export async function getCategoryPosts(slug: string): Promise<WordPressPost[]> {
   try {
     const categoryResponse = await fetch(
       `${API_URL}/wp-json/wp/v2/categories?slug=${slug}`,
-      {
-        next: { revalidate: 300 },
-      }
+      { next: { revalidate: 300 } }
     );
+
+    if (!categoryResponse.ok) {
+      console.error("Category Fetch Error:", categoryResponse.status, categoryResponse.statusText);
+      return [];
+    }
+
+    const contentType = categoryResponse.headers.get("content-type");
+    if (!contentType?.includes("application/json")) {
+      console.error("Invalid category response type:", contentType);
+      return [];
+    }
 
     const categoryData = await categoryResponse.json();
     if (!categoryData.length) {
@@ -70,10 +89,19 @@ export async function getCategoryPosts(slug: string): Promise<WordPressPost[]> {
 
     const postsResponse = await fetch(
       `${API_URL}/wp-json/wp/v2/posts?_embed&categories=${categoryId}&per_page=12`,
-      {
-        next: { revalidate: 60 },
-      }
+      { next: { revalidate: 60 } }
     );
+
+    if (!postsResponse.ok) {
+      console.error("Category Posts Error:", postsResponse.status, postsResponse.statusText);
+      return [];
+    }
+
+    const postsContentType = postsResponse.headers.get("content-type");
+    if (!postsContentType?.includes("application/json")) {
+      console.error("Invalid posts response type:", postsContentType);
+      return [];
+    }
 
     const posts = await postsResponse.json();
     return posts.map(formatPost);
