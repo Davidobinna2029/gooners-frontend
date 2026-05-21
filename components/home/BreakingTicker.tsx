@@ -25,7 +25,11 @@ export default function BreakingTicker({ posts }: Props) {
                 href={`/news/${post.slug}`}
                 className="ticker-item"
               >
-                {post.title.rendered}
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: post.title?.rendered || "",
+                  }}
+                />
               </Link>
             ))}
           </div>

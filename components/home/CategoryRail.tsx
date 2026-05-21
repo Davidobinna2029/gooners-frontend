@@ -1,12 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 
-export default function CategoryRail({
-  title,
-  posts,
-}: any) {
-  if (!posts?.length)
-    return null;
+export default function CategoryRail({ title, posts }: any) {
+  if (!posts?.length) return null;
 
   return (
     <section className="rail">
@@ -23,11 +19,8 @@ export default function CategoryRail({
           >
             <div className="rail-image">
               <Image
-                src={
-                  post.featuredImage ||
-                  "/placeholder.jpg"
-                }
-                alt={post.title}
+                src={post.featuredImage || "/placeholder.jpg"}
+                alt={post.title?.rendered || "Arsenal news"}
                 fill
                 className="object-cover"
               />
@@ -36,8 +29,7 @@ export default function CategoryRail({
             <div className="rail-content">
               <h3
                 dangerouslySetInnerHTML={{
-                  __html:
-                    post.title,
+                  __html: post.title?.rendered || "",
                 }}
               />
             </div>

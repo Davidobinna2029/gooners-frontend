@@ -1,15 +1,15 @@
 import { WordPressPost } from "@/types/wordpress";
 
-const API_URL = process.env.NEXT_PUBLIC_WORDPRESS_URL;
+const API_URL = process.env.NEXT_PUBLIC_WORDPRESS_API_URL;
 
 if (!API_URL) {
-  throw new Error("NEXT_PUBLIC_WORDPRESS_URL missing");
+  throw new Error("NEXT_PUBLIC_WORDPRESS_API_URL missing");
 }
 
 export async function getPosts(page = 1): Promise<WordPressPost[]> {
   try {
     const response = await fetch(
-      `${API_URL}/wp-json/wp/v2/posts?_embed&per_page=12&page=${page}`,
+      `${API_URL}/posts?_embed&per_page=12&page=${page}`,
       { next: { revalidate: 60 } }
     );
 
@@ -35,7 +35,7 @@ export async function getPosts(page = 1): Promise<WordPressPost[]> {
 export async function getPostBySlug(slug: string): Promise<WordPressPost | null> {
   try {
     const response = await fetch(
-      `${API_URL}/wp-json/wp/v2/posts?_embed&slug=${slug}`,
+      `${API_URL}/posts?_embed&slug=${slug}`,
       { next: { revalidate: 60 } }
     );
 
@@ -65,7 +65,7 @@ export async function getPostBySlug(slug: string): Promise<WordPressPost | null>
 export async function getCategoryPosts(slug: string): Promise<WordPressPost[]> {
   try {
     const categoryResponse = await fetch(
-      `${API_URL}/wp-json/wp/v2/categories?slug=${slug}`,
+      `${API_URL}/categories?slug=${slug}`,
       { next: { revalidate: 300 } }
     );
 
@@ -88,7 +88,7 @@ export async function getCategoryPosts(slug: string): Promise<WordPressPost[]> {
     const categoryId = categoryData[0].id;
 
     const postsResponse = await fetch(
-      `${API_URL}/wp-json/wp/v2/posts?_embed&categories=${categoryId}&per_page=12`,
+      `${API_URL}/posts?_embed&categories=${categoryId}&per_page=12`,
       { next: { revalidate: 60 } }
     );
 
@@ -123,7 +123,7 @@ function formatPost(post: any): WordPressPost {
       post?._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
       "/images/placeholder.jpg",
     category:
-      post?._embedded?.["wp:term"]?.[0]?.[0]?.name || "Arsenal", // ✅ singular
+      post?._embedded?.["wp:term"]?.[0]?.[0]?.name || "Arsenal",
     author: post?._embedded?.author?.[0]?.name || "ArsenalTalks",
   };
 }

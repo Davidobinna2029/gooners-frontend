@@ -30,18 +30,20 @@ export default function TrendingRail({ posts }: Props) {
               <div className="trending-image">
                 <Image
                   src={post.featuredImage}
-                  alt={post.title.rendered}
+                  alt={post.title?.rendered || "Arsenal news"}
                   fill
                   className="object-cover"
                 />
               </div>
 
               <div className="trending-content">
-                <p className="trending-tag">
-                  {post.category}
-                </p>
+                <p className="trending-tag">{post.category}</p>
 
-                <h3>{post.title.rendered}</h3>
+                <h3
+                  dangerouslySetInnerHTML={{
+                    __html: post.title?.rendered || "",
+                  }}
+                />
               </div>
             </Link>
           ))}

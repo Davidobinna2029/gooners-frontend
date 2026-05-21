@@ -30,18 +30,20 @@ export default function EditorsPicks({ posts }: Props) {
               <div className="editors-image">
                 <Image
                   src={post.featuredImage}
-                  alt={post.title.rendered}
+                  alt={post.title?.rendered || "Arsenal news"}
                   fill
                   className="object-cover"
                 />
               </div>
 
               <div className="editors-content">
-                <span className="editors-tag">
-                  {post.category}
-                </span>
+                <span className="editors-tag">{post.category}</span>
 
-                <h3>{post.title.rendered}</h3>
+                <h3
+                  dangerouslySetInnerHTML={{
+                    __html: post.title?.rendered || "",
+                  }}
+                />
 
                 <p>
                   {post.excerpt?.rendered

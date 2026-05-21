@@ -12,9 +12,7 @@ export default function TransferCenter({ posts }: Props) {
   }
 
   const transfers = posts.filter((post) =>
-    post.category
-      ?.toLowerCase()
-      .includes("transfer")
+    post.category?.toLowerCase().includes("transfer")
   );
 
   return (
@@ -34,18 +32,20 @@ export default function TransferCenter({ posts }: Props) {
               <div className="transfer-image">
                 <Image
                   src={post.featuredImage}
-                  alt={post.title.rendered}
+                  alt={post.title?.rendered || "Arsenal transfer news"}
                   fill
                   className="object-cover"
                 />
               </div>
 
               <div className="transfer-content">
-                <span className="transfer-tag">
-                  {post.category}
-                </span>
+                <span className="transfer-tag">{post.category}</span>
 
-                <h3>{post.title.rendered}</h3>
+                <h3
+                  dangerouslySetInnerHTML={{
+                    __html: post.title?.rendered || "",
+                  }}
+                />
 
                 <p>
                   {post.excerpt?.rendered
