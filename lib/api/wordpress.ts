@@ -5,7 +5,10 @@ const apiUrl =
   "https://api.arsenaltalks.com/wp-json/wp/v2";
 
 /**
- * Safe fetch wrapper (timeout + error handling + ISR support)
+ * Safe fetch wrapper
+ * - Prevents HTML responses breaking JSON parsing
+ * - Adds timeout protection
+ * - Supports Next.js ISR caching
  */
 async function safeFetch(url: string) {
   const controller = new AbortController();
@@ -14,20 +17,29 @@ async function safeFetch(url: string) {
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      next: { revalidate: 60 }, // ISR caching (Next.js App Router)
+      next: { revalidate: 60 }, // ISR caching (1 min)
     });
 
     clearTimeout(timeout);
 
-    if (!res.ok) {
-      console.error("WordPress API error:", res.status, url);
+    const contentType = res.headers.get("content-type") || "";
+
+    // ❌ Block non-JSON responses (HTML, redirects, errors)
+    if (!contentType.includes("application/json")) {
+      const text = await res.text();
+
+      console.error("❌ NON-JSON RESPONSE:", url);
+      console.error(text.slice(0, 200));
+
       return null;
     }
 
     return await res.json();
   } catch (err) {
     clearTimeout(timeout);
-    console.error("WordPress fetch failed:", err);
+
+    console.error("❌ FETCH FAILED:", url, err);
+
     return null;
   }
 }
@@ -66,9 +78,9 @@ export async function getCategories() {
 }
 
 /**
- * Fetch posts by category SLUG (robust 2-step WordPress method)
- * Step 1: get category ID from slug
- * Step 2: fetch posts using category ID
+ * Fetch posts by category slug (2-step WordPress method)
+ * 1. Get category ID
+ * 2. Fetch posts using ID
  */
 export async function getCategoryPosts(slug: string) {
   const categories = await safeFetch(
@@ -78,7 +90,7 @@ export async function getCategoryPosts(slug: string) {
   const category = Array.isArray(categories) ? categories[0] : null;
 
   if (!category?.id) {
-    console.warn("Category not found for slug:", slug);
+    console.warn("⚠️ Category not found:", slug);
     return [];
   }
 
@@ -90,7 +102,7 @@ export async function getCategoryPosts(slug: string) {
 }
 
 /**
- * Optional: scores endpoint (only works if custom WP route exists)
+ * Optional: scores endpoint (ONLY works if WP custom route exists)
  */
 export async function getScores() {
   const data = await safeFetch(`${apiUrl}/scores`);
