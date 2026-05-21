@@ -1,9 +1,20 @@
 export default function Loading() {
   return (
-    <div className="page-loading">
-      <div className="loader" />
+    <main className="page-loading">
+      <div className="container">
+        <div className="loading-hero" />
 
-      <p>Loading ArsenalTalks...</p>
-    </div>
+        <div className="loading-grid">
+          {Array.from({
+            length: 6,
+          }).map((_, i) => (
+            <div
+              key={i}
+              className="loading-card"
+            />
+          ))}
+        </div>
+      </div>
+    </main>
   );
 }

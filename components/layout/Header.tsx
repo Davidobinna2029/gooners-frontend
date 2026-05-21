@@ -2,29 +2,47 @@ import Link from "next/link";
 
 export default function Header() {
   return (
-    <header className="header">
-      <div className="header-inner">
+    <header className="site-header">
+      <div className="container header-inner">
+
         {/* LOGO */}
-        <Link href="/" className="logo">
+
+        <Link
+          href="/"
+          className="logo"
+        >
           ArsenalTalks
         </Link>
 
-        {/* NAV */}
-        <nav className="nav">
-          <Link href="/category/transfer-news">
+        {/* NAVIGATION */}
+
+        <nav className="nav-links">
+          <Link href="/">
+            Home
+          </Link>
+
+          <Link href="/news">
+            News
+          </Link>
+
+          <Link href="/live">
+            Live
+          </Link>
+
+          <Link href="/standings">
+            Standings
+          </Link>
+
+          <Link href="/fixtures">
+            Fixtures
+          </Link>
+
+          <Link href="/transfers">
             Transfers
           </Link>
 
-          <Link href="/category/injury-news">
-            Injuries
-          </Link>
-
-          <Link href="/category/ucl">
-            UCL
-          </Link>
-
-          <Link href="/category/opinions">
-            Opinions
+          <Link href="/search">
+            Search
           </Link>
         </nav>
       </div>

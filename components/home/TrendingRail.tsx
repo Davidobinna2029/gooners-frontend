@@ -6,28 +6,28 @@ interface Props {
   posts: WordPressPost[];
 }
 
-export default function EditorsPicks({ posts }: Props) {
+export default function TrendingRail({ posts }: Props) {
   if (!posts?.length) {
     return null;
   }
 
-  const picks = posts.slice(2, 6);
+  const trending = posts.slice(0, 5);
 
   return (
-    <section className="editors-picks">
+    <section className="trending-rail">
       <div className="container">
         <div className="section-heading">
-          <h2>Editor’s Picks</h2>
+          <h2>Trending Now</h2>
         </div>
 
-        <div className="editors-grid">
-          {picks.map((post) => (
+        <div className="trending-grid">
+          {trending.map((post) => (
             <Link
               key={post.id}
               href={`/news/${post.slug}`}
-              className="editors-card"
+              className="trending-card"
             >
-              <div className="editors-image">
+              <div className="trending-image">
                 <Image
                   src={post.featuredImage}
                   alt={post.title.rendered}
@@ -36,19 +36,12 @@ export default function EditorsPicks({ posts }: Props) {
                 />
               </div>
 
-              <div className="editors-content">
-                <span className="editors-tag">
+              <div className="trending-content">
+                <p className="trending-tag">
                   {post.category}
-                </span>
+                </p>
 
                 <h3>{post.title.rendered}</h3>
-
-                <p>
-                  {post.excerpt?.rendered
-                    ?.replace(/<[^>]+>/g, "")
-                    .slice(0, 110)}
-                  ...
-                </p>
               </div>
             </Link>
           ))}

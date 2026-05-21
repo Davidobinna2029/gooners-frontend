@@ -1,38 +1,42 @@
-import { getCategoryPosts } from "@/lib/wordpress";
-
-import Header from "@/components/layout/Header";
-
 import NewsCard from "@/components/news/NewsCard";
+
+import {
+  getCategoryPosts,
+} from "@/lib/api/wordpress";
+
+interface Props {
+  params: Promise<{
+    slug: string;
+  }>;
+}
 
 export default async function CategoryPage({
   params,
-}: any) {
+}: Props) {
+  const { slug } =
+    await params;
+
   const posts =
     await getCategoryPosts(
-      params.slug
+      slug
     );
 
   return (
-    <>
-      <Header />
-
-      <main className="category-page">
-        <h1>
-          {params.slug.replace(
-            "-",
-            " "
-          )}
+    <main className="category-page">
+      <div className="container">
+        <h1 className="category-title">
+          {slug}
         </h1>
 
-        <div className="category-grid">
-          {posts.map((post: any) => (
+        <div className="news-grid">
+          {posts.map((post) => (
             <NewsCard
               key={post.id}
               post={post}
             />
           ))}
         </div>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }

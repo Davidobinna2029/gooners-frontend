@@ -1,36 +1,35 @@
 import Link from "next/link";
+import { WordPressPost } from "@/types/wordpress";
 
 interface Props {
-  posts: any[];
+  posts: WordPressPost[];
 }
 
-export default function BreakingTicker({
-  posts,
-}: Props) {
-  if (!posts?.length)
+export default function BreakingTicker({ posts }: Props) {
+  if (!posts?.length) {
     return null;
+  }
+
+  // Editorial: show top 6 breaking posts
+  const breaking = posts.slice(0, 6);
 
   return (
     <section className="breaking-ticker">
-      <div className="ticker-label">
-        BREAKING
-      </div>
-
-      <div className="ticker-scroll">
-        {posts.map((post) => (
-          <Link
-            key={post.id}
-            href={`/news/${post.slug}`}
-            className="ticker-item"
-          >
-            <span
-              dangerouslySetInnerHTML={{
-                __html:
-                  post.title,
-              }}
-            />
-          </Link>
-        ))}
+      <div className="container">
+        <div className="ticker-inner">
+          <span className="ticker-label">BREAKING</span>
+          <div className="ticker-scroll">
+            {breaking.map((post) => (
+              <Link
+                key={post.id}
+                href={`/news/${post.slug}`}
+                className="ticker-item"
+              >
+                {post.title.rendered}
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

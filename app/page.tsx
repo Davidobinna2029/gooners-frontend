@@ -1,164 +1,98 @@
-import Header from "@/components/layout/Header";
-
 import Hero from "@/components/home/Hero";
 
 import FeaturedGrid from "@/components/home/FeaturedGrid";
 
-import CategoryRail from "@/components/home/CategoryRail";
-
-import TrendingList from "@/components/home/TrendingList";
-
 import BreakingTicker from "@/components/home/BreakingTicker";
 
-import VideoHighlights from "@/components/home/VideoHighlights";
+import TrendingRail from "@/components/home/TrendingRail";
 
-import LiveScores from "@/components/sports/LiveScores";
+import TransferCenter from "@/components/home/TransferCenter";
 
-import StickyScoreStrip from "@/components/sports/StickyScoreStrip";
+import EditorsPicks from "@/components/home/EditorsPicks";
 
-import Standings from "@/components/sports/Standings";
+import MatchHero from "@/components/home/MatchHero";
 
-import NextMatch from "@/components/sports/NextMatch";
-
-import { getPosts } from "@/lib/wordpress";
+import StickyScoreStrip from "@/components/layout/StickyScoreStrip";
 
 import {
-  getLiveMatches,
-  getStandings,
-  getNextMatch,
-  getUCLMatches,
-} from "@/lib/sports";
+  getPosts,
+} from "@/lib/api/wordpress";
 
-import { buildHomepage } from "@/lib/orchestrator/homepage";
+import {
+  rankHomepagePosts,
+} from "@/lib/orchestrator/homepage";
 
-/**
- * SEO
- */
-export const metadata = {
-  title:
-    "ArsenalTalks - Arsenal News, Transfers & Live Football",
+async function getScores() {
 
-  description:
-    "Latest Arsenal news, transfer updates, live scores, standings and Champions League coverage.",
-};
+  try {
 
-/**
- * PAGE
- */
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_SITE_URL}/api/scores`,
+      {
+        next: {
+          revalidate: 60,
+        },
+      }
+    );
+
+    return response.json();
+
+  } catch {
+
+    return [];
+
+  }
+
+}
+
 export default async function HomePage() {
-  /**
-   * CONTENT
-   */
-  const posts =
+
+  const rawPosts =
     await getPosts();
 
-  /**
-   * SPORTS
-   */
-  const liveMatches =
-    await getLiveMatches();
+  const posts =
+    rankHomepagePosts(
+      rawPosts
+    );
 
-  const standings =
-    await getStandings();
-
-  const nextMatch =
-    await getNextMatch();
-
-  const uclMatches =
-    await getUCLMatches();
-
-  /**
-   * HOMEPAGE ORCHESTRATION
-   */
-  const homepage =
-    buildHomepage(posts);
+  const scores =
+    await getScores();
 
   return (
-    <>
-      {/* HEADER */}
-      <Header />
+    <main>
 
-      {/* STICKY SCORES */}
       <StickyScoreStrip
-        matches={liveMatches}
+        matches={scores}
       />
 
-      {/* BREAKING TICKER */}
       <BreakingTicker
-        posts={homepage.trending.slice(
-          0,
-          5
-        )}
+        posts={posts}
       />
 
-      <main className="homepage">
-        {/* HERO */}
-        <Hero
-          post={homepage.hero}
-        />
+      <Hero
+        featured={posts.slice(0, 4)}
+      />
 
-        {/* FEATURED */}
-        <FeaturedGrid
-          posts={homepage.featured}
-        />
+      <MatchHero
+        nextMatch={scores?.[0]}
+      />
 
-        {/* LIVE SCORES */}
-        <LiveScores
-          matches={liveMatches}
-        />
+      <TrendingRail
+        posts={posts}
+      />
 
-        {/* TRANSFER NEWS */}
-        <CategoryRail
-          title="Transfer News"
-          posts={
-            homepage.rails
-              .transferNews
-          }
-        />
+      <EditorsPicks
+        posts={posts}
+      />
 
-        {/* INJURY NEWS */}
-        <CategoryRail
-          title="Injury News"
-          posts={
-            homepage.rails
-              .injuryNews
-          }
-        />
+      <TransferCenter
+        posts={posts}
+      />
 
-        {/* UCL NEWS */}
-        <CategoryRail
-          title="Champions League"
-          posts={
-            homepage.rails.uclNews
-          }
-        />
+      <FeaturedGrid
+        posts={posts.slice(4)}
+      />
 
-        {/* UCL MATCHES */}
-        <LiveScores
-          matches={uclMatches}
-        />
-
-        {/* VIDEO */}
-        <VideoHighlights />
-
-        {/* TRENDING */}
-        <TrendingList
-          posts={
-            homepage.trending
-          }
-        />
-
-        {/* FOOTBALL WIDGETS */}
-        <section className="sports-widgets">
-          <Standings
-            table={standings}
-          />
-
-          <NextMatch
-            match={nextMatch}
-          />
-        </section>
-      </main>
-    </>
+    </main>
   );
 }

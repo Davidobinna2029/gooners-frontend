@@ -1,15 +1,22 @@
-export default function LoadingArticle() {
+export default function Loading() {
   return (
     <div className="article-loading">
-      <div className="skeleton-image" />
+      <div className="container">
+        <div className="loading-title" />
 
-      <div className="skeleton-title" />
+        <div className="loading-image" />
 
-      <div className="skeleton-text" />
-
-      <div className="skeleton-text" />
-
-      <div className="skeleton-text" />
+        <div className="loading-lines">
+          {Array.from({
+            length: 12,
+          }).map((_, i) => (
+            <div
+              key={i}
+              className="loading-line"
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,37 +1,46 @@
 import Link from "next/link";
 
+interface Props {
+  posts: any[];
+}
+
 export default function TrendingList({
   posts,
-}: any) {
-  if (!posts?.length)
-    return null;
-
+}: Props) {
   return (
-    <section className="trending">
-      <h2>Trending</h2>
+    <section className="trending-section">
+      <div className="container">
+        <h2>
+          Trending Now
+        </h2>
 
-      <ol>
-        {posts.map(
-          (post: any, index: number) => (
-            <li key={post.id}>
-              <span>
-                {index + 1}
-              </span>
-
+        <div className="trending-list">
+          {posts.map(
+            (
+              post: any,
+              index
+            ) => (
               <Link
+                key={post.id}
                 href={`/news/${post.slug}`}
+                className="trending-item"
               >
-                <span
+                <span>
+                  0{index + 1}
+                </span>
+
+                <h3
                   dangerouslySetInnerHTML={{
                     __html:
-                      post.title,
+                      post.title
+                        .rendered,
                   }}
                 />
               </Link>
-            </li>
-          )
-        )}
-      </ol>
+            )
+          )}
+        </div>
+      </div>
     </section>
   );
 }

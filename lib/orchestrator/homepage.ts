@@ -1,79 +1,60 @@
-import { classifyPost } from "./classify";
+import { WordPressPost } from "@/types/wordpress";
 
-import { rankPosts } from "./rank";
+function calculateScore(post: WordPressPost) {
+  let score = 0;
 
-export function buildHomepage(
-  posts: any[]
-) {
-  /**
-   * ENRICH POSTS
-   */
-  const enriched = posts.map(
-    (post) => ({
-      ...post,
+  // RECENCY BOOST
+  const published = new Date(post.date).getTime();
+  const now = Date.now();
+  const hoursOld = (now - published) / (1000 * 60 * 60);
 
-      meta: classifyPost(post),
-    })
-  );
+  if (hoursOld < 3) {
+    score += 50;
+  } else if (hoursOld < 12) {
+    score += 35;
+  } else if (hoursOld < 24) {
+    score += 20;
+  }
 
-  /**
-   * RANK POSTS
-   */
-  const ranked =
-    rankPosts(enriched);
+  // CATEGORY BOOST
+  const category = post.category?.toLowerCase(); // ✅ singular
 
-  /**
-   * HERO STORY
-   */
-  const hero =
-    ranked[0] || null;
+  if (category?.includes("transfer")) {
+    score += 25;
+  }
 
-  /**
-   * FEATURED STORIES
-   */
-  const featured =
-    ranked.slice(1, 5);
+  if (category?.includes("champions")) {
+    score += 20;
+  }
 
-  /**
-   * TRENDING STORIES
-   */
-  const trending =
-    ranked.slice(0, 6);
+  if (category?.includes("breaking")) {
+    score += 40;
+  }
 
-  /**
-   * CATEGORY RAILS
-   */
-  const transferNews =
-    ranked.filter(
-      (post) =>
-        post.meta.isTransfer
-    );
+  if (category?.includes("exclusive")) {
+    score += 35;
+  }
 
-  const injuryNews =
-    ranked.filter(
-      (post) =>
-        post.meta.isInjury
-    );
+  // TITLE BOOST
+  const title = post.title.rendered.toLowerCase();
 
-  const uclNews =
-    ranked.filter(
-      (post) => post.meta.isUCL
-    );
+  if (title.includes("confirmed")) {
+    score += 18;
+  }
 
-  /**
-   * FINAL HOMEPAGE OBJECT
-   */
-  return {
-    hero,
+  if (title.includes("agreement")) {
+    score += 14;
+  }
 
-    featured,
+  if (title.includes("done deal")) {
+    score += 20;
+  }
 
-    trending,
+  return score;
+}
 
-    rails: {
-      transferNews,
-      injuryNews,
-      uclNews,
-    },
-  };
+export function rankHomepagePosts(posts: WordPressPost[]) {
+  return posts.sort((a, b) => {
+    return calculateScore(b) - calculateScore(a);
+  });
 }

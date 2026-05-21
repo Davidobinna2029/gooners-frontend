@@ -1,10 +1,15 @@
 import Image from "next/image";
+import parse from "html-react-parser";
 
-import { notFound } from "next/navigation";
+import {
+  getPostBySlug,
+  getPosts,
+} from "@/lib/api/wordpress";
 
-import Header from "@/components/layout/Header";
-
-import { getPost } from "@/lib/wordpress";
+import ArticleMeta from "@/components/news/ArticleMeta";
+import ShareBar from "@/components/news/ShareBar";
+import RelatedPosts from "@/components/news/RelatedPosts";
+import AuthorBox from "@/components/news/AuthorBox";
 
 interface Props {
   params: Promise<{
@@ -12,107 +17,96 @@ interface Props {
   }>;
 }
 
-export async function generateMetadata({
-  params,
-}: Props) {
-  const { slug } =
-    await params;
-
-  const post =
-    await getPost(slug);
+export async function generateMetadata({ params }: Props) {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     return {
-      title: "Article Not Found",
+      title: "Article Not Found | ArsenalTalks",
     };
   }
 
   return {
     title: `${post.title.rendered} | ArsenalTalks`,
-
-    description:
-      post.excerpt?.rendered
-        ?.replace(
-          /<[^>]+>/g,
-          ""
-        )
-        ?.slice(0, 160),
+    description: post.excerpt.rendered
+      .replace(/<[^>]+>/g, "")
+      .slice(0, 150),
+    openGraph: {
+      title: post.title.rendered,
+      description: post.excerpt.rendered
+        .replace(/<[^>]+>/g, "")
+        .slice(0, 150),
+      images: [
+        {
+          url: post.featuredImage,
+        },
+      ],
+    },
   };
 }
 
-export default async function NewsPage({
-  params,
-}: Props) {
-  const { slug } =
-    await params;
-
-  const post =
-    await getPost(slug);
+export default async function ArticlePage({ params }: Props) {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
+  const latest = await getPosts();
 
   if (!post) {
-    notFound();
+    return (
+      <div className="container">
+        <div style={{ padding: "80px 0" }}>
+          <h1>Article not found</h1>
+          <p>
+            This article may have been removed or the URL is incorrect.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <>
-      <Header />
+    <article className="article-page">
+      <div className="container">
+        <header className="article-header">
+          <span className="article-category">
+            {post.category || "Arsenal"} {/* ✅ fixed */}
+          </span>
 
-      <main className="article-page">
-        {/* FEATURED IMAGE */}
+          <h1>{post.title.rendered}</h1>
+
+          <ArticleMeta author={post.author} date={post.date} />
+        </header>
+
         <div className="article-image">
           <Image
-            src={
-              post.featuredImage ||
-              "/fallback.jpg"
-            }
-            alt={
-              post.title.rendered
-            }
+            src={post.featuredImage}
+            alt={post.title.rendered}
             fill
             priority
-            unoptimized
             className="object-cover"
           />
         </div>
 
-        {/* META */}
-        <div className="article-meta">
-          <span>
-            {post.categories}
-          </span>
+        <div className="article-layout">
+          <aside className="article-sidebar">
+            <ShareBar slug={post.slug} title={post.title.rendered} />
+          </aside>
 
-          <span>•</span>
+          <main className="article-main">
+            <div className="article-body">
+              {parse(post.content.rendered)}
+            </div>
 
-          <span>
-            {new Date(
-              post.date
-            ).toLocaleDateString()}
-          </span>
+            <AuthorBox author={post.author} />
 
-          <span>•</span>
-
-          <span>
-            By {post.author}
-          </span>
+            <RelatedPosts
+              posts={latest
+                .filter((item) => item.id !== post.id)
+                .slice(0, 4)}
+            />
+          </main>
         </div>
-
-        {/* TITLE */}
-        <h1
-          dangerouslySetInnerHTML={{
-            __html:
-              post.title.rendered,
-          }}
-        />
-
-        {/* CONTENT */}
-        <article
-          className="article-content"
-          dangerouslySetInnerHTML={{
-            __html:
-              post.content.rendered,
-          }}
-        />
-      </main>
-    </>
+      </div>
+    </article>
   );
 }
