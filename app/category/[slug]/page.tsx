@@ -4,6 +4,10 @@ import {
   getCategoryPosts,
 } from "@/lib/api/wordpress";
 
+import {
+  mapWordPressPosts,
+} from "@/lib/mappers/wordpressMapper";
+
 interface Props {
   params: Promise<{
     slug: string;
@@ -13,17 +17,18 @@ interface Props {
 export default async function CategoryPage({
   params,
 }: Props) {
-  const { slug } =
-    await params;
+  const { slug } = await params;
 
-  const posts =
-    await getCategoryPosts(
-      slug
-    );
+  // 1. Fetch RAW WordPress posts
+  const rawPosts = await getCategoryPosts(slug);
+
+  // 2. Normalize into UI-safe structure
+  const posts = mapWordPressPosts(rawPosts);
 
   return (
     <main className="category-page">
       <div className="container">
+
         <h1 className="category-title">
           {slug}
         </h1>
@@ -36,6 +41,7 @@ export default async function CategoryPage({
             />
           ))}
         </div>
+
       </div>
     </main>
   );

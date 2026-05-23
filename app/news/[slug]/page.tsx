@@ -6,6 +6,11 @@ import {
   getPosts,
 } from "@/lib/api/wordpress";
 
+import {
+  mapWordPressPost,
+  mapWordPressPosts,
+} from "@/lib/mappers/wordpressMapper";
+
 import ArticleMeta from "@/components/news/ArticleMeta";
 import ShareBar from "@/components/news/ShareBar";
 import RelatedPosts from "@/components/news/RelatedPosts";
@@ -17,95 +22,181 @@ interface Props {
   }>;
 }
 
-export async function generateMetadata({ params }: Props) {
+/**
+ * SEO Metadata
+ */
+export async function generateMetadata({
+  params,
+}: Props) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
 
-  if (!post) {
+  const rawPost =
+    await getPostBySlug(slug);
+
+  if (!rawPost) {
     return {
-      title: "Article Not Found | ArsenalTalks",
+      title:
+        "Article Not Found | ArsenalTalks",
+
+      description:
+        "The requested article could not be found.",
     };
   }
 
+  const post =
+    mapWordPressPost(rawPost);
+
   return {
-    title: `${post.title.rendered} | ArsenalTalks`,
-    description: post.excerpt.rendered
-      .replace(/<[^>]+>/g, "")
-      .slice(0, 150),
+    title:
+      `${post.title} | ArsenalTalks`,
+
+    description:
+      post.excerpt?.slice(0, 150) ||
+      "Latest Arsenal news",
+
     openGraph: {
-      title: post.title.rendered,
-      description: post.excerpt.rendered
-        .replace(/<[^>]+>/g, "")
-        .slice(0, 150),
+      title: post.title,
+
+      description:
+        post.excerpt?.slice(0, 150) ||
+        "Latest Arsenal news",
+
       images: [
         {
-          url: post.featuredImage,
+          url:
+            post.image ||
+            "/fallback.jpg",
         },
       ],
     },
   };
 }
 
-export default async function ArticlePage({ params }: Props) {
+/**
+ * Article Page
+ */
+export default async function ArticlePage({
+  params,
+}: Props) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
-  const latest = await getPosts();
 
-  if (!post) {
+  // SAFE FETCHES
+  const rawPost =
+    await getPostBySlug(slug);
+
+  const rawLatest =
+    await getPosts();
+
+  // NOT FOUND STATE
+  if (!rawPost) {
     return (
       <div className="container">
-        <div style={{ padding: "80px 0" }}>
-          <h1>Article not found</h1>
+        <div
+          style={{
+            padding: "80px 0",
+          }}
+        >
+          <h1>
+            Article not found
+          </h1>
+
           <p>
-            This article may have been removed or the URL is incorrect.
+            This article may have
+            been removed or the URL
+            is incorrect.
           </p>
         </div>
       </div>
     );
   }
 
+  // SAFE NORMALIZATION
+  const post =
+    mapWordPressPost(rawPost);
+
+  const latest =
+    mapWordPressPosts(
+      rawLatest || []
+    );
+
+  // SAFE HTML CONTENT
+  const articleContent =
+    rawPost?.content?.rendered ||
+    "<p>No article content.</p>";
+
   return (
     <article className="article-page">
       <div className="container">
+
+        {/* HEADER */}
         <header className="article-header">
+
           <span className="article-category">
-            {post.category || "Arsenal"} {/* ✅ fixed */}
+            Arsenal
           </span>
 
-          <h1>{post.title.rendered}</h1>
+          <h1>
+            {post.title}
+          </h1>
 
-          <ArticleMeta author={post.author} date={post.date} />
+          <ArticleMeta
+            date={post.date}
+          />
+
         </header>
 
+        {/* FEATURED IMAGE */}
         <div className="article-image">
           <Image
-            src={post.featuredImage}
-            alt={post.title.rendered}
+            src={
+              post.image ||
+              "/fallback.jpg"
+            }
+            alt={
+              post.title ||
+              "Arsenal news"
+            }
             fill
             priority
             className="object-cover"
           />
         </div>
 
+        {/* ARTICLE LAYOUT */}
         <div className="article-layout">
+
+          {/* SHARE SIDEBAR */}
           <aside className="article-sidebar">
-            <ShareBar slug={post.slug} title={post.title.rendered} />
+            <ShareBar
+              slug={post.slug}
+              title={post.title}
+            />
           </aside>
 
+          {/* ARTICLE CONTENT */}
           <main className="article-main">
+
             <div className="article-body">
-              {parse(post.content.rendered)}
+              {parse(articleContent)}
             </div>
 
-            <AuthorBox author={post.author} />
+            <AuthorBox />
 
+            {/* RELATED POSTS */}
             <RelatedPosts
               posts={latest
-                .filter((item) => item.id !== post.id)
+                .filter(
+                  (item) =>
+                    item.id !==
+                    post.id
+                )
                 .slice(0, 4)}
             />
+
           </main>
+
         </div>
+
       </div>
     </article>
   );

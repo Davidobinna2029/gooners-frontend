@@ -1,4 +1,4 @@
-import "../styles/globals.css";   // ✅ corrected import path
+import "../styles/globals.css";
 
 import type { Metadata } from "next";
 
@@ -7,6 +7,7 @@ import BreakingTicker from "@/components/home/BreakingTicker";
 import Footer from "@/components/layout/Footer";
 
 import { getPosts } from "@/lib/api/wordpress";
+import { mapWordPressPosts } from "@/lib/mappers/wordpressMapper";
 
 export const metadata: Metadata = {
   title: {
@@ -33,11 +34,8 @@ export const metadata: Metadata = {
       "Latest Arsenal news, transfer updates, fixtures, live scores and match analysis.",
 
     url: "https://arsenaltalks.com",
-
     siteName: "ArsenalTalks",
-
     locale: "en_GB",
-
     type: "website",
   },
 
@@ -51,21 +49,24 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  const posts = await getPosts();
+}) {
+  // 1. RAW DATA
+  const rawPosts = await getPosts();
+
+  // 2. NORMALIZED DATA (CRITICAL FIX)
+  const posts = mapWordPressPosts(rawPosts || []);
 
   return (
     <html lang="en">
       <body>
         <Header />
 
+        {/* SAFE NOW */}
         <BreakingTicker posts={posts.slice(0, 6)} />
 
-        <main>
-          {children}
-        </main>
+        <main>{children}</main>
 
         <Footer />
       </body>

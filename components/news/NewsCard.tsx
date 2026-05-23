@@ -1,9 +1,16 @@
 import Link from "next/link";
 import Image from "next/image";
 
+import { NormalizedPost }
+  from "@/lib/mappers/wordpressMapper";
+
+interface Props {
+  post: NormalizedPost;
+}
+
 export default function NewsCard({
   post,
-}: any) {
+}: Props) {
   return (
     <Link
       href={`/news/${post.slug}`}
@@ -11,22 +18,15 @@ export default function NewsCard({
     >
       <div className="news-image">
         <Image
-          src={
-            post.featuredImage ||
-            "/placeholder.jpg"
-          }
-          alt={post.title}
+          src={post.image || "/placeholder.jpg"}
+          alt={post.title || "Arsenal news"}
           fill
           className="object-cover"
         />
       </div>
 
       <div className="news-content">
-        <h3
-          dangerouslySetInnerHTML={{
-            __html: post.title,
-          }}
-        />
+        <h3>{post.title}</h3>
       </div>
     </Link>
   );

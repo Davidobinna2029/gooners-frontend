@@ -1,5 +1,5 @@
 interface Props {
-  author: string;
+  author?: string;
   date: string;
 }
 
@@ -9,22 +9,17 @@ export default function ArticleMeta({
 }: Props) {
   return (
     <div className="article-meta">
-      <span>{author}</span>
 
-      <span>•</span>
+      {author && (
+        <span>
+          By {author}
+        </span>
+      )}
 
       <span>
-        {new Date(
-          date
-        ).toLocaleDateString(
-          "en-GB",
-          {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          }
-        )}
+        {new Date(date).toLocaleDateString()}
       </span>
+
     </div>
   );
 }

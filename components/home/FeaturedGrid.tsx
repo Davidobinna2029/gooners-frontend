@@ -1,43 +1,56 @@
 import Link from "next/link";
 import Image from "next/image";
 
+import { NormalizedPost }
+  from "@/lib/mappers/wordpressMapper";
+
 interface Props {
-  posts: any[];
+  posts: NormalizedPost[];
 }
 
-export default function FeaturedGrid({ posts }: Props) {
+export default function FeaturedGrid({
+  posts,
+}: Props) {
   if (!posts?.length) {
     return null;
   }
 
   return (
-    <section>
+    <section className="featured-grid">
       <div className="container">
-        <h2>Latest Arsenal News</h2>
 
-        <div className="news-grid">
-          {posts.map((post: any) => (
-            <Link
+        <div className="grid-layout">
+          {posts.map((post) => (
+            <article
               key={post.id}
-              href={`/news/${post.slug}`}
-              className="news-card"
+              className="featured-card"
             >
-              <div className="news-image">
-                <Image
-                  src={post.featuredImage}
-                  alt={post.title?.rendered || "Arsenal news"}
-                  fill
-                  className="object-cover"
-                />
-              </div>
+              <Link
+                href={`/news/${post.slug}`}
+              >
 
-              <div className="news-content">
-                <h3 dangerouslySetInnerHTML={{ __html: post.title?.rendered }} />
-                <p>{post.category}</p>
-              </div>
-            </Link>
+                <div className="featured-image">
+                  <Image
+                    src={post.image}
+                    alt={post.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+
+                <div className="featured-content">
+                  <h3>{post.title}</h3>
+
+                  <p>
+                    {post.excerpt}
+                  </p>
+                </div>
+
+              </Link>
+            </article>
           ))}
         </div>
+
       </div>
     </section>
   );

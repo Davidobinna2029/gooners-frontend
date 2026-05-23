@@ -1,62 +1,62 @@
 import Link from "next/link";
 import Image from "next/image";
-import { WordPressPost } from "@/types/wordpress";
+
+import { NormalizedPost }
+  from "@/lib/mappers/wordpressMapper";
 
 interface Props {
-  posts: WordPressPost[];
+  posts: NormalizedPost[];
 }
 
-export default function TransferCenter({ posts }: Props) {
+export default function TransferCenter({
+  posts,
+}: Props) {
   if (!posts?.length) {
     return null;
   }
 
+  // Optional editorial filter: only transfer-related posts
   const transfers = posts.filter((post) =>
-    post.category?.toLowerCase().includes("transfer")
+    post.title.toLowerCase().includes("transfer")
   );
 
   return (
     <section className="transfer-center">
       <div className="container">
-        <div className="section-heading">
-          <h2>Transfer Center</h2>
+
+        <div className="section-header">
+          <h2>Transfer Centre</h2>
         </div>
 
         <div className="transfer-grid">
           {transfers.map((post) => (
-            <Link
+            <article
               key={post.id}
-              href={`/news/${post.slug}`}
               className="transfer-card"
             >
-              <div className="transfer-image">
-                <Image
-                  src={post.featuredImage}
-                  alt={post.title?.rendered || "Arsenal transfer news"}
-                  fill
-                  className="object-cover"
-                />
-              </div>
+              <Link
+                href={`/news/${post.slug}`}
+              >
 
-              <div className="transfer-content">
-                <span className="transfer-tag">{post.category}</span>
+                <div className="transfer-image">
+                  <Image
+                    src={post.image}
+                    alt={post.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
 
-                <h3
-                  dangerouslySetInnerHTML={{
-                    __html: post.title?.rendered || "",
-                  }}
-                />
+                <div className="transfer-content">
+                  <h3>{post.title}</h3>
+                  <p>{post.excerpt}</p>
+                </div>
 
-                <p>
-                  {post.excerpt?.rendered
-                    ?.replace(/<[^>]+>/g, "")
-                    .slice(0, 110)}
-                  ...
-                </p>
-              </div>
-            </Link>
+              </Link>
+            </article>
           ))}
         </div>
+
       </div>
     </section>
   );

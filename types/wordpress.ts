@@ -1,17 +1,29 @@
 export interface WordPressPost {
   id: number;
-  slug: string;
   date: string;
+  slug: string;
+
   title: {
     rendered: string;
   };
-  excerpt: {
+
+  excerpt?: {
     rendered: string;
   };
-  content: {
+
+  content?: {
     rendered: string;
   };
-  featuredImage: string;
-  category: string;   // singular string
-  author: string;
+
+  categories?: number[];
+  tags?: number[];
+
+  acf?: Record<string, any>;
+
+  // ✅ ADD THIS (fixes your error)
+  _embedded?: {
+    "wp:featuredmedia"?: Array<{
+      source_url?: string;
+    }>;
+  };
 }

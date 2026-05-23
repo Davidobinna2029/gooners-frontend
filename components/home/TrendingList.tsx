@@ -1,10 +1,16 @@
 import Link from "next/link";
+import Image from "next/image";
+
+import { NormalizedPost }
+  from "@/lib/mappers/wordpressMapper";
 
 interface Props {
-  posts: any[];
+  posts: NormalizedPost[];
 }
 
-export default function TrendingList({ posts }: Props) {
+export default function TrendingList({
+  posts,
+}: Props) {
   if (!posts?.length) return null;
 
   return (
@@ -13,19 +19,17 @@ export default function TrendingList({ posts }: Props) {
         <h2>Trending Now</h2>
 
         <div className="trending-list">
-          {posts.map((post: any, index) => (
+          {posts.map((post, index) => (
             <Link
               key={post.id}
               href={`/news/${post.slug}`}
               className="trending-item"
             >
-              <span>{String(index + 1).padStart(2, "0")}</span>
+              <span className="trending-index">
+                {String(index + 1).padStart(2, "0")}
+              </span>
 
-              <h3
-                dangerouslySetInnerHTML={{
-                  __html: post.title?.rendered || "",
-                }}
-              />
+              <h3>{post.title}</h3>
             </Link>
           ))}
         </div>

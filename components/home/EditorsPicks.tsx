@@ -1,60 +1,63 @@
 import Link from "next/link";
 import Image from "next/image";
-import { WordPressPost } from "@/types/wordpress";
+
+import { NormalizedPost }
+  from "@/lib/mappers/wordpressMapper";
 
 interface Props {
-  posts: WordPressPost[];
+  posts: NormalizedPost[];
 }
 
-export default function EditorsPicks({ posts }: Props) {
+export default function EditorsPicks({
+  posts,
+}: Props) {
   if (!posts?.length) {
     return null;
   }
 
-  const picks = posts.slice(2, 6);
+  const featured =
+    posts.slice(0, 4);
 
   return (
     <section className="editors-picks">
       <div className="container">
-        <div className="section-heading">
-          <h2>Editor’s Picks</h2>
+
+        <div className="section-header">
+          <h2>Editor&apos;s Picks</h2>
         </div>
 
         <div className="editors-grid">
-          {picks.map((post) => (
-            <Link
+          {featured.map((post) => (
+            <article
               key={post.id}
-              href={`/news/${post.slug}`}
               className="editors-card"
             >
-              <div className="editors-image">
-                <Image
-                  src={post.featuredImage}
-                  alt={post.title?.rendered || "Arsenal news"}
-                  fill
-                  className="object-cover"
-                />
-              </div>
+              <Link
+                href={`/news/${post.slug}`}
+              >
 
-              <div className="editors-content">
-                <span className="editors-tag">{post.category}</span>
+                <div className="editors-image">
+                  <Image
+                    src={post.image}
+                    alt={post.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
 
-                <h3
-                  dangerouslySetInnerHTML={{
-                    __html: post.title?.rendered || "",
-                  }}
-                />
+                <div className="editors-content">
+                  <h3>{post.title}</h3>
 
-                <p>
-                  {post.excerpt?.rendered
-                    ?.replace(/<[^>]+>/g, "")
-                    .slice(0, 110)}
-                  ...
-                </p>
-              </div>
-            </Link>
+                  <p>
+                    {post.excerpt}
+                  </p>
+                </div>
+
+              </Link>
+            </article>
           ))}
         </div>
+
       </div>
     </section>
   );

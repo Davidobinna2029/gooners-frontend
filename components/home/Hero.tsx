@@ -1,63 +1,71 @@
 import Link from "next/link";
 import Image from "next/image";
 
+import { NormalizedPost }
+  from "@/lib/mappers/wordpressMapper";
+
 interface Props {
-  featured: any[];
+  featured: NormalizedPost[];
 }
 
-export default function Hero({ featured }: Props) {
+export default function Hero({
+  featured,
+}: Props) {
   if (!featured?.length) {
     return null;
   }
 
-  const mainPost = featured[0];
-  const sidePosts = featured.slice(1, 4);
+  const main = featured[0];
+  const side = featured.slice(1, 4);
 
   return (
-    <section className="hero-magazine">
-      <div className="container">
-        <div className="hero-grid">
-          {/* MAIN STORY */}
-          <Link href={`/news/${mainPost.slug}`} className="hero-main">
-            <Image
-              src={mainPost.featuredImage}
-              alt={mainPost.title?.rendered || "Arsenal news"}
-              fill
-              className="object-cover"
-            />
+    <section className="hero">
+      <div className="container hero-grid">
 
-            <div className="hero-overlay">
-              <span className="hero-category">
-                {mainPost.category}
-              </span>
+        {/* MAIN STORY */}
+        <div className="hero-main">
+          <Link href={`/news/${main.slug}`}>
+            <div className="hero-image">
+              <Image
+                src={main.image}
+                alt={main.title}
+                fill
+                priority
+                className="object-cover"
+              />
+            </div>
 
-              <h1 dangerouslySetInnerHTML={{ __html: mainPost.title?.rendered }} />
-
-              <p dangerouslySetInnerHTML={{ __html: mainPost.excerpt?.rendered }} />
+            <div className="hero-content">
+              <h1>{main.title}</h1>
+              <p>{main.excerpt}</p>
             </div>
           </Link>
-
-          {/* SIDE STORIES */}
-          <div className="hero-side">
-            {sidePosts.map((post: any) => (
-              <Link key={post.id} href={`/news/${post.slug}`} className="news-card">
-                <div className="news-image">
-                  <Image
-                    src={post.featuredImage}
-                    alt={post.title?.rendered || "Arsenal news"}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-
-                <div className="news-content">
-                  <h3 dangerouslySetInnerHTML={{ __html: post.title?.rendered }} />
-                  <p>{post.category}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
         </div>
+
+        {/* SIDE STORIES */}
+        <div className="hero-side">
+          {side.map((post) => (
+            <Link
+              key={post.id}
+              href={`/news/${post.slug}`}
+              className="hero-side-item"
+            >
+              <div className="side-image">
+                <Image
+                  src={post.image}
+                  alt={post.title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+
+              <div className="side-text">
+                <h3>{post.title}</h3>
+              </div>
+            </Link>
+          ))}
+        </div>
+
       </div>
     </section>
   );

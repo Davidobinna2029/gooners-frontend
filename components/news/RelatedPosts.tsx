@@ -1,51 +1,43 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import { WordPressPost } from "@/types/wordpress";
+import { NormalizedPost }
+  from "@/lib/mappers/wordpressMapper";
 
 interface Props {
-  posts: WordPressPost[];
+  posts: NormalizedPost[];
 }
 
 export default function RelatedPosts({
   posts,
 }: Props) {
+  if (!posts?.length) return null;
+
   return (
     <section className="related-posts">
-      <h2>
-        More Arsenal Stories
-      </h2>
+      <div className="container">
+        <h2>Related Posts</h2>
 
-      <div className="news-grid">
-        {posts.map((post) => (
-          <Link
-            key={post.id}
-            href={`/news/${post.slug}`}
-            className="news-card"
-          >
-            <div className="news-image">
-              <Image
-                src={
-                  post.featuredImage
-                }
-                alt={
-                  post.title.rendered
-                }
-                fill
-                className="object-cover"
-              />
-            </div>
+        <div className="related-grid">
+          {posts.map((post) => (
+            <Link
+              key={post.id}
+              href={`/news/${post.slug}`}
+              className="related-card"
+            >
+              <div className="related-image">
+                <Image
+                  src={post.image || "/fallback.jpg"}
+                  alt={post.title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
 
-            <div className="news-content">
-              <h3>
-                {
-                  post.title
-                    .rendered
-                }
-              </h3>
-            </div>
-          </Link>
-        ))}
+              <h3>{post.title}</h3>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );

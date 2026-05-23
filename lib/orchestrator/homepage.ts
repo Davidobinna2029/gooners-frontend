@@ -1,12 +1,18 @@
-import { WordPressPost } from "@/types/wordpress";
 
-function calculateScore(post: WordPressPost) {
+import { NormalizedPost } from "@/lib/mappers/wordpressMapper";
+
+/**
+ * Homepage scoring engine (PURE logic only)
+ */
+function calculateScore(post: NormalizedPost) {
   let score = 0;
 
   // RECENCY BOOST
   const published = new Date(post.date).getTime();
   const now = Date.now();
-  const hoursOld = (now - published) / (1000 * 60 * 60);
+
+  const hoursOld =
+    (now - published) / (1000 * 60 * 60);
 
   if (hoursOld < 3) {
     score += 50;
@@ -16,27 +22,17 @@ function calculateScore(post: WordPressPost) {
     score += 20;
   }
 
-  // CATEGORY BOOST
-  const category = post.category?.toLowerCase(); // ✅ singular
+  // CATEGORY BOOST (safe array-based)
+  const categories = post.categories || [];
 
-  if (category?.includes("transfer")) {
-    score += 25;
-  }
-
-  if (category?.includes("champions")) {
-    score += 20;
-  }
-
-  if (category?.includes("breaking")) {
-    score += 40;
-  }
-
-  if (category?.includes("exclusive")) {
-    score += 35;
+  if (categories.length > 0) {
+    // optional: extend later with category mapping table
+    score += 5;
   }
 
   // TITLE BOOST
-  const title = post.title.rendered.toLowerCase();
+  const title =
+    post.title?.toLowerCase?.() || "";
 
   if (title.includes("confirmed")) {
     score += 18;
@@ -50,11 +46,34 @@ function calculateScore(post: WordPressPost) {
     score += 20;
   }
 
+  if (title.includes("breaking")) {
+    score += 25;
+  }
+
   return score;
 }
 
-export function rankHomepagePosts(posts: WordPressPost[]) {
-  return posts.sort((a, b) => {
-    return calculateScore(b) - calculateScore(a);
-  });
+/**
+ * Add ranking metadata ONLY (no reshaping)
+ */
+function enrichPost(post: NormalizedPost) {
+  return {
+    ...post,
+    score: calculateScore(post),
+  };
+}
+
+/**
+ * Main homepage ranking pipeline
+ */
+export function rankHomepagePosts(
+  posts: NormalizedPost[]
+) {
+  if (!Array.isArray(posts)) {
+    return [];
+  }
+
+  return posts
+    .map(enrichPost)
+    .sort((a, b) => (b.score || 0) - (a.score || 0));
 }

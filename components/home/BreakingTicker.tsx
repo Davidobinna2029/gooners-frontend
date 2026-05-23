@@ -1,14 +1,12 @@
 import Link from "next/link";
-import { WordPressPost } from "@/types/wordpress";
+import { NormalizedPost } from "@/lib/mappers/wordpressMapper";
 
 interface Props {
-  posts: WordPressPost[];
+  posts: NormalizedPost[];
 }
 
 export default function BreakingTicker({ posts }: Props) {
-  if (!posts?.length) {
-    return null;
-  }
+  if (!posts?.length) return null;
 
   // Editorial: show top 6 breaking posts
   const breaking = posts.slice(0, 6);
@@ -18,6 +16,7 @@ export default function BreakingTicker({ posts }: Props) {
       <div className="container">
         <div className="ticker-inner">
           <span className="ticker-label">BREAKING</span>
+
           <div className="ticker-scroll">
             {breaking.map((post) => (
               <Link
@@ -25,11 +24,7 @@ export default function BreakingTicker({ posts }: Props) {
                 href={`/news/${post.slug}`}
                 className="ticker-item"
               >
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: post.title?.rendered || "",
-                  }}
-                />
+                <span>{post.title}</span>
               </Link>
             ))}
           </div>
