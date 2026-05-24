@@ -16,53 +16,69 @@ export interface NormalizedPost {
 }
 
 /**
- * SAFE IMAGE NORMALIZER (FINAL)
+ * CONSTANT FALLBACK
+ */
+const FALLBACK_IMAGE = "/fallback.jpg";
+
+/**
+ * SAFE IMAGE NORMALIZER (EDGE SAFE)
  */
 function normalizeImage(url?: string): string {
-  if (!url || typeof url !== "string") return "/fallback.jpg";
+  if (typeof url !== "string") return FALLBACK_IMAGE;
 
   const cleaned = url.trim();
 
   if (
     !cleaned ||
     cleaned === "null" ||
-    cleaned === "undefined"
+    cleaned === "undefined" ||
+    cleaned.length < 10
   ) {
-    return "/fallback.jpg";
+    return FALLBACK_IMAGE;
   }
 
-  // fix protocol-relative URLs
+  // protocol-relative fix
   if (cleaned.startsWith("//")) {
     return `https:${cleaned}`;
   }
 
-  // must be valid http(s)
+  // strict http validation
   if (!/^https?:\/\//.test(cleaned)) {
-    return "/fallback.jpg";
+    return FALLBACK_IMAGE;
   }
 
   return cleaned;
 }
 
 /**
- * WORDPRESS FEATURED IMAGE RESOLVER (SAFE + STABLE)
+ * EXTRACT WORDPRESS FEATURED IMAGE (SAFE NAVIGATION)
  */
-function resolveImage(post: WordPressPostWithMedia): string {
+function extractWpImage(post: WordPressPostWithMedia): string {
   const media = post?._embedded?.["wp:featuredmedia"]?.[0];
 
-  const url =
-    media?.source_url ||
-    media?.media_details?.sizes?.large?.source_url ||
-    media?.media_details?.sizes?.medium?.source_url ||
-    media?.media_details?.sizes?.full?.source_url ||
-    media?.media_details?.sizes?.thumbnail?.source_url ||
-    "";
+  // IMPORTANT: WP can return undefined sizes depending on theme
+  const sizes = media?.media_details?.sizes;
 
-  return normalizeImage(url);
+  return (
+    media?.source_url ||
+    sizes?.large?.source_url ||
+    sizes?.medium?.source_url ||
+    sizes?.full?.source_url ||
+    sizes?.thumbnail?.source_url ||
+    ""
+  );
 }
 
 /**
- * STRIP HTML
+ * WORDPRESS FEATURED IMAGE RESOLVER (FINAL LAYER)
+ */
+function resolveImage(post: WordPressPostWithMedia): string {
+  const rawImage = extractWpImage(post);
+  return normalizeImage(rawImage);
+}
+
+/**
+ * STRIP HTML SAFELY (WP CONTENT)
  */
 function stripHtml(html?: string): string {
   if (typeof html !== "string") return "";
@@ -96,7 +112,7 @@ export function mapWordPressPost(
 }
 
 /**
- * POSTS MAPPER
+ * POSTS ARRAY MAPPER
  */
 export function mapWordPressPosts(
   posts: WordPressPostWithMedia[]
@@ -106,6 +122,6 @@ export function mapWordPressPosts(
 }
 
 /**
- * BACKWARD COMPATIBILITY
+ * BACKWARD COMPATIBILITY LAYER (DO NOT BREAK OLD IMPORTS)
  */
 export const normalizePosts = mapWordPressPosts;

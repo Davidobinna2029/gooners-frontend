@@ -11,34 +11,47 @@ import StickyScoreStrip from "@/components/layout/StickyScoreStrip";
 
 import { getPosts, getScores } from "@/lib/api/wordpress";
 import { mapWordPressPosts } from "@/lib/mappers/wordpressMapper";
-import { rankHomepagePosts } from "@/lib/orchestrator/homepage";
+import { buildHomepageFeed } from "@/lib/orchestrator/homepage";
 
 export default async function HomePage() {
-  const rawPosts = await getPosts().catch(() => []);
-  const scores = await getScores().catch(() => []);
+  const [rawPosts, scores] = await Promise.all([
+    getPosts().catch(() => []),
+    getScores().catch(() => []),
+  ]);
 
   const normalizedPosts = mapWordPressPosts(rawPosts ?? []);
-  const posts = rankHomepagePosts(normalizedPosts);
 
-  const heroPosts = posts.slice(0, 4);
-  const featuredPosts = posts.slice(4);
-  const trendingPosts = posts.slice(0, 10);
-  const editorPosts = posts.slice(2, 8);
-
-  const transferPosts = posts.filter(
-    (p) => (p.title || "").toLowerCase().includes("transfer")
-  );
+  /**
+   * SINGLE SOURCE OF TRUTH (NO DUPLICATES, NO STACKING)
+   */
+  const {
+    hero,
+    breaking,
+    trending,
+    editors,
+    transfer,
+    featured,
+  } = buildHomepageFeed(normalizedPosts);
 
   return (
     <main>
+      {/* LIVE SCORE STRIP (GLOBAL SINGLE INSTANCE) */}
       <StickyScoreStrip matches={scores} />
-      <BreakingTicker posts={posts} />
-      <Hero featured={heroPosts} />
+
+      {/* BREAKING SWIPER (ONLY ONE SOURCE) */}
+      <BreakingTicker posts={breaking} />
+
+      <Hero featured={hero} />
+
       <MatchHero nextMatch={scores?.[0]} />
-      <TrendingRail posts={trendingPosts} />
-      <EditorsPicks posts={editorPosts} />
-      <TransferCenter posts={transferPosts} />
-      <FeaturedGrid posts={featuredPosts} />
+
+      <TrendingRail posts={trending} />
+
+      <EditorsPicks posts={editors} />
+
+      <TransferCenter posts={transfer} />
+
+      <FeaturedGrid posts={featured} />
     </main>
   );
 }
