@@ -6,19 +6,38 @@ import { mapEspnMatches } from "@/lib/mappers/espnMatchMapper";
 
 /**
  * =========================
+ * SAFE WRAPPER (GLOBAL)
+ * =========================
+ */
+async function safeFetch<T>(
+  promise: Promise<T>,
+  fallback: T
+): Promise<T> {
+  try {
+    const data = await promise;
+    return data ?? fallback;
+  } catch (err) {
+    console.error("SAFE FETCH FAILED:", err);
+    return fallback;
+  }
+}
+
+/**
+ * =========================
  * POSTS (WORDPRESS)
  * =========================
  */
 
 /**
- * Fetch latest posts
+ * Fetch latest posts (HARDENED)
  */
 export async function getPosts() {
-  return ssrFetch<WordPressPostWithMedia[]>(
-    `${API_BASE}/posts?per_page=20&_embed=1`,
-    {
-      fallback: [],
-    }
+  return safeFetch(
+    ssrFetch<WordPressPostWithMedia[]>(
+      `${API_BASE}/posts?per_page=20&_embed=1`,
+      { fallback: [] }
+    ),
+    []
   );
 }
 
@@ -26,25 +45,25 @@ export async function getPosts() {
  * Fetch single post by slug
  */
 export async function getPostBySlug(slug: string) {
-  const data = await ssrFetch<WordPressPostWithMedia[]>(
-    `${API_BASE}/posts?slug=${slug}&_embed=1`,
-    {
-      fallback: [],
-    }
+  return safeFetch(
+    ssrFetch<WordPressPostWithMedia[]>(
+      `${API_BASE}/posts?slug=${slug}&_embed=1`,
+      { fallback: [] }
+    ).then((data) => data?.[0] || null),
+    null
   );
-
-  return data?.[0] || null;
 }
 
 /**
  * Fetch all categories
  */
 export async function getCategories() {
-  return ssrFetch<any[]>(
-    `${API_BASE}/categories?per_page=100`,
-    {
-      fallback: [],
-    }
+  return safeFetch(
+    ssrFetch<any[]>(
+      `${API_BASE}/categories?per_page=100`,
+      { fallback: [] }
+    ),
+    []
   );
 }
 
@@ -52,24 +71,23 @@ export async function getCategories() {
  * Fetch posts by category slug
  */
 export async function getCategoryPosts(slug: string) {
-  const categories = await ssrFetch<any[]>(
-    `${API_BASE}/categories?slug=${slug}`,
-    {
-      fallback: [],
-    }
-  );
+  return safeFetch(
+    (async () => {
+      const categories = await ssrFetch<any[]>(
+        `${API_BASE}/categories?slug=${slug}`,
+        { fallback: [] }
+      );
 
-  const category = categories?.[0];
+      const category = categories?.[0];
 
-  if (!category?.id) {
-    return [];
-  }
+      if (!category?.id) return [];
 
-  return ssrFetch<WordPressPostWithMedia[]>(
-    `${API_BASE}/posts?categories=${category.id}&per_page=20&_embed=1`,
-    {
-      fallback: [],
-    }
+      return ssrFetch<WordPressPostWithMedia[]>(
+        `${API_BASE}/posts?categories=${category.id}&per_page=20&_embed=1`,
+        { fallback: [] }
+      );
+    })(),
+    []
   );
 }
 
@@ -80,34 +98,27 @@ export async function getCategoryPosts(slug: string) {
  */
 
 /**
- * Fetch live Premier League scores
- * - No API key required
- * - Auto-refresh every 30 seconds
- * - Normalized into internal match format
+ * Fetch live Premier League scores (HARDENED)
  */
 export async function getScores() {
-  try {
-    const res = await fetch(
+  return safeFetch(
+    fetch(
       "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
       {
         next: { revalidate: 30 },
       }
-    );
+    )
+      .then(async (res) => {
+        if (!res.ok) return [];
 
-    if (!res.ok) {
-      console.warn("ESPN API error:", res.status);
-      return [];
-    }
+        const data = await res.json();
 
-    const data = await res.json();
+        const events = Array.isArray(data?.events)
+          ? data.events
+          : [];
 
-    const events = Array.isArray(data?.events)
-      ? data.events
-      : [];
-
-    return mapEspnMatches(events);
-  } catch (err) {
-    console.error("ESPN fetch failed:", err);
-    return [];
-  }
+        return mapEspnMatches(events);
+      }),
+    []
+  );
 }

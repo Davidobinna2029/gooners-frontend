@@ -1,37 +1,25 @@
-type Options = {
-  fallback?: any;
-  revalidate?: number;
-};
+import { fetchWithTimeout } from "./fetchWithTimeout";
 
 export async function ssrFetch<T>(
   url: string,
-  options: Options = {}
+  options: { fallback: T; revalidate?: number }
 ): Promise<T> {
-  const { fallback = null, revalidate = 60 } = options;
-
   try {
-    const res = await fetch(url, {
-      next: { revalidate },
-    });
+    const res = await fetchWithTimeout(
+      url,
+      {
+        next: {
+          revalidate: options.revalidate ?? 60,
+        },
+      },
+      8000 // 🔥 reduce timeout for build safety
+    );
 
-    if (!res.ok) {
-      console.error("SSR FETCH FAILED:", url, res.status);
-      return fallback;
-    }
-
-    const contentType =
-      res.headers.get("content-type") || "";
-
-    if (!contentType.includes("application/json")) {
-      const text = await res.text();
-      console.error("NON-JSON RESPONSE:", url);
-      console.error(text.slice(0, 200));
-      return fallback;
-    }
+    if (!res.ok) return options.fallback;
 
     return await res.json();
   } catch (err) {
-    console.error("SSR FETCH FAILED:", url, err);
-    return fallback;
+    console.warn("SSR SAFE FALLBACK:", url);
+    return options.fallback;
   }
 }

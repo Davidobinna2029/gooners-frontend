@@ -1,45 +1,48 @@
-// types/wordpress-media.ts
+export interface WordPressRenderedField {
+  rendered: string;
+}
 
-import { WordPressPost } from "./wordpress";
-
-/**
- * Featured media structure from WP REST API (_embed=1)
- */
-export interface WPFeaturedMedia {
-  id?: number;
+export interface WordPressMediaSize {
   source_url?: string;
-  media_type?: string;
-  mime_type?: string;
+}
 
-  alt_text?: string;
-
-  media_details?: {
-    width?: number;
-    height?: number;
-
-    sizes?: Record<
-      string,
-      {
-        source_url?: string;
-        width?: number;
-        height?: number;
-      }
-    >;
+export interface WordPressMediaDetails {
+  sizes?: {
+    thumbnail?: WordPressMediaSize;
+    medium?: WordPressMediaSize;
+    large?: WordPressMediaSize;
+    full?: WordPressMediaSize;
   };
 }
 
-/**
- * Embedded WordPress relations (_embed=1)
- */
-export interface WPEmbedded {
-  "wp:featuredmedia"?: WPFeaturedMedia[];
-  author?: any[];
-  "wp:term"?: any[];
+export interface WordPressFeaturedMedia {
+  source_url?: string;
+
+  media_details?: WordPressMediaDetails;
 }
 
-/**
- * Extended post used ONLY when _embed=1 is enabled
- */
-export interface WordPressPostWithMedia extends WordPressPost {
-  _embedded?: WPEmbedded;
+export interface WordPressEmbedded {
+  "wp:featuredmedia"?: WordPressFeaturedMedia[];
+}
+
+export interface WordPressPostWithMedia {
+  id: number;
+
+  slug: string;
+
+  date: string;
+
+  title?: WordPressRenderedField;
+
+  excerpt?: WordPressRenderedField;
+
+  content?: WordPressRenderedField;
+
+  categories?: number[];
+
+  tags?: number[];
+
+  featured_media?: number;
+
+  _embedded?: WordPressEmbedded;
 }

@@ -1,29 +1,31 @@
-export interface WordPressPost {
+export interface WordPressMediaSize {
+  source_url?: string;
+}
+
+export interface WordPressMedia {
+  source_url?: string;
+  media_details?: {
+    sizes?: {
+      thumbnail?: WordPressMediaSize;
+      medium?: WordPressMediaSize;
+      large?: WordPressMediaSize;
+      full?: WordPressMediaSize;
+    };
+  };
+}
+
+export interface WordPressPostWithMedia {
   id: number;
-  date: string;
   slug: string;
+  date: string;
 
-  title: {
-    rendered: string;
-  };
-
-  excerpt?: {
-    rendered: string;
-  };
-
-  content?: {
-    rendered: string;
-  };
+  title?: { rendered?: string };
+  excerpt?: { rendered?: string };
 
   categories?: number[];
   tags?: number[];
 
-  acf?: Record<string, any>;
-
-  // ✅ ADD THIS (fixes your error)
   _embedded?: {
-    "wp:featuredmedia"?: Array<{
-      source_url?: string;
-    }>;
+    "wp:featuredmedia"?: WordPressMedia[];
   };
 }

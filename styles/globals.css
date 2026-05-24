@@ -13,15 +13,17 @@ html {
 }
 
 body {
-  background: #0b0b0f;
+  background: #07090d;
   color: #ffffff;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: Inter, system-ui, sans-serif;
   line-height: 1.5;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* =========================
-   GLOBAL LINKS + MEDIA
+   GLOBAL
 ========================= */
 
 a {
@@ -34,13 +36,9 @@ img {
   display: block;
 }
 
-/* =========================
-   LAYOUT SYSTEM
-========================= */
-
 .container {
   width: 100%;
-  max-width: 1280px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 0 18px;
 }
@@ -51,32 +49,26 @@ img {
 
 h1, h2, h3, h4 {
   letter-spacing: -0.03em;
-  line-height: 1.1;
+  line-height: 1.08;
 }
 
-h1 { font-size: 44px; font-weight: 800; }
-h2 { font-size: 30px; font-weight: 700; }
-h3 { font-size: 18px; font-weight: 700; }
+h1 {
+  font-size: 52px;
+  font-weight: 900;
+}
+
+h2 {
+  font-size: 34px;
+  font-weight: 800;
+}
+
+h3 {
+  font-size: 18px;
+  font-weight: 700;
+}
 
 p {
-  color: #c9c9c9;
-}
-
-/* =========================
-   SECTION SYSTEM
-========================= */
-
-section {
-  margin-top: 32px;
-}
-
-.section-heading {
-  margin-bottom: 18px;
-}
-
-.section-heading h2 {
-  font-size: 28px;
-  font-weight: 800;
+  color: #c5c7ce;
 }
 
 /* =========================
@@ -87,9 +79,9 @@ section {
   position: sticky;
   top: 0;
   z-index: 1000;
-  background: rgba(11, 11, 15, 0.95);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid #1d1d24;
+  background: rgba(7, 9, 13, 0.92);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
 .header-inner {
@@ -102,6 +94,7 @@ section {
 .logo {
   font-size: 28px;
   font-weight: 900;
+  letter-spacing: -0.04em;
 }
 
 .nav-links {
@@ -111,7 +104,7 @@ section {
 
 .nav-links a {
   font-size: 14px;
-  color: #d0d0d0;
+  color: #d4d6dc;
   transition: 0.2s ease;
 }
 
@@ -120,51 +113,79 @@ section {
 }
 
 /* =========================
-   BREAKING TICKER
+   BREAKING NEWS SWIPER (CORE FEATURE)
 ========================= */
 
-.breaking-ticker {
-  background: #c8102e;
+.breaking-wrapper {
+  position: relative;
   overflow: hidden;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(
+    90deg,
+    #c8102e 0%,
+    #7a0f22 45%,
+    #0f172a 100%
+  );
+  will-change: transform;
 }
 
-.ticker-inner {
+.breaking-inner {
   display: flex;
   align-items: center;
-  min-height: 52px;
+  min-height: 58px;
+  gap: 16px;
 }
 
-.ticker-label {
-  background: #fff;
+.breaking-badge {
+  flex-shrink: 0;
+  background: #ffffff;
   color: #c8102e;
-  font-weight: 800;
-  font-size: 12px;
-  padding: 6px 10px;
-  border-radius: 4px;
-  margin-right: 16px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  padding: 8px 14px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
 }
 
-.ticker-scroll {
+.breaking-swiper {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.breaking-slide {
   display: flex;
-  gap: 30px;
-  overflow-x: auto;
-  scrollbar-width: none;
+  align-items: center;
+  min-height: 58px;
 }
 
-.ticker-scroll::-webkit-scrollbar {
-  display: none;
+.breaking-slide a {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: 0.2s ease;
+}
+
+.breaking-slide a:hover {
+  opacity: 0.82;
+  transform: translateX(2px);
 }
 
 /* =========================
-   LIVE SCORE STRIP
+   STICKY SCORE STRIP
 ========================= */
 
 .sticky-score-strip {
   position: sticky;
   top: 72px;
   z-index: 999;
-  background: #111218;
-  border-bottom: 1px solid #222;
+  background: #0d1016;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
   overflow-x: auto;
 }
 
@@ -176,17 +197,123 @@ section {
 }
 
 .strip-card {
-  min-width: 190px;
-  background: #17181f;
-  border-radius: 12px;
-  padding: 12px 14px;
-  display: flex;
-  justify-content: space-between;
-  transition: 0.2s ease;
+  min-width: 210px;
+  background: #131722;
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 14px;
+  padding: 14px;
+  transition: 0.25s ease;
 }
 
 .strip-card:hover {
-  background: #1e2029;
+  transform: translateY(-2px);
+  background: #191e2b;
+}
+
+/* =========================
+   HERO SECTION
+========================= */
+
+.hero-magazine {
+  margin-top: 22px;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 20px;
+}
+
+.hero-main {
+  position: relative;
+  border-radius: 26px;
+  overflow: hidden;
+  min-height: 620px;
+}
+
+.hero-image {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-image img {
+  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.hero-main:hover img {
+  transform: scale(1.06);
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.92),
+    rgba(0,0,0,0.2),
+    transparent
+  );
+  padding: 42px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.hero-overlay h1 {
+  max-width: 850px;
+  margin-bottom: 18px;
+}
+
+.hero-overlay p {
+  max-width: 650px;
+  font-size: 17px;
+}
+
+/* =========================
+   HERO SIDE
+========================= */
+
+.hero-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hero-side-item {
+  display: flex;
+  gap: 14px;
+  background: #12151d;
+  border-radius: 18px;
+  overflow: hidden;
+  padding: 10px;
+  transition: 0.25s ease;
+}
+
+.hero-side-item:hover {
+  background: #181d29;
+  transform: translateY(-2px);
+}
+
+.side-image {
+  position: relative;
+  width: 160px;
+  min-width: 160px;
+  height: 110px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.side-text {
+  display: flex;
+  align-items: center;
+}
+
+.side-text h3 {
+  font-size: 16px;
+  line-height: 1.3;
 }
 
 /* =========================
@@ -196,101 +323,14 @@ section {
 .match-hero-card {
   position: relative;
   min-height: 420px;
-  border-radius: 24px;
+  border-radius: 26px;
   overflow: hidden;
-  background: linear-gradient(135deg, #c8102e, #8b0000, #111);
-}
-
-.match-hero-overlay {
-  position: absolute;
-  inset: 0;
-  padding: 40px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-}
-
-/* =========================
-   CONTROL ROOM (ESPN SYSTEM)
-========================= */
-
-.control-room {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #050505;
-}
-
-.control-room .top-bar {
-  background: #0b0b0b;
-  border-bottom: 1px solid #222;
-  padding: 10px 16px;
-  font-size: 12px;
-  text-transform: uppercase;
-  color: #aaa;
-  letter-spacing: 0.08em;
-}
-
-.control-room .layout {
-  display: grid;
-  grid-template-columns: 260px 1fr 280px;
-  height: 100%;
-}
-
-.control-room .left-panel,
-.control-room .right-panel {
-  padding: 12px;
-  border-color: #1f1f1f;
-}
-
-.control-room .left-panel {
-  border-right: 1px solid #1f1f1f;
-}
-
-.control-room .right-panel {
-  border-left: 1px solid #1f1f1f;
-}
-
-.control-room .match-item {
-  background: #0f0f0f;
-  padding: 10px;
-  margin-bottom: 8px;
-  border-radius: 10px;
-  transition: 0.2s ease;
-  border: 1px solid transparent;
-}
-
-.control-room .match-item:hover {
-  background: #141414;
-  transform: translateX(3px);
-}
-
-.control-room .match-item.active {
-  border-left: 3px solid #2d6bff;
-}
-
-.control-room .center-screen {
-  padding: 18px;
-}
-
-.control-room .live-core {
-  background: #0b0b0b;
-  border: 1px solid #1f1f1f;
-  border-radius: 14px;
-  min-height: 320px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.control-room .status {
-  margin-top: 12px;
-  background: #c8102e;
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
+  background: linear-gradient(
+    135deg,
+    #c8102e,
+    #791126,
+    #10131c
+  );
 }
 
 /* =========================
@@ -300,7 +340,51 @@ section {
 .news-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 22px;
+}
+
+.news-card {
+  background: #12151d;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.04);
+  transition: 0.25s ease;
+}
+
+.news-card:hover {
+  transform: translateY(-4px);
+  background: #171c27;
+  border-color: rgba(255,255,255,0.08);
+}
+
+/* =========================
+   CONTROL ROOM
+========================= */
+
+.control-room {
+  min-height: 100vh;
+  background: #050505;
+}
+
+.control-room .layout {
+  display: grid;
+  grid-template-columns: 260px 1fr 280px;
+}
+
+.control-room .left-panel,
+.control-room .right-panel {
+  padding: 14px;
+}
+
+.control-room .center-screen {
+  padding: 18px;
+}
+
+.control-room .live-core {
+  background: #0c0f14;
+  border-radius: 18px;
+  min-height: 420px;
+  border: 1px solid rgba(255,255,255,0.05);
 }
 
 /* =========================
@@ -309,7 +393,7 @@ section {
 
 .loading-hero,
 .loading-card {
-  background: #17181f;
+  background: #161b25;
   animation: pulse 1.5s infinite;
 }
 
@@ -323,6 +407,16 @@ section {
    RESPONSIVE
 ========================= */
 
+@media (max-width: 1200px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-main {
+    min-height: 520px;
+  }
+}
+
 @media (max-width: 1024px) {
   .news-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -334,15 +428,40 @@ section {
 }
 
 @media (max-width: 768px) {
-  .sticky-score-strip {
-    top: 64px;
+  h1 {
+    font-size: 34px;
+  }
+
+  .hero-main {
+    min-height: 420px;
+  }
+
+  .hero-overlay {
+    padding: 24px;
+  }
+
+  .hero-overlay p {
+    font-size: 15px;
+  }
+
+  .hero-side-item {
+    flex-direction: column;
+  }
+
+  .side-image {
+    width: 100%;
+    height: 200px;
   }
 
   .news-grid {
     grid-template-columns: 1fr;
   }
 
+  .sticky-score-strip {
+    top: 64px;
+  }
+
   body {
-    padding-bottom: 62px;
+    padding-bottom: 70px;
   }
 }
