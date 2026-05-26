@@ -2,7 +2,7 @@ export const revalidate = 30;
 
 import Hero from "@/components/home/Hero";
 import FeaturedGrid from "@/components/home/FeaturedGrid";
-import BreakingTicker from "@/components/home/BreakingTicker";
+import BreakingSwiper from "@/components/home/BreakingSwiper";
 import TrendingRail from "@/components/home/TrendingRail";
 import TransferCenter from "@/components/home/TransferCenter";
 import EditorsPicks from "@/components/home/EditorsPicks";
@@ -19,39 +19,27 @@ export default async function HomePage() {
     getScores().catch(() => []),
   ]);
 
-  const normalizedPosts = mapWordPressPosts(rawPosts ?? []);
-
-  /**
-   * SINGLE SOURCE OF TRUTH (NO DUPLICATES, NO STACKING)
-   */
-  const {
-    hero,
-    breaking,
-    trending,
-    editors,
-    transfer,
-    featured,
-  } = buildHomepageFeed(normalizedPosts);
+  const normalized = mapWordPressPosts(rawPosts || []);
+  const feed = buildHomepageFeed(normalized);
 
   return (
     <main>
-      {/* LIVE SCORE STRIP (GLOBAL SINGLE INSTANCE) */}
-      <StickyScoreStrip matches={scores} />
+      <StickyScoreStrip matches={scores || []} />
 
-      {/* BREAKING SWIPER (ONLY ONE SOURCE) */}
-      <BreakingTicker posts={breaking} />
+      {/* SINGLE BREAKING SYSTEM (ONLY ONE SWIPER) */}
+      <BreakingSwiper posts={feed.breaking} />
 
-      <Hero featured={hero} />
+      <Hero featured={feed.hero} />
 
       <MatchHero nextMatch={scores?.[0]} />
 
-      <TrendingRail posts={trending} />
+      <TrendingRail posts={feed.trending} />
 
-      <EditorsPicks posts={editors} />
+      <EditorsPicks posts={feed.editors} />
 
-      <TransferCenter posts={transfer} />
+      <TransferCenter posts={feed.transfer} />
 
-      <FeaturedGrid posts={featured} />
+      <FeaturedGrid posts={feed.featured} />
     </main>
   );
 }

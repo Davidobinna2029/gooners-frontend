@@ -1,12 +1,9 @@
 import { WordPressPostWithMedia } from "@/types/wordpress-media";
 
-/**
- * SAFE FALLBACK
- */
 const FALLBACK_IMAGE = "/fallback.jpg";
 
 /**
- * Extract best WP featured image
+ * Extract WP image safely
  */
 function extractWpImage(post: WordPressPostWithMedia): string {
   const media = post?._embedded?.["wp:featuredmedia"]?.[0];
@@ -22,26 +19,24 @@ function extractWpImage(post: WordPressPostWithMedia): string {
 }
 
 /**
- * HARD SANITIZER (prevents broken Next/Image + Vercel crash)
+ * HARD SAFE SANITIZER (CRITICAL)
  */
 function sanitizeImage(url?: string): string {
   if (!url || typeof url !== "string") return FALLBACK_IMAGE;
 
   const clean = url.trim();
 
-  if (
-    clean === "null" ||
-    clean === "undefined" ||
-    clean.length < 10
-  ) {
+  if (!clean || clean === "null" || clean === "undefined") {
     return FALLBACK_IMAGE;
   }
 
-  // protocol-relative
-  if (clean.startsWith("//")) return `https:${clean}`;
+  // protocol-relative fix
+  if (clean.startsWith("//")) {
+    return `https:${clean}`;
+  }
 
-  // enforce http(s)
-  if (!/^https?:\/\//.test(clean)) {
+  // FORCE absolute URLs only
+  if (!clean.startsWith("http://") && !clean.startsWith("https://")) {
     return FALLBACK_IMAGE;
   }
 
@@ -49,11 +44,9 @@ function sanitizeImage(url?: string): string {
 }
 
 /**
- * PUBLIC API (USE EVERYWHERE IN UI)
+ * PUBLIC PIPELINE ENTRY
  */
-export function resolvePostImage(
-  post: WordPressPostWithMedia
-): string {
+export function resolvePostImage(post: WordPressPostWithMedia): string {
   const raw = extractWpImage(post);
   return sanitizeImage(raw);
 }

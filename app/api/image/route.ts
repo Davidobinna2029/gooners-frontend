@@ -1,51 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
 
-/**
- * EDGE IMAGE PROXY
- * - fetches remote images
- * - caches at CDN edge (Vercel)
- * - prevents WordPress blocking issues
- */
+const ALLOWED = [
+  "arsenaltalks.com",
+  "i0.wp.com",
+  "i1.wp.com",
+  "i2.wp.com",
+  "wordpress.com",
+];
+
+function isAllowed(url: string) {
+  try {
+    const host = new URL(url).hostname;
+    return ALLOWED.some((d) => host.includes(d));
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
 
   const url = searchParams.get("url");
 
-  if (!url) {
-    return new NextResponse("Missing URL", { status: 400 });
+  if (!url || !isAllowed(url)) {
+    return new NextResponse("Invalid image source", { status: 403 });
   }
 
   try {
-    const imageRes = await fetch(url, {
+    const res = await fetch(url, {
       headers: {
-        // trick some servers into allowing fetch
         "User-Agent": "Mozilla/5.0",
       },
     });
 
-    if (!imageRes.ok) {
-      return new NextResponse("Image fetch failed", {
-        status: 502,
-      });
+    if (!res.ok || !res.body) {
+      return new NextResponse("Image fetch failed", { status: 502 });
     }
 
     const contentType =
-      imageRes.headers.get("content-type") || "image/jpeg";
+      res.headers.get("content-type") || "image/jpeg";
 
-    const buffer = await imageRes.arrayBuffer();
-
-    return new NextResponse(buffer, {
+    return new NextResponse(res.body, {
       headers: {
         "Content-Type": contentType,
 
         /**
-         * EDGE CACHING (VERY IMPORTANT)
-         * 1 year immutable cache on CDN
+         * ESPN-style CDN caching (safe)
          */
         "Cache-Control": "public, s-maxage=31536000, immutable",
       },
     });
-  } catch (err) {
+  } catch {
     return new NextResponse("Proxy error", { status: 500 });
   }
 }

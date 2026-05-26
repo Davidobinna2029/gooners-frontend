@@ -3,11 +3,7 @@ import "../styles/globals.css";
 import type { Metadata } from "next";
 
 import Header from "@/components/layout/Header";
-import BreakingTicker from "@/components/home/BreakingTicker";
 import Footer from "@/components/layout/Footer";
-
-import { getPosts } from "@/lib/api/wordpress";
-import { mapWordPressPosts } from "@/lib/mappers/wordpressMapper";
 
 export const metadata: Metadata = {
   title: {
@@ -47,24 +43,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // 1. RAW DATA
-  const rawPosts = await getPosts();
-
-  // 2. NORMALIZED DATA (CRITICAL FIX)
-  const posts = mapWordPressPosts(rawPosts || []);
-
   return (
     <html lang="en">
       <body>
         <Header />
-
-        {/* SAFE NOW */}
-        <BreakingTicker posts={posts.slice(0, 6)} />
 
         <main>{children}</main>
 
