@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { NormalizedPost } from "@/lib/mappers/wordpressMapper";
+import type { NormalizedPost } from "@/lib/mappers/wordpressMapper";
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
@@ -12,7 +12,7 @@ interface Props {
   posts: NormalizedPost[];
 }
 
-export default function BreakingTicker({ posts }: Props) {
+export default function BreakingSwiper({ posts }: Props) {
   if (!posts?.length) return null;
 
   return (

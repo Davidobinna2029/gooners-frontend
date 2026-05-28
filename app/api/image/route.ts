@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ALLOWED = [
-  "arsenaltalks.com",
-  "i0.wp.com",
-  "i1.wp.com",
-  "i2.wp.com",
-  "wordpress.com",
-];
+const ALLOWED = ["arsenaltalks.com", "i0.wp.com", "i1.wp.com", "i2.wp.com"];
 
-function isAllowed(url: string) {
+function allowed(url: string) {
   try {
     const host = new URL(url).hostname;
     return ALLOWED.some((d) => host.includes(d));
@@ -22,31 +16,20 @@ export async function GET(req: NextRequest) {
 
   const url = searchParams.get("url");
 
-  if (!url || !isAllowed(url)) {
-    return new NextResponse("Invalid image source", { status: 403 });
+  if (!url || !allowed(url)) {
+    return new NextResponse("Invalid image", { status: 403 });
   }
 
   try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-      },
-    });
+    const res = await fetch(url);
 
     if (!res.ok || !res.body) {
-      return new NextResponse("Image fetch failed", { status: 502 });
+      return new NextResponse("Image failed", { status: 502 });
     }
-
-    const contentType =
-      res.headers.get("content-type") || "image/jpeg";
 
     return new NextResponse(res.body, {
       headers: {
-        "Content-Type": contentType,
-
-        /**
-         * ESPN-style CDN caching (safe)
-         */
+        "Content-Type": res.headers.get("content-type") || "image/jpeg",
         "Cache-Control": "public, s-maxage=31536000, immutable",
       },
     });

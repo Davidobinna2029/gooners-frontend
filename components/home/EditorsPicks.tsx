@@ -1,22 +1,16 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import { NormalizedPost }
-  from "@/lib/mappers/wordpressMapper";
+import type { NormalizedPost } from "@/lib/mappers/wordpressMapper";
 
 interface Props {
   posts: NormalizedPost[];
 }
 
-export default function EditorsPicks({
-  posts,
-}: Props) {
-  if (!posts?.length) {
-    return null;
-  }
+export default function EditorsPicks({ posts }: Props) {
+  if (!Array.isArray(posts) || posts.length === 0) return null;
 
-  const featured =
-    posts.slice(0, 4);
+  const featured = posts.slice(0, 4);
 
   return (
     <section className="editors-picks">
@@ -28,18 +22,13 @@ export default function EditorsPicks({
 
         <div className="editors-grid">
           {featured.map((post) => (
-            <article
-              key={post.id}
-              className="editors-card"
-            >
-              <Link
-                href={`/news/${post.slug}`}
-              >
+            <article key={post.id} className="editors-card">
+              <Link href={`/news/${post.slug}`}>
 
                 <div className="editors-image">
                   <Image
-                    src={post.image}
-                    alt={post.title}
+                    src={post.image || "/fallback.jpg"}
+                    alt={post.title || "News image"}
                     fill
                     className="object-cover"
                   />
@@ -47,10 +36,7 @@ export default function EditorsPicks({
 
                 <div className="editors-content">
                   <h3>{post.title}</h3>
-
-                  <p>
-                    {post.excerpt}
-                  </p>
+                  <p>{post.excerpt}</p>
                 </div>
 
               </Link>

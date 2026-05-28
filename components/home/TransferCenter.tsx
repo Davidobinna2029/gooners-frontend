@@ -1,24 +1,20 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import { NormalizedPost }
-  from "@/lib/mappers/wordpressMapper";
+import type { NormalizedPost } from "@/lib/mappers/wordpressMapper";
 
 interface Props {
   posts: NormalizedPost[];
 }
 
-export default function TransferCenter({
-  posts,
-}: Props) {
-  if (!posts?.length) {
-    return null;
-  }
+export default function TransferCenter({ posts }: Props) {
+  if (!Array.isArray(posts) || posts.length === 0) return null;
 
-  // Optional editorial filter: only transfer-related posts
   const transfers = posts.filter((post) =>
-    post.title.toLowerCase().includes("transfer")
+    (post.title ?? "").toLowerCase().includes("transfer")
   );
+
+  if (transfers.length === 0) return null;
 
   return (
     <section className="transfer-center">
@@ -30,19 +26,15 @@ export default function TransferCenter({
 
         <div className="transfer-grid">
           {transfers.map((post) => (
-            <article
-              key={post.id}
-              className="transfer-card"
-            >
-              <Link
-                href={`/news/${post.slug}`}
-              >
+            <article key={post.id} className="transfer-card">
+              <Link href={`/news/${post.slug}`}>
 
                 <div className="transfer-image">
                   <Image
-                    src={post.image}
-                    alt={post.title}
+                    src={post.image || "/fallback.jpg"}
+                    alt={post.title || "Transfer news"}
                     fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
                     className="object-cover"
                   />
                 </div>

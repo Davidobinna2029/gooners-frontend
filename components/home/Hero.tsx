@@ -1,8 +1,7 @@
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 
-import { NormalizedPost } from "@/lib/mappers/wordpressMapper";
-import { getAdaptiveImage } from "@/lib/media/adaptiveImage";
+import type { NormalizedPost } from "@/lib/mappers/wordpressMapper";
 
 interface Props {
   featured: NormalizedPost[];
@@ -18,13 +17,14 @@ export default function Hero({ featured }: Props) {
     <section className="hero-magazine">
       <div className="container hero-grid">
 
-        {/* MAIN STORY (LCP OPTIMIZED) */}
+        {/* MAIN STORY */}
         <div className="hero-main">
           <Link href={`/news/${main.slug}`}>
+
             <div className="hero-image">
               <Image
-                src={getAdaptiveImage(main, "hero")}
-                alt={main.title || "Featured news image"}
+                src={main.image || "/fallback.jpg"}
+                alt={main.title || "Arsenal news"}
                 fill
                 priority
                 quality={90}
@@ -37,10 +37,11 @@ export default function Hero({ featured }: Props) {
               <h1>{main.title}</h1>
               <p>{main.excerpt}</p>
             </div>
+
           </Link>
         </div>
 
-        {/* SIDE STORIES (CARD OPTIMIZED) */}
+        {/* SIDE STORIES */}
         <div className="hero-side">
           {side.map((post) => (
             <Link
@@ -48,13 +49,14 @@ export default function Hero({ featured }: Props) {
               href={`/news/${post.slug}`}
               className="hero-side-item"
             >
+
               <div className="side-image">
                 <Image
-                  src={getAdaptiveImage(post, "card")}
-                  alt={post.title || "News image"}
+                  src={post.image || "/fallback.jpg"}
+                  alt={post.title || "Arsenal article"}
                   fill
-                  quality={75}
-                  sizes="(max-width: 768px) 50vw, 30vw"
+                  quality={80}
+                  sizes="(max-width:768px) 100vw, 30vw"
                   className="object-cover"
                   loading="lazy"
                 />
@@ -63,6 +65,7 @@ export default function Hero({ featured }: Props) {
               <div className="side-text">
                 <h3>{post.title}</h3>
               </div>
+
             </Link>
           ))}
         </div>

@@ -1,17 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import { NormalizedPost }
-  from "@/lib/mappers/wordpressMapper";
+import type { NormalizedPost } from "@/lib/mappers/wordpressMapper";
 
 interface Props {
   posts: NormalizedPost[];
 }
 
-export default function TrendingRail({
-  posts,
-}: Props) {
-  if (!posts?.length) return null;
+export default function TrendingRail({ posts }: Props) {
+  if (!Array.isArray(posts) || posts.length === 0) return null;
 
   return (
     <section className="trending-rail">
@@ -19,23 +16,33 @@ export default function TrendingRail({
         <h2>Trending</h2>
 
         <div className="rail-scroll">
-          {posts.map((post) => (
-            <Link
-              key={post.id}
-              href={`/news/${post.slug}`}
-              className="rail-card"
-            >
-              <div className="rail-image">
-                <Image
-                  src={post.image || "/fallback.jpg"}
-                  alt={post.title}
-                  fill
-                />
-              </div>
+          {posts.map((post) => {
+            const title = post.title ?? "Untitled";
+            const image = post.image || "/fallback.jpg";
+            const slug = post.slug ?? "#";
 
-              <h3>{post.title}</h3>
-            </Link>
-          ))}
+            return (
+              <Link
+                key={post.id}
+                href={`/news/${slug}`}
+                className="rail-card"
+              >
+                <div className="rail-image">
+                  <Image
+                    src={image}
+                    alt={title}
+                    fill
+                    sizes="(max-width: 768px) 60vw, 25vw"
+                    className="object-cover"
+                    loading="lazy"
+                    quality={75}
+                  />
+                </div>
+
+                <h3>{title}</h3>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>

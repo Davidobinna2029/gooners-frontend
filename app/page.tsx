@@ -19,20 +19,30 @@ export default async function HomePage() {
     getScores().catch(() => []),
   ]);
 
-  const normalized = mapWordPressPosts(rawPosts || []);
-  const feed = buildHomepageFeed(normalized);
+  /**
+   * STEP 1: SAFE NORMALIZATION (ONLY ONCE)
+   */
+  const normalizedPosts = mapWordPressPosts(rawPosts ?? []);
+
+  /**
+   * STEP 2: SINGLE SOURCE FEED ENGINE
+   */
+  const feed = buildHomepageFeed(normalizedPosts);
 
   return (
     <main>
       <StickyScoreStrip matches={scores || []} />
 
-      {/* SINGLE BREAKING SYSTEM (ONLY ONE SWIPER) */}
+      {/* BREAKING SYSTEM */}
       <BreakingSwiper posts={feed.breaking} />
 
+      {/* HERO */}
       <Hero featured={feed.hero} />
 
-      <MatchHero nextMatch={scores?.[0]} />
+      {/* MATCH MODULE */}
+      <MatchHero nextMatch={scores?.[0] ?? null} />
 
+      {/* CONTENT STREAM */}
       <TrendingRail posts={feed.trending} />
 
       <EditorsPicks posts={feed.editors} />

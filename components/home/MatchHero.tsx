@@ -1,17 +1,37 @@
 import Link from "next/link";
-import { Match } from "@/types/match";
+
+export type Match = {
+  id: number;
+  date?: string;
+  status?: string;
+  league?: {
+    name?: string;
+  };
+  teams?: {
+    home?: {
+      name?: string;
+      score?: number;
+    };
+    away?: {
+      name?: string;
+      score?: number;
+    };
+  };
+};
 
 interface Props {
-  nextMatch?: Match;
+  nextMatch?: Match | null;
 }
 
 export default function MatchHero({ nextMatch }: Props) {
   if (!nextMatch) return null;
 
-  const competition = nextMatch.league?.name || "Premier League";
-  const home = nextMatch.teams?.home?.name || "Arsenal";
-  const away = nextMatch.teams?.away?.name || "Opponent";
-  const date = nextMatch.fixture?.date || "TBD";
+  const competition = nextMatch?.league?.name ?? "Premier League";
+
+  const home = nextMatch?.teams?.home?.name ?? "Arsenal";
+  const away = nextMatch?.teams?.away?.name ?? "Opponent";
+
+  const date = nextMatch?.date ?? "TBD";
 
   return (
     <section className="match-hero">
