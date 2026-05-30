@@ -1,16 +1,40 @@
-export async function safeFetch(url: string, retries = 3) {
-  for (let i = 0; i < retries; i++) {
+export async function safeFetch<T>(
+  url: string,
+  retries = 3
+): Promise<T | null> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const res = await fetch(url, {
-        next: { revalidate: 30 },
+        next: {
+          revalidate: 30,
+        },
+        headers: {
+          Accept: "application/json",
+        },
       });
 
-      if (!res.ok) throw new Error("Bad response");
+      if (!res.ok) {
+        throw new Error(
+          `HTTP ${res.status}: ${res.statusText}`
+        );
+      }
 
-      return await res.json();
-    } catch (err) {
-      if (i === retries - 1) {
-        console.error("FETCH FAILED FINAL:", url);
+      const data = await res.json();
+
+      return data as T;
+    } catch (error) {
+      console.warn(
+        `[SAFE FETCH RETRY ${attempt}/${retries}]`,
+        url
+      );
+
+      if (attempt === retries) {
+        console.error(
+          "[SAFE FETCH FAILED]",
+          url,
+          error
+        );
+
         return null;
       }
     }

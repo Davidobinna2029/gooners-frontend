@@ -2,14 +2,7 @@ import type { WordPressPostWithMedia } from "@/types/wordpress-media";
 
 /**
  * =========================
- * FALLBACK IMAGE (SAFE DEFAULT)
- * =========================
- */
-const FALLBACK_IMAGE = "/fallback.jpg";
-
-/**
- * =========================
- * NORMALIZED POST TYPE (SINGLE SOURCE OF TRUTH)
+ * NORMALIZED POST TYPE
  * =========================
  */
 export interface NormalizedPost {
@@ -30,45 +23,30 @@ export interface NormalizedPost {
  * =========================
  */
 function stripHtml(html?: string): string {
-  if (typeof html !== "string") return "";
+  if (!html || typeof html !== "string") return "";
   return html.replace(/<[^>]*>/g, "").trim();
 }
 
 /**
  * =========================
- * IMAGE NORMALIZER (VERCEL + NEXT/IMAGE SAFE)
+ * IMAGE VALIDATOR (STRICT)
  * =========================
  */
-function normalizeImage(url?: string): string {
-  if (!url || typeof url !== "string") return FALLBACK_IMAGE;
+function isValidImage(url?: string): url is string {
+  if (!url || typeof url !== "string") return false;
 
   const clean = url.trim();
 
-  if (
-    clean === "" ||
-    clean === "null" ||
-    clean === "undefined" ||
-    clean.length < 10
-  ) {
-    return FALLBACK_IMAGE;
-  }
+  if (clean.length < 10) return false;
 
-  // protocol-relative URLs
-  if (clean.startsWith("//")) {
-    return `https:${clean}`;
-  }
+  if (clean.startsWith("//")) return true;
 
-  // enforce only valid http(s)
-  if (!/^https?:\/\//.test(clean)) {
-    return FALLBACK_IMAGE;
-  }
-
-  return clean;
+  return /^https?:\/\//.test(clean);
 }
 
 /**
  * =========================
- * WORDPRESS FEATURED IMAGE EXTRACTOR (ROBUST)
+ * EXTRACT FEATURED IMAGE (ROBUST WP HANDLING)
  * =========================
  */
 function extractWpImage(post: WordPressPostWithMedia): string {
@@ -79,7 +57,9 @@ function extractWpImage(post: WordPressPostWithMedia): string {
   const sizes = media?.media_details?.sizes;
 
   return (
+    sizes?.full?.source_url ||
     sizes?.large?.source_url ||
+    sizes?.medium_large?.source_url ||
     sizes?.medium?.source_url ||
     sizes?.thumbnail?.source_url ||
     media?.source_url ||
@@ -89,11 +69,37 @@ function extractWpImage(post: WordPressPostWithMedia): string {
 
 /**
  * =========================
- * FINAL IMAGE RESOLVER
+ * EXTRACT IMAGE FROM CONTENT (FALLBACK REAL DATA ONLY)
+ * =========================
+ */
+function extractContentImage(post: WordPressPostWithMedia): string {
+  const html = post?.content?.rendered || "";
+
+  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+
+  return match?.[1] || "";
+}
+
+/**
+ * =========================
+ * RESOLVE FINAL IMAGE (NO FAKE FALLBACKS)
  * =========================
  */
 function resolveImage(post: WordPressPostWithMedia): string {
-  return normalizeImage(extractWpImage(post));
+  const featured = extractWpImage(post);
+  const content = extractContentImage(post);
+
+  const final = featured || content;
+
+  if (!isValidImage(final)) {
+    return "";
+  }
+
+  if (final.startsWith("//")) {
+    return `https:${final}`;
+  }
+
+  return final;
 }
 
 /**
@@ -130,10 +136,3 @@ export function mapWordPressPosts(
   if (!Array.isArray(posts)) return [];
   return posts.map(mapWordPressPost);
 }
-
-/**
- * =========================
- * BACKWARD COMPATIBILITY (SAFE LEGACY SUPPORT)
- * =========================
- */
-export const normalizePosts = mapWordPressPosts;

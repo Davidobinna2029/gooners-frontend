@@ -20,36 +20,79 @@ export default async function HomePage() {
   ]);
 
   /**
-   * STEP 1: SAFE NORMALIZATION (ONLY ONCE)
+   * SAFE NORMALIZATION LAYER
    */
-  const normalizedPosts = mapWordPressPosts(rawPosts ?? []);
+  const posts = mapWordPressPosts(rawPosts ?? []);
 
   /**
-   * STEP 2: SINGLE SOURCE FEED ENGINE
+   * FEED ORCHESTRATION (SINGLE SOURCE OF TRUTH)
    */
-  const feed = buildHomepageFeed(normalizedPosts);
+  const feed = buildHomepageFeed(posts);
+
+  /**
+   * MATCH SAFETY GUARD
+   */
+  const liveMatch = Array.isArray(scores) && scores.length > 0
+    ? scores[0]
+    : null;
 
   return (
-    <main>
-      <StickyScoreStrip matches={scores || []} />
+    <main className="home-page">
 
-      {/* BREAKING SYSTEM */}
-      <BreakingSwiper posts={feed.breaking} />
+      {/* =========================
+          1. LIVE SCORE STRIP
+      ========================= */}
+      <StickyScoreStrip matches={scores ?? []} />
 
-      {/* HERO */}
-      <Hero featured={feed.hero} />
+      {/* =========================
+          2. HERO SECTION
+      ========================= */}
+      <section className="hero-zone">
+        <Hero featured={feed.hero ?? []} />
+      </section>
 
-      {/* MATCH MODULE */}
-      <MatchHero nextMatch={scores?.[0] ?? null} />
+      {/* =========================
+          3. BREAKING NEWS
+      ========================= */}
+      <section className="breaking-zone">
+        <BreakingSwiper posts={feed.breaking ?? []} />
+      </section>
 
-      {/* CONTENT STREAM */}
-      <TrendingRail posts={feed.trending} />
+      {/* =========================
+          4. MATCH HERO
+      ========================= */}
+      <section className="match-zone">
+        <MatchHero nextMatch={liveMatch} />
+      </section>
 
-      <EditorsPicks posts={feed.editors} />
+      {/* =========================
+          5. CONTENT GRID
+      ========================= */}
+      <section className="content-grid-zone">
+        <div className="container grid-3col">
 
-      <TransferCenter posts={feed.transfer} />
+          <div className="col">
+            <TrendingRail posts={feed.trending ?? []} />
+          </div>
 
-      <FeaturedGrid posts={feed.featured} />
+          <div className="col">
+            <EditorsPicks posts={feed.editors ?? []} />
+          </div>
+
+          <div className="col">
+            <TransferCenter posts={feed.transfer ?? []} />
+          </div>
+
+        </div>
+      </section>
+
+      {/* =========================
+          6. FEATURED ARCHIVE
+      ========================= */}
+      <section className="featured-zone">
+        <FeaturedGrid posts={feed.featured ?? []} />
+      </section>
+
     </main>
   );
 }
