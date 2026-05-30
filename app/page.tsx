@@ -20,54 +20,52 @@ export default async function HomePage() {
   ]);
 
   /**
+   * =========================
+   * DEBUG LAYER (CRITICAL)
+   * =========================
+   */
+  console.log("RAW POSTS SAMPLE:", rawPosts?.[0]);
+  console.log("RAW EMBED SAMPLE:", rawPosts?.[0]?._embedded);
+
+  /**
    * SAFE NORMALIZATION LAYER
    */
   const posts = mapWordPressPosts(rawPosts ?? []);
 
+  console.log("MAPPED POSTS SAMPLE:", posts?.[0]);
+
   /**
-   * FEED ORCHESTRATION (SINGLE SOURCE OF TRUTH)
+   * FEED ORCHESTRATION
    */
   const feed = buildHomepageFeed(posts);
+
+  console.log("HERO IMAGE SAMPLE:", feed.hero?.[0]?.image);
 
   /**
    * MATCH SAFETY GUARD
    */
-  const liveMatch = Array.isArray(scores) && scores.length > 0
-    ? scores[0]
-    : null;
+  const liveMatch =
+    Array.isArray(scores) && scores.length > 0
+      ? scores[0]
+      : null;
 
   return (
     <main className="home-page">
 
-      {/* =========================
-          1. LIVE SCORE STRIP
-      ========================= */}
       <StickyScoreStrip matches={scores ?? []} />
 
-      {/* =========================
-          2. HERO SECTION
-      ========================= */}
       <section className="hero-zone">
         <Hero featured={feed.hero ?? []} />
       </section>
 
-      {/* =========================
-          3. BREAKING NEWS
-      ========================= */}
       <section className="breaking-zone">
         <BreakingSwiper posts={feed.breaking ?? []} />
       </section>
 
-      {/* =========================
-          4. MATCH HERO
-      ========================= */}
       <section className="match-zone">
         <MatchHero nextMatch={liveMatch} />
       </section>
 
-      {/* =========================
-          5. CONTENT GRID
-      ========================= */}
       <section className="content-grid-zone">
         <div className="container grid-3col">
 
@@ -86,9 +84,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* =========================
-          6. FEATURED ARCHIVE
-      ========================= */}
       <section className="featured-zone">
         <FeaturedGrid posts={feed.featured ?? []} />
       </section>
