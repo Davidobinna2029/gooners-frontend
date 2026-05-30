@@ -13,80 +13,110 @@ import { getPosts, getScores } from "@/lib/api/wordpress";
 import { mapWordPressPosts } from "@/lib/mappers/wordpressMapper";
 import { buildHomepageFeed } from "@/lib/orchestrator/homepage";
 
+/**
+ * =========================
+ * SAFE FETCH
+ * =========================
+ */
+async function safeFetch<T>(
+  promise: Promise<T>,
+  fallback: T
+): Promise<T> {
+  try {
+    return await promise;
+  } catch {
+    return fallback;
+  }
+}
+
 export default async function HomePage() {
+  /**
+   * =========================
+   * FETCH DATA
+   * =========================
+   */
   const [rawPosts, scores] = await Promise.all([
-    getPosts().catch(() => []),
-    getScores().catch(() => []),
+    safeFetch(getPosts(), []),
+    safeFetch(getScores(), []),
   ]);
 
   /**
    * =========================
-   * DEBUG LAYER (CRITICAL)
+   * NORMALIZE POSTS
    * =========================
    */
-  console.log("RAW POSTS SAMPLE:", rawPosts?.[0]);
-  console.log("RAW EMBED SAMPLE:", rawPosts?.[0]?._embedded);
+  const posts = mapWordPressPosts(rawPosts);
 
   /**
-   * SAFE NORMALIZATION LAYER
-   */
-  const posts = mapWordPressPosts(rawPosts ?? []);
-
-  console.log("MAPPED POSTS SAMPLE:", posts?.[0]);
-
-  /**
-   * FEED ORCHESTRATION
+   * =========================
+   * BUILD FEED
+   * =========================
    */
   const feed = buildHomepageFeed(posts);
 
-  console.log("HERO IMAGE SAMPLE:", feed.hero?.[0]?.image);
-
   /**
-   * MATCH SAFETY GUARD
+   * =========================
+   * LIVE MATCH
+   * =========================
    */
-  const liveMatch =
-    Array.isArray(scores) && scores.length > 0
-      ? scores[0]
-      : null;
+  const liveMatch = scores?.[0] ?? null;
 
   return (
     <main className="home-page">
 
-      <StickyScoreStrip matches={scores ?? []} />
+      {/* SCORE STRIP */}
+      <StickyScoreStrip matches={scores} />
 
-      <section className="hero-zone">
-        <Hero featured={feed.hero ?? []} />
-      </section>
+      {/* HERO */}
+      {feed.hero?.length > 0 && (
+        <section className="hero-zone">
+          <Hero featured={feed.hero} />
+        </section>
+      )}
 
-      <section className="breaking-zone">
-        <BreakingSwiper posts={feed.breaking ?? []} />
-      </section>
+      {/* BREAKING NEWS */}
+      {feed.breaking?.length > 0 && (
+        <section className="breaking-zone">
+          <BreakingSwiper posts={feed.breaking} />
+        </section>
+      )}
 
+      {/* MATCH CENTER */}
       <section className="match-zone">
         <MatchHero nextMatch={liveMatch} />
       </section>
 
+      {/* MAIN CONTENT */}
       <section className="content-grid-zone">
         <div className="container grid-3col">
 
           <div className="col">
-            <TrendingRail posts={feed.trending ?? []} />
+            {feed.trending?.length > 0 && (
+              <TrendingRail posts={feed.trending} />
+            )}
           </div>
 
           <div className="col">
-            <EditorsPicks posts={feed.editors ?? []} />
+            {feed.editors?.length > 0 && (
+              <EditorsPicks posts={feed.editors} />
+            )}
           </div>
 
           <div className="col">
-            <TransferCenter posts={feed.transfer ?? []} />
+            {feed.transfer?.length > 0 && (
+              <TransferCenter posts={feed.transfer} />
+            )}
           </div>
 
         </div>
       </section>
 
-      <section className="featured-zone">
-        <FeaturedGrid posts={feed.featured ?? []} />
-      </section>
+      {/* FEATURED STORIES */}
+      {feed.featured?.length > 0 && (
+        <section className="featured-zone">
+          <FeaturedGrid posts={feed.featured} />
+        </section>
+      )}
 
     </main>
   );
