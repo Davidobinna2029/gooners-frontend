@@ -1,9 +1,18 @@
 import { WordPressPostWithMedia } from "@/types/wordpress-media";
 
-const FALLBACK = "";
+/**
+ * =========================
+ * FALLBACK IMAGE (CRITICAL FIX)
+ * =========================
+ * Never allow empty UI state
+ */
+const FALLBACK =
+  "/images/fallback/arsenal-default.jpg";
 
 /**
- * Extract WP featured image
+ * =========================
+ * FEATURED IMAGE (WP PRIORITY)
+ * =========================
  */
 function getFeatured(post: WordPressPostWithMedia): string {
   const media = post?._embedded?.["wp:featuredmedia"]?.[0];
@@ -13,13 +22,16 @@ function getFeatured(post: WordPressPostWithMedia): string {
     sizes?.full?.source_url ||
     sizes?.large?.source_url ||
     sizes?.medium_large?.source_url ||
+    sizes?.medium?.source_url ||
     media?.source_url ||
     ""
   );
 }
 
 /**
- * Extract content image fallback
+ * =========================
+ * CONTENT IMAGE FALLBACK (SECONDARY SOURCE)
+ * =========================
  */
 function getContent(post: WordPressPostWithMedia): string {
   const html = post?.content?.rendered || "";
@@ -28,25 +40,43 @@ function getContent(post: WordPressPostWithMedia): string {
 }
 
 /**
- * CLEAN NORMALIZER
+ * =========================
+ * URL NORMALIZER (SAFE)
+ * =========================
  */
 function normalize(url: string): string {
   if (!url) return "";
 
-  if (url.startsWith("//")) return `https:${url}`;
+  const clean = url.trim();
 
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    return url;
+  if (clean.startsWith("//")) {
+    return `https:${clean}`;
+  }
+
+  if (
+    clean.startsWith("http://") ||
+    clean.startsWith("https://")
+  ) {
+    return clean;
   }
 
   return "";
 }
 
 /**
- * FINAL RESOLVER (SYNC ONLY)
+ * =========================
+ * FINAL ESPN-STYLE RESOLVER
+ * =========================
  */
-export function resolveWordPressImage(post: WordPressPostWithMedia): string {
+export function resolveWordPressImage(
+  post: WordPressPostWithMedia
+): string {
   const raw = getFeatured(post) || getContent(post);
+  const cleaned = normalize(raw);
 
-  return normalize(raw) || FALLBACK;
+  /**
+   * GUARANTEE LAYER:
+   * Never return empty string to UI
+   */
+  return cleaned || FALLBACK;
 }

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import type { NormalizedPost } from "@/lib/mappers/wordpressMapper";
+import type { CanonicalPost } from "@/types";
 
 interface Props {
-  posts: NormalizedPost[];
+  posts: CanonicalPost[];
 }
 
 export default function EditorsPicks({ posts }: Props) {
@@ -27,7 +27,7 @@ export default function EditorsPicks({ posts }: Props) {
 
                 <div className="editors-image">
                   <Image
-                    src={post.image || "/fallback.jpg"}
+                    src={post.image?.url || "/fallback.jpg"}
                     alt={post.title || "News image"}
                     fill
                     className="object-cover"

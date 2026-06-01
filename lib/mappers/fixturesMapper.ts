@@ -1,14 +1,14 @@
-import { WordPressPostWithMedia } from "@/types/wordpress-media";
+import type { WordPressPostWithMedia } from "@/types/wordpress-media";
 import { mapWordPressPost } from "@/lib/mappers/wordpressMapper";
-import { NormalizedPost } from "@/types/ui";
+import type { CanonicalPost } from "@/types/content";
 
 /**
- * Fixtures Mapper (WordPress → UI)
+ * Fixtures Mapper (WordPress → Canonical UI Model)
  * Thin wrapper around core mapper for consistency
  */
 export function mapFixtures(
   posts: WordPressPostWithMedia[]
-): NormalizedPost[] {
+): CanonicalPost[] {
   if (!Array.isArray(posts)) return [];
 
   return posts.map(mapWordPressPost);

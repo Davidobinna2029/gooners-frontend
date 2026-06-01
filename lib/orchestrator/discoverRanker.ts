@@ -1,11 +1,12 @@
-import type { NormalizedPost } from "@/lib/mappers/wordpressMapper";
+import type { CanonicalPost } from "@/types/content";
 
 /**
  * =========================
- * GOOGLE DISCOVER PRIORITIZER
+ * GOOGLE DISCOVER PRIORITIZER (ESPN LAYER)
  * =========================
  */
-export function rankForDiscover(posts: NormalizedPost[]): NormalizedPost[] {
+
+export function rankForDiscover(posts: CanonicalPost[]): CanonicalPost[] {
   if (!Array.isArray(posts)) return [];
 
   const now = Date.now();
@@ -19,7 +20,7 @@ export function rankForDiscover(posts: NormalizedPost[]): NormalizedPost[] {
 
       /**
        * =========================
-       * 1. FRESHNESS BOOST (CRITICAL)
+       * 1. FRESHNESS BOOST
        * =========================
        */
       if (ageHours <= 2) score += 120;
@@ -32,30 +33,25 @@ export function rankForDiscover(posts: NormalizedPost[]): NormalizedPost[] {
        * 2. CONTENT QUALITY SIGNALS
        * =========================
        */
-      if (post.image) score += 25;
+      if (post.image) score += 25; // ✅ string check only
       if (post.excerpt && post.excerpt.length > 80) score += 15;
       if (post.categories?.length) score += 10;
 
       /**
        * =========================
-       * 3. SEO ENGAGEMENT SIGNAL (SIMULATED)
+       * 3. SEO SIGNALS
        * =========================
        */
       const titleLength = post.title.length;
 
       if (titleLength >= 40 && titleLength <= 80) {
-        score += 20; // optimal Discover title range
+        score += 20;
       }
 
       if (post.title.toLowerCase().includes("arsenal")) {
-        score += 15; // niche authority boost
+        score += 15;
       }
 
-      /**
-       * =========================
-       * FINAL SCORE
-       * =========================
-       */
       return {
         ...post,
         score,

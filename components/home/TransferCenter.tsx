@@ -1,51 +1,74 @@
-import Link from "next/link";
 import Image from "next/image";
-
-import type { NormalizedPost } from "@/lib/mappers/wordpressMapper";
+import Link from "next/link";
+import type { CanonicalPost } from "@/types";
 
 interface Props {
-  posts: NormalizedPost[];
+  featured: CanonicalPost[];
 }
 
-export default function TransferCenter({ posts }: Props) {
-  if (!Array.isArray(posts) || posts.length === 0) return null;
+export default function Hero({ featured }: Props) {
+  if (!Array.isArray(featured) || featured.length === 0) return null;
 
-  const transfers = posts.filter((post) =>
-    (post.title ?? "").toLowerCase().includes("transfer")
-  );
+  const main = featured[0];
+  const side = featured.slice(1, 4);
 
-  if (transfers.length === 0) return null;
+  const mainImage = main.image?.url || "";
+  const fallback = "/fallback.jpg";
 
   return (
-    <section className="transfer-center">
-      <div className="container">
+    <section className="hero-magazine">
+      <div className="container hero-grid">
 
-        <div className="section-header">
-          <h2>Transfer Centre</h2>
+        {/* MAIN STORY */}
+        <div className="hero-main">
+          <Link href={`/news/${main.slug}`}>
+
+            <div className="hero-image">
+              <Image
+                src={mainImage || fallback}
+                alt={main.title || "Arsenal news"}
+                fill
+                priority
+                quality={90}
+                sizes="100vw"
+                className="object-cover"
+              />
+            </div>
+
+            <div className="hero-overlay">
+              <h1>{main.title}</h1>
+              <p>{main.excerpt}</p>
+            </div>
+
+          </Link>
         </div>
 
-        <div className="transfer-grid">
-          {transfers.map((post) => (
-            <article key={post.id} className="transfer-card">
-              <Link href={`/news/${post.slug}`}>
+        {/* SIDE STORIES */}
+        <div className="hero-side">
+          {side.map((post) => (
+            <Link
+              key={post.id}
+              href={`/news/${post.slug}`}
+              className="hero-side-item"
+            >
 
-                <div className="transfer-image">
-                  <Image
-                    src={post.image || "/fallback.jpg"}
-                    alt={post.title || "Transfer news"}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover"
-                  />
-                </div>
+              <div className="side-image">
+                <Image
+                  src={post.image?.url || fallback}
+                  alt={post.title || "Arsenal article"}
+                  fill
+                  quality={80}
+                  sizes="(max-width:768px) 100vw, 30vw"
+                  className="object-cover"
+                  loading="lazy"
+                />
+              </div>
 
-                <div className="transfer-content">
-                  <h3>{post.title}</h3>
-                  <p>{post.excerpt}</p>
-                </div>
+              <div className="side-text">
+                <h3>{post.title}</h3>
+              </div>
 
-              </Link>
-            </article>
+            </Link>
           ))}
         </div>
 

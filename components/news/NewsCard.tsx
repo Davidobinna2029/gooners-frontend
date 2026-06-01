@@ -1,16 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import { NormalizedPost }
-  from "@/lib/mappers/wordpressMapper";
+import type { CanonicalPost } from "@/types/content";
 
 interface Props {
-  post: NormalizedPost;
+  post: CanonicalPost;
 }
 
-export default function NewsCard({
-  post,
-}: Props) {
+export default function NewsCard({ post }: Props) {
+  const imageUrl = post.image?.url || "/fallback.jpg";
+
   return (
     <Link
       href={`/news/${post.slug}`}
@@ -18,10 +17,11 @@ export default function NewsCard({
     >
       <div className="news-image">
         <Image
-          src={post.image || "/placeholder.jpg"}
+          src={imageUrl}
           alt={post.title || "Arsenal news"}
           fill
           className="object-cover"
+          loading="lazy"
         />
       </div>
 

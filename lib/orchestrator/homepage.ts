@@ -1,50 +1,83 @@
-import { rankForDiscover } from "./discoverRanker";
-import type { NormalizedPost } from "@/lib/mappers/wordpressMapper";
+import type { CanonicalPost } from "@/types/content";
+import { clusterPosts } from "@/lib/engine/clusterPost";
 
-export function buildHomepageFeed(posts: NormalizedPost[]) {
-  const ranked = rankForDiscover(posts);
+/**
+ * =========================
+ * TYPE: HOMEPAGE FEED
+ * =========================
+ */
+export interface HomepageFeed {
+  hero: CanonicalPost[];
+  breaking: CanonicalPost[];
+  trending: CanonicalPost[];
+  editors: CanonicalPost[];
+  transfer: CanonicalPost[];
+  featured: CanonicalPost[];
+}
+
+/**
+ * =========================
+ * HELPER: SAFE SLICE
+ * =========================
+ */
+function take(posts: CanonicalPost[], n: number) {
+  return posts.slice(0, n);
+}
+
+/**
+ * =========================
+ * MAIN ORCHESTRATOR
+ * =========================
+ */
+export function buildHomepageFeed(posts: CanonicalPost[]): HomepageFeed {
+  const clusters = clusterPosts(posts);
+
+  const hero = take(
+    [...clusters.arsenal, ...clusters.match].sort(
+      (a, b) => (b.score ?? 0) - (a.score ?? 0)
+    ),
+    5
+  );
+
+  const breaking = take(
+    [...clusters.injury, ...clusters.transfers].sort(
+      (a, b) => (b.score ?? 0) - (a.score ?? 0)
+    ),
+    8
+  );
+
+  const trending = take(
+    [...posts]
+      .filter((p) => (p.score ?? 0) >= 40)
+      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0)),
+    10
+  );
+
+  const editors = take(
+    [...clusters.arsenal, ...clusters.match]
+      .filter((p) => (p.score ?? 0) >= 60)
+      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0)),
+    6
+  );
+
+  const transfer = take(
+    clusters.transfers.sort(
+      (a, b) => (b.score ?? 0) - (a.score ?? 0)
+    ),
+    8
+  );
+
+  const featured = take(
+    [...posts].sort((a, b) => (b.score ?? 0) - (a.score ?? 0)),
+    18
+  );
 
   return {
-    /**
-     * =========================
-     * HERO = TOP 5 ONLY
-     * =========================
-     */
-    hero: ranked.slice(0, 5),
-
-    /**
-     * =========================
-     * BREAKING = HIGH FRESHNESS ONLY
-     * =========================
-     */
-    breaking: ranked.filter(p => (p.score ?? 0) >= 90).slice(0, 8),
-
-    /**
-     * =========================
-     * TRENDING = BALANCED SIGNALS
-     * =========================
-     */
-    trending: ranked.slice(5, 15),
-
-    /**
-     * =========================
-     * EDITORS PICKS = MID + HIGH QUALITY
-     * =========================
-     */
-    editors: ranked.filter(p => (p.score ?? 0) >= 60).slice(0, 6),
-
-    /**
-     * =========================
-     * TRANSFERS = CATEGORY FILTER (optional extend later)
-     * =========================
-     */
-    transfer: ranked.slice(10, 18),
-
-    /**
-     * =========================
-     * FEATURED GRID = FULL RANGE
-     * =========================
-     */
-    featured: ranked.slice(0, 18),
+    hero,
+    breaking,
+    trending,
+    editors,
+    transfer,
+    featured,
   };
 }

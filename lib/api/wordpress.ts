@@ -6,40 +6,52 @@ import { mapEspnMatches } from "@/lib/mappers/espnMatchMapper";
 
 /**
  * =========================
- * SAFE FETCH WRAPPER
+ * SAFE FETCH CORE
  * =========================
+ * Centralized fallback system (no nested wrappers)
  */
-async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
+async function safeFetch<T>(
+  fn: () => Promise<T>,
+  fallback: T
+): Promise<T> {
   try {
     return await fn();
   } catch (err) {
-    console.error("SAFE FETCH FAILED:", err);
+    console.error("API ERROR:", err);
     return fallback;
   }
 }
 
 /**
- * FORCE EMBED PARAM (CRITICAL FOR FEATURED IMAGES)
+ * =========================
+ * WORDPRESS CONFIG
+ * =========================
  */
 const WP_EMBED = "_embed=1";
+const POSTS_LIMIT = 20;
+const CATEGORY_LIMIT = 100;
 
 /**
  * =========================
- * POSTS
+ * POSTS (CORE FEED SOURCE)
  * =========================
  */
-
-export async function getPosts() {
-  return safe(async () => {
+export async function getPosts(): Promise<WordPressPostWithMedia[]> {
+  return safeFetch(async () => {
     return ssrFetch<WordPressPostWithMedia[]>(
-      `${API_BASE}/posts?per_page=20&${WP_EMBED}`,
+      `${API_BASE}/posts?per_page=${POSTS_LIMIT}&${WP_EMBED}`,
       { fallback: [] }
     );
   }, []);
 }
 
-export async function getPostBySlug(slug: string) {
-  return safe(async () => {
+/**
+ * SINGLE POST BY SLUG
+ */
+export async function getPostBySlug(
+  slug: string
+): Promise<WordPressPostWithMedia | null> {
+  return safeFetch(async () => {
     const data = await ssrFetch<WordPressPostWithMedia[]>(
       `${API_BASE}/posts?slug=${slug}&${WP_EMBED}`,
       { fallback: [] }
@@ -49,28 +61,37 @@ export async function getPostBySlug(slug: string) {
   }, null);
 }
 
-export async function getCategories() {
-  return safe(async () => {
+/**
+ * =========================
+ * CATEGORIES
+ * =========================
+ */
+export async function getCategories(): Promise<any[]> {
+  return safeFetch(async () => {
     return ssrFetch<any[]>(
-      `${API_BASE}/categories?per_page=100`,
+      `${API_BASE}/categories?per_page=${CATEGORY_LIMIT}`,
       { fallback: [] }
     );
   }, []);
 }
 
-export async function getCategoryPosts(slug: string) {
-  return safe(async () => {
+/**
+ * CATEGORY FILTERED POSTS
+ */
+export async function getCategoryPosts(
+  slug: string
+): Promise<WordPressPostWithMedia[]> {
+  return safeFetch(async () => {
     const categories = await ssrFetch<any[]>(
       `${API_BASE}/categories?slug=${slug}`,
       { fallback: [] }
     );
 
     const categoryId = categories?.[0]?.id;
-
     if (!categoryId) return [];
 
     return ssrFetch<WordPressPostWithMedia[]>(
-      `${API_BASE}/posts?categories=${categoryId}&per_page=20&${WP_EMBED}`,
+      `${API_BASE}/posts?categories=${categoryId}&per_page=${POSTS_LIMIT}&${WP_EMBED}`,
       { fallback: [] }
     );
   }, []);
@@ -78,15 +99,16 @@ export async function getCategoryPosts(slug: string) {
 
 /**
  * =========================
- * LIVE SCORES
+ * LIVE SCORES (ESPN LAYER)
  * =========================
  */
-
 export async function getScores() {
-  return safe(async () => {
+  return safeFetch(async () => {
     const res = await fetch(
       "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
-      { next: { revalidate: 30 } }
+      {
+        next: { revalidate: 30 },
+      }
     );
 
     if (!res.ok) return [];

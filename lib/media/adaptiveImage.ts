@@ -1,21 +1,36 @@
-import { NormalizedPost } from "@/lib/mappers/wordpressMapper";
+import type { CanonicalPost } from "@/types/content";
 
-/**
- * DEVICE BREAKPOINT STRATEGY
- */
 type ImageContext = "hero" | "card" | "thumbnail";
 
-/**
- * SIZE MAP (performance optimized)
- */
 const SIZE_MAP: Record<ImageContext, number> = {
-  hero: 1200,       // LCP critical
-  card: 800,        // feed/grid
-  thumbnail: 400,   // sidebar / small UI
+  hero: 1200,
+  card: 800,
+  thumbnail: 400,
 };
 
 /**
- * EDGE IMAGE ROUTER (central pipeline)
+ * SAFE IMAGE EXTRACTOR (handles BOTH old + new system temporarily)
+ */
+function getImageUrl(post: CanonicalPost): string {
+  const image: any = post?.image;
+
+  if (!image) return "";
+
+  // NEW ESPN FORMAT
+  if (typeof image === "object" && image.url) {
+    return image.url;
+  }
+
+  // LEGACY SAFETY (during migration)
+  if (typeof image === "string") {
+    return image;
+  }
+
+  return "";
+}
+
+/**
+ * EDGE CDN ROUTER
  */
 function buildEdgeImage(url: string, width: number): string {
   if (!url || url.includes("fallback.jpg")) return "/fallback.jpg";
@@ -24,15 +39,17 @@ function buildEdgeImage(url: string, width: number): string {
 }
 
 /**
- * MAIN ADAPTIVE IMAGE FUNCTION
+ * MAIN ENGINE
  */
 export function getAdaptiveImage(
-  post: NormalizedPost,
+  post: CanonicalPost,
   context: ImageContext = "card"
 ): string {
-  const width = SIZE_MAP[context] || 800;
+  const width = SIZE_MAP[context] ?? 800;
 
-  if (!post?.image) return "/fallback.jpg";
+  const url = getImageUrl(post);
 
-  return buildEdgeImage(post.image, width);
+  if (!url) return "/fallback.jpg";
+
+  return buildEdgeImage(url, width);
 }

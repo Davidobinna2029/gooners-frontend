@@ -1,13 +1,13 @@
 import Link from "next/link";
 
-import type { NormalizedPost } from "@/lib/mappers/wordpressMapper";
+import type { CanonicalPost } from "@/types/content";
 
 interface Props {
-  posts: NormalizedPost[];
+  posts: CanonicalPost[];
 }
 
 export default function TrendingList({ posts }: Props) {
-  if (!Array.isArray(posts) || posts.length === 0) return null;
+  if (!posts?.length) return null;
 
   return (
     <section className="trending-section">
@@ -16,24 +16,19 @@ export default function TrendingList({ posts }: Props) {
         <h2>Trending Now</h2>
 
         <div className="trending-list">
-          {posts.map((post, index) => {
-            const title = post.title ?? "Untitled";
-            const slug = post.slug ?? "#";
+          {posts.map((post, index) => (
+            <Link
+              key={post.id}
+              href={`/news/${post.slug}`}
+              className="trending-item"
+            >
+              <span className="trending-index">
+                {String(index + 1).padStart(2, "0")}
+              </span>
 
-            return (
-              <Link
-                key={post.id}
-                href={`/news/${slug}`}
-                className="trending-item"
-              >
-                <span className="trending-index">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-
-                <h3>{title}</h3>
-              </Link>
-            );
-          })}
+              <h3>{post.title}</h3>
+            </Link>
+          ))}
         </div>
 
       </div>

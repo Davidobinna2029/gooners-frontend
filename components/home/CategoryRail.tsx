@@ -1,11 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import type { NormalizedPost } from "@/lib/mappers/wordpressMapper";
+import type { CanonicalPost } from "@/types";
 
 interface Props {
   title: string;
-  posts: NormalizedPost[];
+  posts: CanonicalPost[];
 }
 
 export default function CategoryRail({ title, posts }: Props) {
@@ -21,9 +21,10 @@ export default function CategoryRail({ title, posts }: Props) {
           {posts.map((post) => (
             <article key={post.id} className="rail-card">
               <Link href={`/news/${post.slug}`}>
+
                 <div className="rail-image">
                   <Image
-                    src={post.image}
+                    src={post.image.url || "/fallback.jpg"}
                     alt={post.title}
                     fill
                     className="object-cover"
@@ -31,6 +32,7 @@ export default function CategoryRail({ title, posts }: Props) {
                 </div>
 
                 <h3>{post.title}</h3>
+
               </Link>
             </article>
           ))}

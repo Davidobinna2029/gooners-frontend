@@ -1,10 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import type { NormalizedPost } from "@/lib/mappers/wordpressMapper";
+import type { CanonicalPost } from "@/types/content";
 
 interface Props {
-  posts: NormalizedPost[];
+  posts: CanonicalPost[];
+}
+
+function resolveImage(post: CanonicalPost): string {
+  const url = post.image?.url;
+  return url && url.trim() !== "" ? url : "/fallback.jpg";
 }
 
 export default function TrendingRail({ posts }: Props) {
@@ -18,7 +23,7 @@ export default function TrendingRail({ posts }: Props) {
         <div className="rail-scroll">
           {posts.map((post) => {
             const title = post.title ?? "Untitled";
-            const image = post.image || "/fallback.jpg";
+            const image = resolveImage(post);
             const slug = post.slug ?? "#";
 
             return (

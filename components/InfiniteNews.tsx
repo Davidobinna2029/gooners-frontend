@@ -1,112 +1,88 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { NormalizedPost } from "@/lib/mappers/wordpressMapper";
+
+import type { CanonicalPost } from "@/types/content";
 
 interface Props {
-  initialPosts: NormalizedPost[];
+  initialPosts: CanonicalPost[];
+  fetchPage?: (page: number) => Promise<CanonicalPost[]>;
 }
 
-export default function InfiniteNews({ initialPosts }: Props) {
-  const [posts, setPosts] = useState<NormalizedPost[]>(initialPosts || []);
-  const [page, setPage] = useState(2);
+export default function InfiniteNews({
+  initialPosts,
+  fetchPage,
+}: Props) {
+  const [posts, setPosts] = useState<CanonicalPost[]>(initialPosts || []);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
 
-  const loaderRef = useRef<HTMLDivElement | null>(null);
+  const observerRef = useRef<HTMLDivElement | null>(null);
 
   async function loadMore() {
-    if (loading || !hasMore) return;
+    if (!fetchPage || loading) return;
 
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/posts?page=${page}&per_page=20`);
+      const next = page + 1;
+      const newPosts = await fetchPage(next);
 
-      if (!res.ok) {
-        setHasMore(false);
-        return;
+      if (Array.isArray(newPosts) && newPosts.length > 0) {
+        setPosts((prev) => [...prev, ...newPosts]);
+        setPage(next);
       }
-
-      const data = await res.json();
-
-      if (!Array.isArray(data) || data.length === 0) {
-        setHasMore(false);
-        return;
-      }
-
-      setPosts((prev) => {
-        const existingIds = new Set(prev.map((p) => p.id));
-        const filtered = data.filter((p: NormalizedPost) => !existingIds.has(p.id));
-        return [...prev, ...filtered];
-      });
-
-      setPage((p) => p + 1);
     } catch (err) {
-      console.error("Infinite scroll error:", err);
-      setHasMore(false);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          loadMore();
-        }
-      },
-      { threshold: 1 }
-    );
+    const el = observerRef.current;
+    if (!el) return;
 
-    if (loaderRef.current) {
-      observer.observe(loaderRef.current);
-    }
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) loadMore();
+    });
 
-    return () => observer.disconnect();
-  }, [loaderRef.current, page, loading]);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [page, fetchPage, loading]);
 
   return (
     <section className="news-grid">
-      {posts.map((post) => (
-        <article key={post.id} className="news-card">
-          <Link href={`/news/${post.slug}`}>
-            <div className="news-image">
-              <Image
-                src={post.image || "/fallback.jpg"}
-                alt={post.title}
-                width={600}
-                height={350}
-                priority={false}
-              />
-            </div>
+      {posts.map((post) => {
+        const imageUrl = post.image?.url || "/fallback.jpg";
 
-            <h3
-              dangerouslySetInnerHTML={{
-                __html: post.title,
-              }}
-            />
-          </Link>
-        </article>
-      ))}
+        return (
+          <article key={post.id} className="news-card">
+            <Link href={`/news/${post.slug}`}>
+              <div className="news-image">
+                <Image
+                  src={imageUrl}
+                  alt={post.title || "Arsenal news"}
+                  width={600}
+                  height={400}
+                  className="object-cover"
+                  loading="lazy"
+                />
+              </div>
 
-      {/* Loader trigger */}
-      <div ref={loaderRef} style={{ height: 40 }} />
+              <h3>{post.title}</h3>
+            </Link>
+          </article>
+        );
+      })}
 
-      {/* Loading state */}
+      <div ref={observerRef} style={{ height: 40 }} />
+
       {loading && (
         <p style={{ textAlign: "center", padding: 20 }}>
           Loading more news...
-        </p>
-      )}
-
-      {/* End state */}
-      {!hasMore && (
-        <p style={{ textAlign: "center", padding: 20 }}>
-          No more articles
         </p>
       )}
     </section>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { NormalizedPost } from "@/lib/mappers/wordpressMapper";
+import type { CanonicalPost } from "@/types/content";
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
@@ -9,7 +9,7 @@ import { Autoplay } from "swiper/modules";
 import "swiper/css";
 
 interface Props {
-  posts: NormalizedPost[];
+  posts: CanonicalPost[];
 }
 
 export default function BreakingSwiper({ posts }: Props) {

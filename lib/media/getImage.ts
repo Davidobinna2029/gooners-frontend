@@ -1,24 +1,29 @@
-import { NormalizedPost } from "@/lib/mappers/wordpressMapper";
+import type { CanonicalPost } from "@/types/content";
 
 const FALLBACK = "/fallback.jpg";
 
 /**
  * FINAL SAFE IMAGE PIPELINE
- * WordPress -> Proxy -> Next/Image
+ * CanonicalPost -> MediaImage -> Next/Image (ESPN LAYER)
  */
 export function getImage(
-  post: NormalizedPost,
+  post: CanonicalPost,
   width = 1200,
   quality = 85
-) {
-  if (!post?.image) return FALLBACK;
+): string {
+  const image = post?.image;
 
-  // local image
-  if (post.image.startsWith("/")) {
-    return post.image;
+  // STRICT ESPN TYPE (no legacy branching anymore)
+  const imageUrl = image?.url;
+
+  if (!imageUrl) return FALLBACK;
+
+  // local images
+  if (imageUrl.startsWith("/")) {
+    return imageUrl;
   }
 
   return `/api/image?url=${encodeURIComponent(
-    post.image
+    imageUrl
   )}&w=${width}&q=${quality}`;
 }

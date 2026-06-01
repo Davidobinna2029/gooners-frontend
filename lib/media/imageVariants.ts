@@ -1,38 +1,61 @@
-import { NormalizedPost } from "@/lib/mappers/wordpressMapper";
+import type { CanonicalPost } from "@/types/content";
 
 /**
+ * =========================
  * ESPN STYLE IMAGE VARIANTS
+ * =========================
  */
-export type ImageVariant = "hero" | "card" | "ticker" | "thumbnail";
 
-/**
- * SIZE MAP (OPTIMIZED FOR LAYOUT + LCP)
- */
-const VARIANT_SIZES: Record<ImageVariant, string> = {
-  hero: "1200w",
-  card: "800w",
-  ticker: "600w",
-  thumbnail: "300w",
+export type ImageVariant = "hero" | "card" | "thumbnail";
+
+const SIZE_MAP: Record<ImageVariant, number> = {
+  hero: 1200,
+  card: 800,
+  thumbnail: 400,
 };
 
 /**
- * GET ADAPTIVE IMAGE SIZE
+ * EDGE IMAGE BUILDER
  */
-export function getAdaptiveImage(
-  post: NormalizedPost,
+function buildImage(url: string, width: number): string {
+  if (!url || url.includes("fallback.jpg")) return "/fallback.jpg";
+
+  return `/api/image?url=${encodeURIComponent(url)}&w=${width}&q=85`;
+}
+
+/**
+ * SAFE IMAGE EXTRACTOR (handles CanonicalPost structure)
+ */
+function getImageUrl(post: CanonicalPost): string {
+  const image: any = post?.image;
+
+  if (!image) return "";
+
+  // NEW FORMAT
+  if (typeof image === "object" && image.url) {
+    return image.url;
+  }
+
+  // LEGACY SAFETY (temporary migration support)
+  if (typeof image === "string") {
+    return image;
+  }
+
+  return "";
+}
+
+/**
+ * MAIN VARIANT ENGINE
+ */
+export function getImageVariant(
+  post: CanonicalPost,
   variant: ImageVariant = "card"
 ): string {
-  const base = post.image;
+  const width = SIZE_MAP[variant] ?? 800;
 
-  if (!base) return "/fallback.jpg";
+  const url = getImageUrl(post);
 
-  /**
-   * If using your proxy system → inject sizing hint
-   */
-  const url = new URL("/api/image", window.location.origin);
+  if (!url) return "/fallback.jpg";
 
-  url.searchParams.set("url", base);
-  url.searchParams.set("w", VARIANT_SIZES[variant]);
-
-  return url.toString();
+  return buildImage(url, width);
 }
