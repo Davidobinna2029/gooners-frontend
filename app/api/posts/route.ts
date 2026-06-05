@@ -2,6 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 
 const WP_API = process.env.NEXT_PUBLIC_WORDPRESS_API_URL;
 
+/**
+ * SAFE IMAGE EXTRACTOR
+ */
+function extractImage(post: any): string | null {
+  const media =
+    post?._embedded?.["wp:featuredmedia"]?.[0];
+
+  const url =
+    media?.source_url ||
+    media?.media_details?.sizes?.large?.source_url ||
+    media?.media_details?.sizes?.full?.source_url ||
+    null;
+
+  if (!url) return null;
+
+  return url.startsWith("//") ? `https:${url}` : url;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const page =
@@ -25,9 +43,23 @@ export async function GET(request: NextRequest) {
 
     const data = await wpRes.json();
 
-    return NextResponse.json(
-      Array.isArray(data) ? data : []
-    );
+    if (!Array.isArray(data)) {
+      return NextResponse.json([]);
+    }
+
+    /**
+     * FORCE IMAGE CONSISTENCY LAYER
+     */
+    const normalized = data.map((post) => ({
+      ...post,
+
+      /**
+       * ALWAYS GUARANTEE THIS EXISTS
+       */
+      image: extractImage(post),
+    }));
+
+    return NextResponse.json(normalized);
   } catch (error: any) {
     return NextResponse.json(
       {

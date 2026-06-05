@@ -1,6 +1,5 @@
 import type { WordPressPostWithMedia } from "@/types/wordpress-media";
-import type { CanonicalPost, MediaImage } from "@/types/content";
-import { resolveWordPressImage } from "@/lib/media/resolveWordPressImage";
+import type { CanonicalPost } from "@/types/content";
 
 /**
  * Strip HTML safely
@@ -24,23 +23,12 @@ function safeArray(input: unknown): number[] {
 }
 
 /**
- * IMAGE BUILDER (ONLY SOURCE OF TRUTH)
- */
-function buildImage(post: WordPressPostWithMedia): MediaImage | null {
-  const url = resolveWordPressImage(post);
-
-  if (!url) return null;
-
-  return {
-    url,
-  };
-}
-
-/**
- * MAIN MAPPER
+ * MAIN MAPPER (CLEAN + API-AWARE)
  */
 export function mapWordPressPost(
-  post: WordPressPostWithMedia
+  post: WordPressPostWithMedia & {
+    image?: string | null;
+  }
 ): CanonicalPost {
   return {
     id: post.id,
@@ -51,7 +39,11 @@ export function mapWordPressPost(
     excerpt: strip(post.excerpt?.rendered),
     content: strip(post.content?.rendered),
 
-    image: buildImage(post),
+    /**
+     * 🔥 NOW COMES DIRECTLY FROM API
+     * No rebuild, no resolver, no MediaImage layer here
+     */
+    image: post.image ? { url: post.image } : null,
 
     categories: safeArray(post.categories),
     tags: safeArray(post.tags),
@@ -70,5 +62,6 @@ export function mapWordPressPosts(
   posts: WordPressPostWithMedia[]
 ): CanonicalPost[] {
   if (!Array.isArray(posts)) return [];
+
   return posts.map(mapWordPressPost);
 }
