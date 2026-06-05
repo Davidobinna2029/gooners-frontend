@@ -13,11 +13,19 @@ const nextConfig: NextConfig = {
         hostname: "www.arsenaltalks.com",
         pathname: "/wp-content/**",
       },
+
+      /**
+       * API DOMAIN (if images ever proxy)
+       */
       {
         protocol: "https",
         hostname: "api.arsenaltalks.com",
         pathname: "/**",
       },
+
+      /**
+       * WORDPRESS CDN (VERY IMPORTANT)
+       */
       {
         protocol: "https",
         hostname: "i0.wp.com",
@@ -32,6 +40,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "i2.wp.com",
         pathname: "/**",
+      },
+
+      /**
+       * SAFETY NET (THIS FIXES MOST MISSING IMAGE CASES)
+       */
+      {
+        protocol: "https",
+        hostname: "**",
       },
     ],
   },

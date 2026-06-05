@@ -8,9 +8,7 @@ interface Props {
 }
 
 export default function RelatedPosts({ posts }: Props) {
-  if (!Array.isArray(posts) || posts.length === 0) {
-    return null;
-  }
+  if (!posts?.length) return null;
 
   return (
     <section className="related-posts">
@@ -19,7 +17,7 @@ export default function RelatedPosts({ posts }: Props) {
 
         <div className="related-grid">
           {posts.map((post) => {
-            const imageUrl = post.image?.url || "/fallback.jpg";
+            const imageUrl = post.image?.url;
 
             return (
               <Link
@@ -28,16 +26,20 @@ export default function RelatedPosts({ posts }: Props) {
                 className="related-card"
               >
                 <div className="related-image">
-                  <Image
-                    src={imageUrl}
-                    alt={post.title || "Related news"}
-                    fill
-                    className="object-cover"
-                    loading="lazy"
-                  />
+                  {imageUrl ? (
+                    <Image
+                      src={imageUrl}
+                      alt={post.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover"
+                    />
+                  ) : null}
                 </div>
 
-                <h3>{post.title}</h3>
+                <div className="related-content">
+                  <h3>{post.title}</h3>
+                </div>
               </Link>
             );
           })}

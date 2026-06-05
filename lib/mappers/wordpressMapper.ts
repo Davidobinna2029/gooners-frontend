@@ -1,10 +1,9 @@
 import type { WordPressPostWithMedia } from "@/types/wordpress-media";
 import type { CanonicalPost, MediaImage } from "@/types/content";
+import { resolveWordPressImage } from "@/lib/media/resolveWordPressImage";
 
 /**
- * =========================
- * HTML CLEANER
- * =========================
+ * Strip HTML safely
  */
 function strip(html?: string): string {
   if (typeof html !== "string") return "";
@@ -18,97 +17,41 @@ function strip(html?: string): string {
 }
 
 /**
- * =========================
- * SAFE ARRAY
- * =========================
+ * Safe array helper
  */
 function safeArray(input: unknown): number[] {
   return Array.isArray(input) ? input : [];
 }
 
 /**
- * =========================
- * IMAGE RESOLVER (ESPN CORE)
- * ALWAYS RETURNS MediaImage
- * =========================
+ * IMAGE BUILDER (ONLY SOURCE OF TRUTH)
  */
-function resolveImage(post: WordPressPostWithMedia): MediaImage {
-  const url =
-    (post as any)?.featured_media_url ||
-    (post as any)?.image_url ||
-    "";
+function buildImage(post: WordPressPostWithMedia): MediaImage | null {
+  const url = resolveWordPressImage(post);
+
+  if (!url) return null;
 
   return {
-    url: url || "/fallback.jpg",
+    url,
   };
 }
 
 /**
- * =========================
- * CLUSTER ENGINE
- * =========================
- */
-export type ClusterType =
-  | "arsenal"
-  | "transfer"
-  | "injury"
-  | "match"
-  | "other";
-
-function detectCluster(text: string): ClusterType {
-  const t = text.toLowerCase();
-
-  const rules: Record<ClusterType, string[]> = {
-    injury: ["injury", "fitness", "sidelined", "recovery", "knock"],
-    transfer: ["transfer", "deal", "bid", "signing", "target"],
-    match: ["lineup", "kick", "vs", "fixture", "match", "champions league"],
-    arsenal: ["arsenal", "arteta", "odegaard", "saka", "emirates"],
-    other: [],
-  };
-
-  let best: ClusterType = "other";
-  let bestScore = 0;
-
-  for (const key of Object.keys(rules) as ClusterType[]) {
-    let score = 0;
-
-    for (const word of rules[key]) {
-      if (t.includes(word)) score += 10;
-    }
-
-    if (score > bestScore) {
-      bestScore = score;
-      best = key;
-    }
-  }
-
-  return best;
-}
-
-/**
- * =========================
- * CANONICAL MAPPER (LOCKED MODEL)
- * =========================
+ * MAIN MAPPER
  */
 export function mapWordPressPost(
   post: WordPressPostWithMedia
 ): CanonicalPost {
-  const title = strip(post.title?.rendered);
-  const excerpt = strip(post.excerpt?.rendered);
-  const combined = `${title} ${excerpt}`;
-
   return {
     id: post.id,
     slug: post.slug,
     date: post.date,
 
-    title,
-    excerpt,
+    title: strip(post.title?.rendered),
+    excerpt: strip(post.excerpt?.rendered),
+    content: strip(post.content?.rendered),
 
-    /**
-     * 🔥 FIXED: ALWAYS MediaImage
-     */
-    image: resolveImage(post),
+    image: buildImage(post),
 
     categories: safeArray(post.categories),
     tags: safeArray(post.tags),
@@ -116,14 +59,12 @@ export function mapWordPressPost(
     link: post.link,
 
     score: 0,
-    cluster: detectCluster(combined),
+    cluster: undefined,
   };
 }
 
 /**
- * =========================
  * BULK MAPPER
- * =========================
  */
 export function mapWordPressPosts(
   posts: WordPressPostWithMedia[]

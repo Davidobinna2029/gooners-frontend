@@ -1,11 +1,11 @@
-import { NormalizedPost } from "./ui";
+import type { CanonicalPost } from "./content";
 
 /**
  * CORE UI CONTRACT
- * UI ONLY consumes NormalizedPost
+ * UI ONLY consumes CanonicalPost
  */
 
-export type Post = NormalizedPost;
+export type Post = CanonicalPost;
 
 /**
  * Strict homepage feed structure

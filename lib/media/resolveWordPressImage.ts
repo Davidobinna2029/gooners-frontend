@@ -1,52 +1,19 @@
-import { WordPressPostWithMedia } from "@/types/wordpress-media";
-
-const FALLBACK = "";
+import type { WordPressPostWithMedia } from "@/types/wordpress-media";
 
 /**
- * Extract WP featured image
- */
-function getFeatured(post: WordPressPostWithMedia): string {
-  const media = post?._embedded?.["wp:featuredmedia"]?.[0];
-  const sizes = media?.media_details?.sizes;
-
-  return (
-    sizes?.full?.source_url ||
-    sizes?.large?.source_url ||
-    sizes?.medium_large?.source_url ||
-    media?.source_url ||
-    ""
-  );
-}
-
-/**
- * Extract content image fallback
- */
-function getContent(post: WordPressPostWithMedia): string {
-  const html = post?.content?.rendered || "";
-  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return match?.[1] || "";
-}
-
-/**
- * CLEAN NORMALIZER
- */
-function normalize(url: string): string {
-  if (!url) return "";
-
-  if (url.startsWith("//")) return `https:${url}`;
-
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    return url;
-  }
-
-  return "";
-}
-
-/**
- * FINAL RESOLVER (SYNC ONLY)
+ * Extract featured image from WP _embed
+ * Returns string only (RAW URL)
  */
 export function resolveWordPressImage(post: WordPressPostWithMedia): string {
-  const raw = getFeatured(post) || getContent(post);
+  const media = post?._embedded?.["wp:featuredmedia"]?.[0];
 
-  return normalize(raw) || FALLBACK;
+  const url =
+    media?.source_url ||
+    media?.media_details?.sizes?.large?.source_url ||
+    media?.media_details?.sizes?.full?.source_url ||
+    "";
+
+  if (!url) return "";
+
+  return url.startsWith("//") ? `https:${url}` : url;
 }

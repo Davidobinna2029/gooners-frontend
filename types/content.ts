@@ -5,7 +5,7 @@ export interface MediaImage {
 }
 
 /**
- * Canonical Post (STRICT ESPN CORE MODEL)
+ * Canonical Post (ESPN CORE MODEL)
  */
 export interface CanonicalPost {
   id: number;
@@ -17,7 +17,7 @@ export interface CanonicalPost {
 
   content?: string;
 
-  image: MediaImage; // 🔥 LOCKED TYPE (NO STRING EVER)
+  image: MediaImage | null;
 
   categories: number[];
   tags: number[];

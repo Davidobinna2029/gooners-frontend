@@ -1,14 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const WP_API = process.env.NEXT_PUBLIC_WORDPRESS_API_URL;
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const page =
+      Number(request.nextUrl.searchParams.get("page")) || 1;
+
     const wpRes = await fetch(
-      `${WP_API}/posts?per_page=20&_embed=1`,
+      `${WP_API}/posts?page=${page}&per_page=20&_embed=1`,
       {
-        // IMPORTANT: prevents Vercel cold slowdown
-        next: { revalidate: 30 },
+        next: {
+          revalidate: 30,
+        },
       }
     );
 
@@ -21,12 +25,9 @@ export async function GET() {
 
     const data = await wpRes.json();
 
-    // HARD GUARD: always return array
-    if (!Array.isArray(data)) {
-      return NextResponse.json([]);
-    }
-
-    return NextResponse.json(data);
+    return NextResponse.json(
+      Array.isArray(data) ? data : []
+    );
   } catch (error: any) {
     return NextResponse.json(
       {

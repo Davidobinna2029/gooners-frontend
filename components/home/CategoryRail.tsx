@@ -1,44 +1,32 @@
-import Link from "next/link";
 import Image from "next/image";
+import type { CanonicalPost } from "@/types/content";
 
-import type { CanonicalPost } from "@/types";
-
-interface Props {
-  title: string;
+export default function CategoryRail({
+  posts,
+}: {
   posts: CanonicalPost[];
-}
-
-export default function CategoryRail({ title, posts }: Props) {
-  if (!posts?.length) return null;
-
+}) {
   return (
-    <section className="category-rail">
-      <div className="container">
+    <div className="rail">
+      {posts.map((post) => {
+        const imageUrl = post.image?.url;
 
-        <h2>{title}</h2>
+        return (
+          <div key={post.id} className="rail-card">
+            <div className="rail-image">
+              {imageUrl && (
+                <Image
+                  src={imageUrl}
+                  alt={post.title}
+                  fill
+                />
+              )}
+            </div>
 
-        <div className="rail-grid">
-          {posts.map((post) => (
-            <article key={post.id} className="rail-card">
-              <Link href={`/news/${post.slug}`}>
-
-                <div className="rail-image">
-                  <Image
-                    src={post.image.url || "/fallback.jpg"}
-                    alt={post.title}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-
-                <h3>{post.title}</h3>
-
-              </Link>
-            </article>
-          ))}
-        </div>
-
-      </div>
-    </section>
+            <h4>{post.title}</h4>
+          </div>
+        );
+      })}
+    </div>
   );
 }
