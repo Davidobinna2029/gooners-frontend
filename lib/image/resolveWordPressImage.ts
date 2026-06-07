@@ -17,7 +17,7 @@ function normalize(url: string): string {
 
 /**
  * =========================
- * VALIDATOR (REALISTIC ONLY)
+ * VALIDATION (NO FALLBACK RULES)
  * =========================
  */
 function isValid(url?: string): url is string {
@@ -29,15 +29,16 @@ function isValid(url?: string): url is string {
     return false;
   }
 
-  // reject obvious garbage
-  if (clean.includes("placeholder") || clean.includes("default")) return false;
+  if (clean.includes("placeholder") || clean.includes("default")) {
+    return false;
+  }
 
   return true;
 }
 
 /**
  * =========================
- * FEATURED IMAGE (WP PRIMARY)
+ * FEATURED IMAGE ONLY (SOURCE OF TRUTH)
  * =========================
  */
 function getFeatured(post: WordPressPostWithMedia): string {
@@ -57,38 +58,17 @@ function getFeatured(post: WordPressPostWithMedia): string {
 
 /**
  * =========================
- * CONTENT IMAGE FALLBACK
- * =========================
- */
-function getContentImage(post: WordPressPostWithMedia): string {
-  const html = post?.content?.rendered || "";
-  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return match?.[1] || "";
-}
-
-/**
- * =========================
- * ESPN IMAGE RESOLVER CORE
+ * STRICT RESOLVER (NO FALLBACK CHAIN)
  * =========================
  */
 export function resolveWordPressImage(
   post: WordPressPostWithMedia
 ): string {
-  const candidates = [
-    getFeatured(post),     // 100% priority
-    getContentImage(post), // fallback
-  ];
+  const url = getFeatured(post);
 
-  for (const url of candidates) {
-    if (isValid(url)) {
-      return normalize(url);
-    }
+  if (!isValid(url)) {
+    throw new Error(`Missing featured image for post ID: ${post?.id}`);
   }
 
-  /**
-   * IMPORTANT DESIGN DECISION:
-   * No fake fallback image.
-   * Let UI handle missing media gracefully.
-   */
-  return "";
+  return normalize(url);
 }
