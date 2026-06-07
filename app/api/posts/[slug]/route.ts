@@ -1,40 +1,47 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getPostBySlug } from "@/lib/api/wordpress";
 
-import {
-  getPostBySlug,
-} from "@/lib/api/wordpress";
+function extractImage(post: any): string | null {
+  const media =
+    post?._embedded?.["wp:featuredmedia"]?.[0];
 
-interface Params {
-  params: Promise<{
-    slug: string;
-  }>;
+  const url =
+    media?.source_url ||
+    media?.media_details?.sizes?.large?.source_url ||
+    media?.media_details?.sizes?.full?.source_url ||
+    null;
+
+  if (!url) return null;
+
+  return url.startsWith("//")
+    ? `https:${url}`
+    : url;
 }
 
 export async function GET(
-  request: Request,
-  { params }: Params
+  request: NextRequest,
+  context: {
+    params: Promise<{
+      slug: string;
+    }>;
+  }
 ) {
   try {
-    const { slug } =
-      await params;
+    const { slug } = await context.params;
 
-    const post =
-      await getPostBySlug(
-        slug
-      );
+    const post = await getPostBySlug(slug);
 
-    return NextResponse.json(
-      post
-    );
-  } catch (error) {
+    return NextResponse.json({
+      ...post,
+      image: post ? extractImage(post) : null,
+    });
+  } catch (error: any) {
     return NextResponse.json(
       {
-        error:
-          "Failed to fetch post",
+        error: "Failed to fetch post",
+        details: error?.message ?? "unknown",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }

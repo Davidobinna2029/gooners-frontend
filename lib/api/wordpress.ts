@@ -6,59 +6,40 @@ import { mapEspnMatches } from "@/lib/mappers/espnMatchMapper";
 
 /**
  * =========================
- * SAFE FETCH CORE
+ * POSTS (STRICT)
  * =========================
- * Centralized fallback system (no nested wrappers)
  */
-async function safeFetch<T>(
-  fn: () => Promise<T>,
-  fallback: T
-): Promise<T> {
-  try {
-    return await fn();
-  } catch (err) {
-    console.error("API ERROR:", err);
-    return fallback;
+export async function getPosts(): Promise<
+  WordPressPostWithMedia[]
+> {
+  const data = await ssrFetch<WordPressPostWithMedia[]>(
+    `${API_BASE}/posts?per_page=20&_embed=1`
+  );
+
+  if (!Array.isArray(data)) {
+    throw new Error("Invalid posts response from WordPress");
   }
+
+  return data;
 }
 
 /**
  * =========================
- * WORDPRESS CONFIG
+ * SINGLE POST
  * =========================
- */
-const WP_EMBED = "_embed=1";
-const POSTS_LIMIT = 20;
-const CATEGORY_LIMIT = 100;
-
-/**
- * =========================
- * POSTS (CORE FEED SOURCE)
- * =========================
- */
-export async function getPosts(): Promise<WordPressPostWithMedia[]> {
-  return safeFetch(async () => {
-    return ssrFetch<WordPressPostWithMedia[]>(
-      `${API_BASE}/posts?per_page=${POSTS_LIMIT}&${WP_EMBED}`,
-      { fallback: [] }
-    );
-  }, []);
-}
-
-/**
- * SINGLE POST BY SLUG
  */
 export async function getPostBySlug(
   slug: string
 ): Promise<WordPressPostWithMedia | null> {
-  return safeFetch(async () => {
-    const data = await ssrFetch<WordPressPostWithMedia[]>(
-      `${API_BASE}/posts?slug=${slug}&${WP_EMBED}`,
-      { fallback: [] }
-    );
+  const data = await ssrFetch<WordPressPostWithMedia[]>(
+    `${API_BASE}/posts?slug=${slug}&_embed=1`
+  );
 
-    return data?.[0] ?? null;
-  }, null);
+  if (!Array.isArray(data)) {
+    throw new Error("Invalid post response from WordPress");
+  }
+
+  return data[0] ?? null;
 }
 
 /**
@@ -67,56 +48,72 @@ export async function getPostBySlug(
  * =========================
  */
 export async function getCategories(): Promise<any[]> {
-  return safeFetch(async () => {
-    return ssrFetch<any[]>(
-      `${API_BASE}/categories?per_page=${CATEGORY_LIMIT}`,
-      { fallback: [] }
-    );
-  }, []);
+  const data = await ssrFetch<any[]>(
+    `${API_BASE}/categories?per_page=100`
+  );
+
+  if (!Array.isArray(data)) {
+    throw new Error("Invalid categories response");
+  }
+
+  return data;
 }
 
 /**
- * CATEGORY FILTERED POSTS
+ * =========================
+ * CATEGORY POSTS
+ * =========================
  */
 export async function getCategoryPosts(
   slug: string
 ): Promise<WordPressPostWithMedia[]> {
-  return safeFetch(async () => {
-    const categories = await ssrFetch<any[]>(
-      `${API_BASE}/categories?slug=${slug}`,
-      { fallback: [] }
-    );
+  const categories = await ssrFetch<any[]>(
+    `${API_BASE}/categories?slug=${slug}`
+  );
 
-    const categoryId = categories?.[0]?.id;
-    if (!categoryId) return [];
+  if (!Array.isArray(categories)) {
+    throw new Error("Invalid categories lookup response");
+  }
 
-    return ssrFetch<WordPressPostWithMedia[]>(
-      `${API_BASE}/posts?categories=${categoryId}&per_page=${POSTS_LIMIT}&${WP_EMBED}`,
-      { fallback: [] }
-    );
-  }, []);
+  const categoryId = categories[0]?.id;
+
+  if (!categoryId) {
+    throw new Error("Category not found");
+  }
+
+  const data = await ssrFetch<WordPressPostWithMedia[]>(
+    `${API_BASE}/posts?categories=${categoryId}&per_page=20&_embed=1`
+  );
+
+  if (!Array.isArray(data)) {
+    throw new Error("Invalid category posts response");
+  }
+
+  return data;
 }
 
 /**
  * =========================
- * LIVE SCORES (ESPN LAYER)
+ * LIVE SCORES (STRICT)
  * =========================
  */
 export async function getScores() {
-  return safeFetch(async () => {
-    const res = await fetch(
-      "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
-      {
-        next: { revalidate: 30 },
-      }
-    );
+  const res = await fetch(
+    "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
+    {
+      next: { revalidate: 30 },
+    }
+  );
 
-    if (!res.ok) return [];
+  if (!res.ok) {
+    throw new Error("Failed to fetch ESPN scores");
+  }
 
-    const data = await res.json();
+  const data = await res.json();
 
-    const events = Array.isArray(data?.events) ? data.events : [];
+  const events = Array.isArray(data?.events)
+    ? data.events
+    : [];
 
-    return mapEspnMatches(events);
-  }, []);
+  return mapEspnMatches(events);
 }

@@ -5,41 +5,23 @@ import type { WordPressPostWithMedia } from "@/types/wordpress-media";
 const WP_EMBED = "_embed=1";
 
 /**
- * PRIMARY FETCH (with embed)
+ * STRICT WORDPRESS FETCH
+ * - Uses _embed=1 only
+ * - No fallback
+ * - No retry
+ * - Throws if WordPress fails
  */
-async function fetchWithEmbed() {
-  return ssrFetch<WordPressPostWithMedia[]>(
-    `${API_BASE}/posts?per_page=20&${WP_EMBED}`,
-    { fallback: [] }
-  );
-}
-
-/**
- * FALLBACK FETCH (NO EMBED - GUARANTEED POSTS)
- */
-async function fetchWithoutEmbed() {
-  return ssrFetch<WordPressPostWithMedia[]>(
-    `${API_BASE}/posts?per_page=20`,
-    { fallback: [] }
-  );
-}
-
-/**
- * AUTO RETRY WRAPPER (ESPN STYLE RESILIENCE)
- */
-export async function getPostsSafe(): Promise<WordPressPostWithMedia[]> {
-  let posts = await fetchWithEmbed();
-
-  /**
-   * If embed failed or empty featured media → retry without embed
-   */
-  const hasImages = posts?.some(
-    (p) => p?._embedded?.["wp:featuredmedia"]?.length
+export async function getPostsSafe(): Promise<
+  WordPressPostWithMedia[]
+> {
+  const posts = await ssrFetch<WordPressPostWithMedia[]>(
+    `${API_BASE}/posts?per_page=20&${WP_EMBED}`
   );
 
-  if (!posts.length || !hasImages) {
-    console.warn("WP _embed failed → retrying fallback fetch");
-    posts = await fetchWithoutEmbed();
+  if (!Array.isArray(posts)) {
+    throw new Error(
+      "Invalid WordPress posts response"
+    );
   }
 
   return posts;

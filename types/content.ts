@@ -5,7 +5,7 @@ export interface MediaImage {
 }
 
 /**
- * Canonical Post (ESPN CORE MODEL)
+ * Canonical Post (NO FALLBACK POLICY)
  */
 export interface CanonicalPost {
   id: number;
@@ -17,6 +17,9 @@ export interface CanonicalPost {
 
   content?: string;
 
+  /**
+   * STRICT: only real WP image or null
+   */
   image: MediaImage | null;
 
   categories: number[];

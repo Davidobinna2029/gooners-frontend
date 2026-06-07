@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 const WP_API = process.env.NEXT_PUBLIC_WORDPRESS_API_URL;
 
 /**
- * SAFE IMAGE EXTRACTOR
+ * IMAGE EXTRACTOR (NO FALLBACKS)
  */
 function extractImage(post: any): string | null {
   const media =
@@ -28,9 +28,7 @@ export async function GET(request: NextRequest) {
     const wpRes = await fetch(
       `${WP_API}/posts?page=${page}&per_page=20&_embed=1`,
       {
-        next: {
-          revalidate: 30,
-        },
+        next: { revalidate: 30 },
       }
     );
 
@@ -47,16 +45,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([]);
     }
 
-    /**
-     * FORCE IMAGE CONSISTENCY LAYER
-     */
     const normalized = data.map((post) => ({
       ...post,
-
-      /**
-       * ALWAYS GUARANTEE THIS EXISTS
-       */
-      image: extractImage(post),
+      image: extractImage(post), // string | null ONLY
     }));
 
     return NextResponse.json(normalized);
