@@ -7,24 +7,15 @@ export async function ssrFetch<T>(
   const res = await fetchWithTimeout(
     url,
     {
-      next: {
-        revalidate,
-      },
-
-      headers: {
-        Accept: "application/json",
-      },
+      next: { revalidate },
+      headers: { Accept: "application/json" },
     },
     8000
   );
 
   if (!res.ok) {
-    throw new Error(
-      `[SSR FETCH ERROR] ${res.status} ${res.statusText}: ${url}`
-    );
+    throw new Error(`[SSR FETCH ERROR] ${res.status}: ${url}`);
   }
 
-  const data = await res.json();
-
-  return data as T;
+  return (await res.json()) as T;
 }

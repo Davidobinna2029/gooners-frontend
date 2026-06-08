@@ -12,64 +12,58 @@ export default function Hero({ featured }: Props) {
   const main = featured[0];
   const side = featured.slice(1, 4);
 
-  const mainImage = main.image?.url || "";
-  const fallback = "/fallback.jpg";
+  const mainImage = main.image?.url;
 
   return (
     <section className="hero-magazine">
       <div className="container hero-grid">
 
-        {/* MAIN STORY */}
+        {/* MAIN */}
         <div className="hero-main">
           <Link href={`/news/${main.slug}`}>
-
             <div className="hero-image">
-              <Image
-                src={mainImage || fallback}
-                alt={main.title || "Arsenal news"}
-                fill
-                priority
-                quality={90}
-                sizes="100vw"
-                className="object-cover"
-              />
+              {mainImage && (
+                <Image
+                  src={mainImage}
+                  alt={main.title}
+                  fill
+                  priority
+                  className="object-cover"
+                  sizes="100vw"
+                />
+              )}
             </div>
 
             <div className="hero-overlay">
               <h1>{main.title}</h1>
               <p>{main.excerpt}</p>
             </div>
-
           </Link>
         </div>
 
-        {/* SIDE STORIES */}
+        {/* SIDE */}
         <div className="hero-side">
-          {side.map((post) => (
-            <Link
-              key={post.id}
-              href={`/news/${post.slug}`}
-              className="hero-side-item"
-            >
+          {side.map((post) => {
+            const img = post.image?.url;
 
-              <div className="side-image">
-                <Image
-                  src={post.image?.url || fallback}
-                  alt={post.title || "Arsenal article"}
-                  fill
-                  quality={80}
-                  sizes="(max-width:768px) 100vw, 30vw"
-                  className="object-cover"
-                  loading="lazy"
-                />
-              </div>
+            return (
+              <Link key={post.id} href={`/news/${post.slug}`}>
+                <div className="side-image">
+                  {img && (
+                    <Image
+                      src={img}
+                      alt={post.title}
+                      fill
+                      className="object-cover"
+                      sizes="30vw"
+                    />
+                  )}
+                </div>
 
-              <div className="side-text">
                 <h3>{post.title}</h3>
-              </div>
-
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
 
       </div>

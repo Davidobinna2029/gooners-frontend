@@ -1,13 +1,10 @@
 export async function fetchWithTimeout(
   url: string,
-  options: RequestInit = {},
-  timeout = 10000 // 10s
-) {
+  options: RequestInit,
+  timeout = 8000
+): Promise<Response> {
   const controller = new AbortController();
-
-  const id = setTimeout(() => {
-    controller.abort();
-  }, timeout);
+  const id = setTimeout(() => controller.abort(), timeout);
 
   try {
     const res = await fetch(url, {

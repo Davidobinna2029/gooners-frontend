@@ -7,9 +7,17 @@ export default function NewsCard({ post }: { post: CanonicalPost }) {
 
   return (
     <Link href={`/news/${post.slug}`}>
-      <div className="news-image">
-        {imageUrl && (
-          <Image src={imageUrl} alt={post.title} fill className="object-cover" />
+      <div className="news-image relative">
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={post.title || "News image"}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 33vw"
+          />
+        ) : (
+          <div className="no-image" />
         )}
       </div>
 

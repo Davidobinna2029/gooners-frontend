@@ -1,19 +1,59 @@
 import type { WordPressPostWithMedia } from "@/types/wordpress-media";
 
-/**
- * Extract featured image from WP _embed
- * Returns string only (RAW URL)
- */
-export function resolveWordPressImage(post: WordPressPostWithMedia): string {
+function normalize(url: string): string {
+  if (url.startsWith("//")) return `https:${url}`;
+  return url;
+}
+
+function isValid(url?: string): url is string {
+  if (!url) return false;
+  if (typeof url !== "string") return false;
+
+  if (
+    url.includes("placeholder") ||
+    url.includes("default") ||
+    url.trim() === ""
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function getFeatured(post: WordPressPostWithMedia): string {
   const media = post?._embedded?.["wp:featuredmedia"]?.[0];
+  const sizes = media?.media_details?.sizes;
 
-  const url =
+  return (
+    sizes?.full?.source_url ||
+    sizes?.large?.source_url ||
+    sizes?.medium_large?.source_url ||
+    sizes?.medium?.source_url ||
+    sizes?.thumbnail?.source_url ||
     media?.source_url ||
-    media?.media_details?.sizes?.large?.source_url ||
-    media?.media_details?.sizes?.full?.source_url ||
-    "";
+    ""
+  );
+}
 
-  if (!url) return "";
+function getContentImage(post: WordPressPostWithMedia): string {
+  const html = post?.content?.rendered || "";
+  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match?.[1] || "";
+}
 
-  return url.startsWith("//") ? `https:${url}` : url;
+export function resolveWordPressImage(
+  post: WordPressPostWithMedia
+): string {
+  const candidates = [
+    getFeatured(post),
+    getContentImage(post),
+  ];
+
+  for (const url of candidates) {
+    if (isValid(url)) {
+      return normalize(url);
+    }
+  }
+
+  return "";
 }

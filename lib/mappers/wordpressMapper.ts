@@ -2,7 +2,7 @@ import type { WordPressPostWithMedia } from "@/types/wordpress-media";
 import type { CanonicalPost } from "@/types/content";
 
 function strip(html?: string): string {
-  if (typeof html !== "string") return "";
+  if (!html) return "";
 
   return html
     .replace(/<script[^>]*>.*?<\/script>/gi, "")
@@ -23,17 +23,11 @@ export function mapWordPressPost(
     id: post.id,
     slug: post.slug,
     date: post.date,
-
     title: strip(post.title?.rendered),
     excerpt: strip(post.excerpt?.rendered),
     content: strip(post.content?.rendered),
 
-    /**
-     * STRICT NO FALLBACK IMAGE POLICY
-     */
-    image: post.image
-      ? { url: post.image }
-      : null,
+    image: post.image ? { url: post.image } : null,
 
     categories: safeArray(post.categories),
     tags: safeArray(post.tags),
@@ -48,6 +42,5 @@ export function mapWordPressPosts(
   posts: WordPressPostWithMedia[]
 ): CanonicalPost[] {
   if (!Array.isArray(posts)) return [];
-
   return posts.map(mapWordPressPost);
 }
