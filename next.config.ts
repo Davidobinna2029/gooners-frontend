@@ -6,12 +6,12 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "arsenaltalks.com",
-        pathname: "/wp-content/**",
+        pathname: "/wp-content/uploads/**",
       },
       {
         protocol: "https",
         hostname: "www.arsenaltalks.com",
-        pathname: "/wp-content/**",
+        pathname: "/wp-content/uploads/**",
       },
       {
         protocol: "https",
