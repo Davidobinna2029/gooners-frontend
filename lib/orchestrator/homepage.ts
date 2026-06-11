@@ -17,11 +17,28 @@ export interface HomepageFeed {
 
 /**
  * =========================
- * HELPER: SAFE SLICE
+ * HELPERS
  * =========================
  */
+
 function take(posts: CanonicalPost[], n: number) {
   return posts.slice(0, n);
+}
+
+/**
+ * STRICT IMAGE FILTER (CORE FIX)
+ */
+function withImages(posts: CanonicalPost[]) {
+  return posts.filter((p) => p.image?.url);
+}
+
+/**
+ * SORT BY SCORE SAFELY
+ */
+function sortByScore(posts: CanonicalPost[]) {
+  return [...posts].sort(
+    (a, b) => (b.score ?? 0) - (a.score ?? 0)
+  );
 }
 
 /**
@@ -32,43 +49,71 @@ function take(posts: CanonicalPost[], n: number) {
 export function buildHomepageFeed(posts: CanonicalPost[]): HomepageFeed {
   const clusters = clusterPosts(posts);
 
+  /**
+   * HERO (STRICT IMAGE-FIRST)
+   * Must ALWAYS have images or it will break UI
+   */
   const hero = take(
-    [...clusters.arsenal, ...clusters.match].sort(
-      (a, b) => (b.score ?? 0) - (a.score ?? 0)
+    sortByScore(
+      withImages([
+        ...clusters.arsenal,
+        ...clusters.match,
+      ])
     ),
     5
   );
 
+  /**
+   * BREAKING (IMPORTANT NEWS + IMAGE-FIRST)
+   */
   const breaking = take(
-    [...clusters.injury, ...clusters.transfers].sort(
-      (a, b) => (b.score ?? 0) - (a.score ?? 0)
+    sortByScore(
+      withImages([
+        ...clusters.injury,
+        ...clusters.transfers,
+      ])
     ),
     8
   );
 
+  /**
+   * TRENDING (OPTIONAL IMAGE FILTER — but recommended)
+   */
   const trending = take(
-    [...posts]
-      .filter((p) => (p.score ?? 0) >= 40)
-      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0)),
+    sortByScore(
+      withImages(posts).filter(
+        (p) => (p.score ?? 0) >= 40
+      )
+    ),
     10
   );
 
+  /**
+   * EDITORS PICKS (HIGH QUALITY ONLY)
+   */
   const editors = take(
-    [...clusters.arsenal, ...clusters.match]
-      .filter((p) => (p.score ?? 0) >= 60)
-      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0)),
+    sortByScore(
+      withImages([
+        ...clusters.arsenal,
+        ...clusters.match,
+      ]).filter((p) => (p.score ?? 0) >= 60)
+    ),
     6
   );
 
+  /**
+   * TRANSFERS (IMAGE-FIRST)
+   */
   const transfer = take(
-    clusters.transfers.sort(
-      (a, b) => (b.score ?? 0) - (a.score ?? 0)
-    ),
+    sortByScore(withImages(clusters.transfers)),
     8
   );
 
+  /**
+   * FEATURED (GLOBAL TOP CONTENT, IMAGE-FIRST)
+   */
   const featured = take(
-    [...posts].sort((a, b) => (b.score ?? 0) - (a.score ?? 0)),
+    sortByScore(withImages(posts)),
     18
   );
 

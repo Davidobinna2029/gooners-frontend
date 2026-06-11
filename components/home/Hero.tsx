@@ -5,18 +5,13 @@ interface Props {
   featured: CanonicalPost[];
 }
 
-const FALLBACK = "/fallback.jpg";
-
 export default function Hero({ featured }: Props) {
-  if (!Array.isArray(featured) || featured.length === 0) return null;
+  if (!featured?.length) return null;
 
   const main = featured[0];
   const side = featured.slice(1, 4);
 
-  // 🔍 DEBUG (check runtime data)
-  console.log("MAIN IMAGE URL:", main.image?.url);
-
-  const mainImage = main.image?.url || FALLBACK;
+  if (!main?.image?.url) return null; // HARD GUARANTEE
 
   return (
     <section className="hero-magazine">
@@ -26,9 +21,8 @@ export default function Hero({ featured }: Props) {
         <div className="hero-main">
           <Link href={`/news/${main.slug}`}>
             <div className="hero-image">
-              {/* 🚨 TEMP FIX: NO Next/Image (ISOLATION TEST) */}
               <img
-                src={mainImage}
+                src={main.image.url}
                 alt={main.title}
                 style={{
                   width: "100%",
@@ -48,17 +42,13 @@ export default function Hero({ featured }: Props) {
 
         {/* SIDE */}
         <div className="hero-side">
-          {side.map((post) => {
-            const img = post.image?.url || FALLBACK;
-
-            console.log("SIDE IMAGE URL:", post.image?.url);
-
-            return (
+          {side
+            .filter((p) => p.image?.url)
+            .map((post) => (
               <Link key={post.id} href={`/news/${post.slug}`}>
                 <div className="side-image">
-                  {/* 🚨 TEMP FIX: NO Next/Image */}
                   <img
-                    src={img}
+                    src={post.image!.url}
                     alt={post.title}
                     style={{
                       width: "100%",
@@ -71,8 +61,7 @@ export default function Hero({ featured }: Props) {
 
                 <h3>{post.title}</h3>
               </Link>
-            );
-          })}
+            ))}
         </div>
 
       </div>

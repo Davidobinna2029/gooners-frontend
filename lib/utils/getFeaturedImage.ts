@@ -1,25 +1,29 @@
 import type { WordPressPostWithMedia } from "@/types/wordpress-media";
 
-/**
- * Extracts featured image from WordPress REST API (_embed=1)
- * Handles multiple fallback structures for reliability in production (Vercel/Next.js SSR)
- */
 export function getFeaturedImage(
   post: WordPressPostWithMedia
 ): string | null {
   if (!post) return null;
 
-  const media = post._embedded?.["wp:featuredmedia"]?.[0];
+  // 1. Embedded media (preferred)
+  const embedded = post._embedded?.["wp:featuredmedia"]?.[0];
 
-  if (!media) return null;
+  const embeddedUrl =
+    embedded?.source_url ||
+    embedded?.media_details?.sizes?.full?.source_url ||
+    embedded?.media_details?.sizes?.large?.source_url ||
+    embedded?.media_details?.sizes?.medium?.source_url ||
+    null;
 
-  return (
-    // Most common WP REST API field
-    media.source_url ||
-    // Fallback for WP media sizes (sometimes more stable in production)
-    media.media_details?.sizes?.full?.source_url ||
-    media.media_details?.sizes?.large?.source_url ||
-    media.media_details?.sizes?.medium?.source_url ||
-    null
-  );
+  // 2. Fallback from REST field (VERY IMPORTANT)
+  const mediaFieldUrl =
+    (post as any)?.featured_media_url ||
+    null;
+
+  // 3. Direct WP fallback (sometimes exposed via plugins)
+  const directUrl =
+    (post as any)?.jetpack_featured_media_url ||
+    null;
+
+  return embeddedUrl || mediaFieldUrl || directUrl || null;
 }

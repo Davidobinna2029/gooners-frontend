@@ -10,6 +10,8 @@ export function mapWordPressPost(
   const image: MediaImage | null = imageUrl
     ? {
         url: imageUrl,
+        width: undefined,
+        height: undefined,
       }
     : null;
 
