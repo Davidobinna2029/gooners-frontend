@@ -2,10 +2,17 @@ import { API_BASE } from "./core/apiBase";
 import { ssrFetch } from "./core/ssrFetch";
 import type { WordPressPostWithMedia } from "@/types/wordpress-media";
 
-const WP_EMBED = "_embed=1";
+/**
+ * IMPORTANT:
+ * Use standard WordPress embed flag.
+ * "_embed=1" is unreliable across WP setups.
+ */
+const WP_EMBED = "_embed";
 
 /**
+ * =========================
  * GET POSTS
+ * =========================
  */
 export async function getPosts(): Promise<WordPressPostWithMedia[]> {
   const posts = await ssrFetch<WordPressPostWithMedia[]>(
@@ -16,7 +23,9 @@ export async function getPosts(): Promise<WordPressPostWithMedia[]> {
 }
 
 /**
+ * =========================
  * SINGLE POST
+ * =========================
  */
 export async function getPostBySlug(
   slug: string
@@ -29,7 +38,9 @@ export async function getPostBySlug(
 }
 
 /**
+ * =========================
  * CATEGORIES
+ * =========================
  */
 export async function getCategories(): Promise<any[]> {
   const data = await ssrFetch<any[]>(
@@ -40,7 +51,9 @@ export async function getCategories(): Promise<any[]> {
 }
 
 /**
+ * =========================
  * CATEGORY POSTS
+ * =========================
  */
 export async function getCategoryPosts(
   slug: string
@@ -61,7 +74,9 @@ export async function getCategoryPosts(
 }
 
 /**
+ * =========================
  * LIVE SCORES (ESPN)
+ * =========================
  */
 export async function getScores() {
   const res = await fetch(
@@ -75,7 +90,5 @@ export async function getScores() {
 
   const data = await res.json();
 
-  const events = Array.isArray(data?.events) ? data.events : [];
-
-  return events;
+  return Array.isArray(data?.events) ? data.events : [];
 }
