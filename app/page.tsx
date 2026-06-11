@@ -29,25 +29,32 @@ export default async function HomePage() {
   const feed = buildHomepageFeed(posts);
   const liveMatch = scores?.[0] ?? null;
 
-  /**
-   * CLEAN LIMITING LAYER (IMPORTANT)
-   */
   const hero = feed.hero?.slice(0, 3);
+
+  /**
+   * =========================
+   * 🔍 DEBUG LOGS (TEMP ONLY)
+   * =========================
+   */
+  console.log("🟡 RAW POSTS[0]:", rawPosts?.[0]);
+  console.log("🟢 MAPPED POSTS[0]:", posts?.[0]);
+  console.log("🔵 HERO[0]:", hero?.[0]);
+  console.log("🟣 HERO IMAGE URL:", hero?.[0]?.image?.url);
 
   return (
     <main className="home-page">
 
-      {/* LIVE STRIP (ONLY SIGNAL LAYER) */}
+      {/* LIVE STRIP */}
       <StickyScoreStrip matches={scores} />
 
-      {/* HERO (PRIMARY CONTENT ONLY) */}
+      {/* HERO */}
       {hero?.length > 0 && (
         <section className="hero-zone">
           <Hero featured={hero} />
         </section>
       )}
 
-      {/* MATCH (ONLY IF EXISTS) */}
+      {/* MATCH */}
       {liveMatch && (
         <section className="match-zone">
           <MatchHero nextMatch={liveMatch} />
