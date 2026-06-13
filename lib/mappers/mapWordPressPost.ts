@@ -1,7 +1,37 @@
 import type { WordPressPostWithMedia } from "@/types/wordpress-media";
 import type { CanonicalPost, MediaImage } from "@/types/content";
-import { getFeaturedImage } from "@/lib/utils/getFeaturedImage";
+import { getFeaturedImage } from "@/lib/media/getFeaturedImage";
 
+/**
+ * =========================
+ * HTML STRIP (SAFE)
+ * =========================
+ */
+function strip(html?: string): string {
+  if (typeof html !== "string") return "";
+
+  return html
+    .replace(/<script[^>]*>.*?<\/script>/gi, "")
+    .replace(/<style[^>]*>.*?<\/style>/gi, "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * =========================
+ * SAFE ARRAY NORMALIZER
+ * =========================
+ */
+function safeArray(input: unknown): number[] {
+  return Array.isArray(input) ? input : [];
+}
+
+/**
+ * =========================
+ * WORDPRESS → CANONICAL POST
+ * =========================
+ */
 export function mapWordPressPost(
   post: WordPressPostWithMedia
 ): CanonicalPost {
@@ -20,19 +50,28 @@ export function mapWordPressPost(
     slug: post.slug,
     date: post.date,
 
-    title: post.title?.rendered ?? "",
-    excerpt: post.excerpt?.rendered ?? "",
+    title: strip(post.title?.rendered),
+    excerpt: strip(post.excerpt?.rendered),
+    content: post.content?.rendered ?? "",
 
-    content: post.content?.rendered,
-
+    /**
+     * =========================
+     * IMAGE (STRICT SOURCE ONLY)
+     * =========================
+     */
     image,
 
-    categories: post.categories ?? [],
-    tags: post.tags ?? [],
+    categories: safeArray(post.categories),
+    tags: safeArray(post.tags),
 
     link: post.link,
 
+    /**
+     * =========================
+     * SYSTEM METADATA
+     * =========================
+     */
     score: 0,
-    cluster: "other",
+    cluster: undefined,
   };
 }

@@ -1,6 +1,5 @@
 import Image from "next/image";
 import type { CanonicalPost } from "@/types/content";
-import { getFeaturedImage } from "@/lib/utils/getFeaturedImage";
 
 export default function CategoryRail({
   posts,
@@ -10,18 +9,19 @@ export default function CategoryRail({
   return (
     <div className="rail">
       {posts.map((post) => {
-        const imageUrl = getFeaturedImage(post as any);
+        const imageUrl = post.image?.url;
 
         return (
           <div key={post.id} className="rail-card">
             <div className="rail-image">
-              {imageUrl && (
+              {imageUrl ? (
                 <Image
                   src={imageUrl}
-                  alt={post.title}
+                  alt={post.title || "Arsenal news"}
                   fill
+                  className="object-cover"
                 />
-              )}
+              ) : null}
             </div>
 
             <h4>{post.title}</h4>
