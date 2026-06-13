@@ -1,14 +1,14 @@
 import type { WordPressPostWithMedia } from "@/types/wordpress-media";
 import type { CanonicalPost } from "@/types/content";
-import { getFeaturedImage } from "@/lib/utils/getFeaturedImage";
+import { getFeaturedImage } from "@/lib/media/getFeaturedImage";
 
 /**
  * =========================
- * HTML CLEANER
+ * HTML CLEANER (SAFE + FAST)
  * =========================
  */
 function strip(html?: string): string {
-  if (!html) return "";
+  if (typeof html !== "string") return "";
 
   return html
     .replace(/<script[^>]*>.*?<\/script>/gi, "")
@@ -48,16 +48,18 @@ export function mapWordPressPost(
 
     /**
      * =========================
-     * FIXED IMAGE MAPPING
+     * FEATURED IMAGE (STRICT)
      * =========================
-     * Always derived from _embedded media
+     * - ONLY from WP embedded media
+     * - NO fallback image
      */
-    image: imageUrl
-      ? {
-          url: imageUrl,
-        }
-      : null,
+    image: imageUrl ? { url: imageUrl } : null,
 
+    /**
+     * =========================
+     * TAXONOMY DATA
+     * =========================
+     */
     categories: safeArray(post.categories),
     tags: safeArray(post.tags),
 
@@ -65,11 +67,11 @@ export function mapWordPressPost(
 
     /**
      * =========================
-     * DEFAULT SYSTEM VALUES
+     * SYSTEM METADATA
      * =========================
      */
     score: 0,
-    cluster: "other",
+    cluster: undefined,
   };
 }
 
