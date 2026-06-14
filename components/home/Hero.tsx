@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { CanonicalPost } from "@/types";
 
 interface Props {
@@ -13,35 +14,62 @@ export default function Hero({ featured }: Props) {
 
   return (
     <section className="hero-magazine">
-      <div className="container">
+      <div className="container hero-grid">
 
-        {/* MAIN */}
-        <div>
-          <p>{main.image?.url}</p>
+        {/* MAIN STORY */}
+        <div className="hero-main">
+          <Link href={`/news/${main.slug}`}>
 
-          <img
-            src={main.image?.url}
-            alt={main.title}
-            width={1200}
-            height={700}
-          />
+            {main.image?.url && (
+              <div className="hero-image">
+                <Image
+                  src={main.image.url}
+                  alt={main.title}
+                  fill
+                  priority
+                  sizes="100vw"
+                  className="object-cover"
+                />
+              </div>
+            )}
 
-          <h1>{main.title}</h1>
+            <div className="hero-overlay">
+              <h1>{main.title}</h1>
+
+              {main.excerpt && (
+                <p>{main.excerpt}</p>
+              )}
+            </div>
+
+          </Link>
         </div>
 
-        {/* SIDE */}
-        {side.map((post) => (
-          <div key={post.id}>
-            <img
-              src={post.image?.url}
-              alt={post.title}
-              width={400}
-              height={250}
-            />
+        {/* SIDE STORIES */}
+        <div className="hero-side">
+          {side.map((post) => (
+            <Link
+              key={post.id}
+              href={`/news/${post.slug}`}
+              className="hero-side-item"
+            >
+              {post.image?.url && (
+                <div className="side-image">
+                  <Image
+                    src={post.image.url}
+                    alt={post.title}
+                    fill
+                    sizes="(max-width:768px) 100vw, 300px"
+                    className="object-cover"
+                  />
+                </div>
+              )}
 
-            <h3>{post.title}</h3>
-          </div>
-        ))}
+              <div className="side-text">
+                <h3>{post.title}</h3>
+              </div>
+            </Link>
+          ))}
+        </div>
 
       </div>
     </section>

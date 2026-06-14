@@ -1,7 +1,10 @@
 import Image from "next/image";
 import parse from "html-react-parser";
 
-import { getPostBySlug, getPosts } from "@/lib/api/wordpress";
+import {
+  getPostBySlug,
+  getPosts,
+} from "@/lib/api/wordpress";
 
 import {
   mapWordPressPost,
@@ -21,20 +24,12 @@ interface Props {
 
 /**
  * =========================
- * SAFE IMAGE RESOLVER (CRITICAL FIX)
+ * SEO METADATA
  * =========================
  */
-function resolveImage(image: unknown): string {
-  if (typeof image === "string" && image.length > 5) {
-    return image;
-  }
-  return "/fallback.jpg";
-}
-
-/**
- * SEO Metadata
- */
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({
+  params,
+}: Props) {
   const { slug } = await params;
 
   const rawPost = await getPostBySlug(slug);
@@ -42,59 +37,78 @@ export async function generateMetadata({ params }: Props) {
   if (!rawPost) {
     return {
       title: "Article Not Found | ArsenalTalks",
-      description: "The requested article could not be found.",
+      description:
+        "The requested article could not be found.",
     };
   }
 
   const post = mapWordPressPost(rawPost);
 
-  const image = resolveImage(post.image);
+  const imageUrl = post.image?.url;
 
   return {
     title: `${post.title} | ArsenalTalks`,
-    description: post.excerpt?.slice(0, 150) || "Latest Arsenal news",
+
+    description:
+      post.excerpt?.slice(0, 150) ||
+      "Latest Arsenal news",
 
     openGraph: {
       title: post.title,
-      description: post.excerpt?.slice(0, 150) || "Latest Arsenal news",
-      images: [
-        {
-          url: image,
-        },
-      ],
+
+      description:
+        post.excerpt?.slice(0, 150) ||
+        "Latest Arsenal news",
+
+      images: imageUrl
+        ? [
+            {
+              url: imageUrl,
+            },
+          ]
+        : [],
     },
   };
 }
 
 /**
- * Article Page
+ * =========================
+ * ARTICLE PAGE
+ * =========================
  */
-export default async function ArticlePage({ params }: Props) {
+export default async function ArticlePage({
+  params,
+}: Props) {
   const { slug } = await params;
 
   const rawPost = await getPostBySlug(slug);
-  const rawLatest = await getPosts();
 
   if (!rawPost) {
     return (
       <div className="container">
         <div style={{ padding: "80px 0" }}>
-          <h1>Article not found</h1>
+          <h1>Article Not Found</h1>
+
           <p>
-            This article may have been removed or the URL is incorrect.
+            This article may have been removed
+            or the URL is incorrect.
           </p>
         </div>
       </div>
     );
   }
 
+  const rawLatest = await getPosts();
+
   const post = mapWordPressPost(rawPost);
-  const latest = mapWordPressPosts(rawLatest || []);
+
+  const latest = mapWordPressPosts(
+    rawLatest || []
+  );
 
   const articleContent =
-    rawPost?.content?.rendered || "<p>No article content.</p>";
-
-  const imageSrc = resolveImage(post.image);
+    rawPost.content?.rendered ||
+    "<p>No article content available.</p>";
 
   return (
     <article className="article-page">
@@ -102,34 +116,43 @@ export default async function ArticlePage({ params }: Props) {
 
         {/* HEADER */}
         <header className="article-header">
-          <span className="article-category">Arsenal</span>
+          <span className="article-category">
+            Arsenal
+          </span>
 
           <h1>{post.title}</h1>
 
           <ArticleMeta date={post.date} />
         </header>
 
-        {/* FEATURED IMAGE (FIXED TYPE SAFE) */}
-        <div className="article-image">
-          <Image
-            src={imageSrc}
-            alt={post.title || "Arsenal news"}
-            fill
-            priority
-            className="object-cover"
-          />
-        </div>
+        {/* FEATURED IMAGE */}
+        {post.image?.url && (
+          <div className="article-featured-image">
+            <Image
+              src={post.image.url}
+              alt={post.title}
+              width={1200}
+              height={675}
+              priority
+              className="article-image"
+            />
+          </div>
+        )}
 
         {/* ARTICLE LAYOUT */}
         <div className="article-layout">
 
           {/* SHARE SIDEBAR */}
           <aside className="article-sidebar">
-            <ShareBar slug={post.slug} title={post.title} />
+            <ShareBar
+              slug={post.slug}
+              title={post.title}
+            />
           </aside>
 
           {/* ARTICLE CONTENT */}
           <main className="article-main">
+
             <div className="article-body">
               {parse(articleContent)}
             </div>
@@ -138,12 +161,16 @@ export default async function ArticlePage({ params }: Props) {
 
             <RelatedPosts
               posts={latest
-                .filter((item) => item.id !== post.id)
+                .filter(
+                  (item) => item.id !== post.id
+                )
                 .slice(0, 4)}
             />
+
           </main>
 
         </div>
+
       </div>
     </article>
   );
