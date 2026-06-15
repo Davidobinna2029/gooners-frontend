@@ -44,8 +44,6 @@ export async function generateMetadata({
 
   const post = mapWordPressPost(rawPost);
 
-  const imageUrl = post.image?.url;
-
   return {
     title: `${post.title} | ArsenalTalks`,
 
@@ -60,10 +58,10 @@ export async function generateMetadata({
         post.excerpt?.slice(0, 150) ||
         "Latest Arsenal news",
 
-      images: imageUrl
+      images: post.image?.url
         ? [
             {
-              url: imageUrl,
+              url: post.image.url,
             },
           ]
         : [],
@@ -106,9 +104,15 @@ export default async function ArticlePage({
     rawLatest || []
   );
 
-  const articleContent =
+  /**
+   * REMOVE ALL ARTICLE BODY IMAGES
+   */
+  const articleContent = (
     rawPost.content?.rendered ||
-    "<p>No article content available.</p>";
+    "<p>No article content available.</p>"
+  )
+    .replace(/<img[^>]*>/gi, "")
+    .replace(/<figure[\s\S]*?<\/figure>/gi, "");
 
   return (
     <article className="article-page">

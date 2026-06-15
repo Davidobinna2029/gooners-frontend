@@ -1,5 +1,6 @@
 /* =========================
-   HERO SYSTEM V5
+   HERO SYSTEM V6
+   ESPN / BBC STYLE
 ========================= */
 
 .hero-magazine {
@@ -8,8 +9,10 @@
 
 .hero-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.8fr) minmax(320px, 1fr);
   gap: 20px;
+
+  /* Mobile First */
+  grid-template-columns: 1fr;
 }
 
 /* =========================
@@ -22,7 +25,8 @@
   border-radius: var(--radius-lg);
   background: #f8fafc;
   box-shadow: var(--shadow-soft);
-  aspect-ratio: 16 / 9;
+
+  aspect-ratio: 16 / 10;
 }
 
 .hero-main a {
@@ -42,7 +46,7 @@
 
 .hero-image img {
   object-fit: cover;
-  transition: transform .6s ease;
+  transition: transform 0.6s ease;
 }
 
 .hero-main:hover .hero-image img {
@@ -56,7 +60,8 @@
 .hero-overlay {
   position: absolute;
   inset: 0;
-  padding: 40px;
+
+  padding: 20px;
 
   display: flex;
   flex-direction: column;
@@ -64,15 +69,15 @@
 
   background: linear-gradient(
     to top,
-    rgba(0, 0, 0, .85),
-    rgba(0, 0, 0, .35),
+    rgba(0, 0, 0, 0.85),
+    rgba(0, 0, 0, 0.35),
     transparent
   );
 }
 
 .hero-overlay h1 {
   color: #fff;
-  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-size: clamp(1.5rem, 4vw, 3rem);
   line-height: 1.1;
   font-weight: 800;
   margin-bottom: 10px;
@@ -82,7 +87,6 @@
   color: rgba(255,255,255,.9);
   font-size: 1rem;
   line-height: 1.5;
-  max-width: 700px;
 }
 
 /* =========================
@@ -105,6 +109,8 @@
   border-radius: 12px;
   overflow: hidden;
 
+  text-decoration: none;
+
   transition: .25s ease;
 }
 
@@ -113,18 +119,13 @@
   box-shadow: var(--shadow-hover);
 }
 
-.hero-side-item a {
-  display: flex;
-  width: 100%;
-  text-decoration: none;
-}
-
 /* =========================
    SIDE IMAGE
 ========================= */
 
 .side-image {
   position: relative;
+
   width: 180px;
   min-width: 180px;
   height: 120px;
@@ -140,6 +141,7 @@
 
 .side-text {
   padding: 12px;
+
   display: flex;
   align-items: center;
 }
@@ -155,32 +157,43 @@
    TABLET
 ========================= */
 
-@media (max-width: 1200px) {
-  .hero-grid {
-    grid-template-columns: 1fr;
+@media (min-width: 769px) {
+
+  .hero-main {
+    aspect-ratio: 16 / 9;
+  }
+
+  .hero-overlay {
+    padding: 30px;
   }
 }
 
 /* =========================
-   MOBILE
+   DESKTOP
 ========================= */
 
-@media (max-width: 768px) {
-  .hero-main {
-    aspect-ratio: 16 / 10;
+@media (min-width: 1200px) {
+
+  .hero-grid {
+    grid-template-columns:
+      minmax(0, 1.8fr)
+      minmax(320px, 1fr);
   }
 
   .hero-overlay {
-    padding: 20px;
-  }
-
-  .hero-overlay h1 {
-    font-size: 1.5rem;
+    padding: 40px;
   }
 
   .hero-overlay p {
-    display: none;
+    max-width: 700px;
   }
+}
+
+/* =========================
+   MOBILE STACK
+========================= */
+
+@media (max-width: 768px) {
 
   .hero-side-item {
     flex-direction: column;
@@ -192,7 +205,7 @@
     height: 200px;
   }
 
-  .side-text {
-    padding: 12px;
+  .hero-overlay p {
+    display: none;
   }
 }
