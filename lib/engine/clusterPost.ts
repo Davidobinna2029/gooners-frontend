@@ -117,7 +117,7 @@ export function detectCluster(post: CanonicalPost): PostCluster {
 
 /**
  * =========================
- * CLUSTER POSTS (ESPN FEED ENGINE)
+ * CLUSTER POSTS (IMMUTABLE VERSION)
  * =========================
  */
 export function clusterPosts(posts: CanonicalPost[]) {
@@ -131,7 +131,12 @@ export function clusterPosts(posts: CanonicalPost[]) {
 
   for (const post of posts) {
     const cluster = detectCluster(post);
-    clusters[cluster].push(post);
+
+    /**
+     * 🔥 CRITICAL FIX:
+     * Clone object to prevent shared reference bugs across feed engine
+     */
+    clusters[cluster].push(structuredClone(post));
   }
 
   return clusters;
@@ -139,14 +144,11 @@ export function clusterPosts(posts: CanonicalPost[]) {
 
 /**
  * =========================
- * PRIORITY SORTING (ESPN DISCOVER LAYER)
+ * PRIORITY SORTING (IMMUTABLE)
  * =========================
  */
 export function boostCluster(posts: CanonicalPost[]) {
   return [...posts].sort((a, b) => {
-    const scoreA = a.score ?? 0;
-    const scoreB = b.score ?? 0;
-
-    return scoreB - scoreA;
+    return (b.score ?? 0) - (a.score ?? 0);
   });
 }
