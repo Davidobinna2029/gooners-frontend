@@ -2,7 +2,6 @@ import Image from "next/image";
 import parse from "html-react-parser";
 
 import { getPostBySlug, getPosts } from "@/lib/api/wordpress";
-
 import {
   mapWordPressPost,
   mapWordPressPosts,
@@ -14,9 +13,7 @@ import RelatedPosts from "@/components/news/RelatedPosts";
 import AuthorBox from "@/components/news/AuthorBox";
 
 interface Props {
-  params: Promise<{
-    slug: string;
-  }>;
+  params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -26,7 +23,6 @@ export async function generateMetadata({ params }: Props) {
   if (!rawPost) {
     return {
       title: "Article Not Found | ArsenalTalks",
-      description: "The requested article could not be found.",
     };
   }
 
@@ -34,10 +30,10 @@ export async function generateMetadata({ params }: Props) {
 
   return {
     title: `${post.title} | ArsenalTalks`,
-    description: post.excerpt?.slice(0, 150) || "Latest Arsenal news",
+    description: post.excerpt?.slice(0, 150),
     openGraph: {
       title: post.title,
-      description: post.excerpt?.slice(0, 150) || "Latest Arsenal news",
+      description: post.excerpt?.slice(0, 150),
       images: post.image?.url ? [{ url: post.image.url }] : [],
     },
   };
@@ -49,82 +45,60 @@ export default async function ArticlePage({ params }: Props) {
   const rawPost = await getPostBySlug(slug);
 
   if (!rawPost) {
-    return (
-      <div className="container py-20 text-center">
-        <h1 className="text-4xl font-bold">Article Not Found</h1>
-        <p className="mt-4 text-gray-400">
-          This article may have been removed or the URL is incorrect.
-        </p>
-      </div>
-    );
+    return <div className="container py-20">Article Not Found</div>;
   }
 
   const rawLatest = await getPosts();
-
   const post = mapWordPressPost(rawPost);
   const latest = mapWordPressPosts(rawLatest || []);
 
-  const imageUrl = post.image?.url;
+  const featured = post.image?.url;
 
-  // NO CONTENT MANIPULATION — PURE WORDPRESS OUTPUT
-  const articleContent =
-    rawPost.content?.rendered || "<p>No content available.</p>";
+  let content = rawPost.content?.rendered || "";
+
+  // ONLY remove duplicate featured image from WP content
+  if (featured) {
+    const escaped = featured.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    content = content.replace(
+      new RegExp(
+        `<figure[^>]*>.*?<img[^>]*src=["']${escaped}["'][^>]*>.*?<\/figure>`,
+        "gi"
+      ),
+      ""
+    );
+  }
 
   return (
     <article className="article-page py-8">
-      <div className="container max-w-[480px] md:max-w-[800px] mx-auto px-4">
+      <div className="container max-w-[800px] mx-auto px-4">
 
-        {/* HEADER */}
-        <header className="article-header mb-8">
-          <span className="article-category uppercase tracking-widest text-red-500 text-sm font-medium">
-            Arsenal
-          </span>
-
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mt-3">
-            {post.title}
-          </h1>
-
+        <header className="mb-8">
+          <h1 className="text-4xl font-bold">{post.title}</h1>
           <ArticleMeta date={post.date} />
         </header>
 
-        {/* FEATURED IMAGE */}
-        {imageUrl && (
-          <div className="article-featured-image mb-10 -mx-4 md:mx-0">
-            <Image
-              src={imageUrl}
-              alt={post.title}
-              width={1200}
-              height={675}
-              priority
-              className="article-image w-full h-auto rounded-2xl object-cover"
-            />
-          </div>
+        {/* ONLY ONE FEATURED IMAGE */}
+        {featured && (
+          <Image
+            src={featured}
+            alt={post.title}
+            width={1200}
+            height={675}
+            priority
+          />
         )}
 
-        {/* ARTICLE BODY */}
-        <div className="article-layout flex flex-col lg:flex-row gap-10">
-
-          <main className="article-main flex-1 min-w-0">
-            <div className="article-body prose prose-base md:prose-lg max-w-none">
-              {parse(articleContent)}
-            </div>
-
-            <ShareBar slug={post.slug} title={post.title} />
-            <AuthorBox />
-          </main>
-
-          <aside className="article-sidebar w-full lg:w-80 hidden lg:block">
-            {/* Sidebar content if needed */}
-          </aside>
+        <div className="prose max-w-none">
+          {parse(content)}
         </div>
 
-        {/* RELATED POSTS */}
-        <RelatedPosts
-          posts={latest
-            .filter((item) => item.id !== post.id)
-            .slice(0, 4)}
-        />
+        <ShareBar slug={post.slug} title={post.title} />
+        <AuthorBox />
 
+        <RelatedPosts
+          posts={latest.filter((p) => p.id !== post.id).slice(0, 4)}
+        />
       </div>
     </article>
   );
