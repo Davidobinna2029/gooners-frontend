@@ -1,10 +1,7 @@
 import Image from "next/image";
 import parse from "html-react-parser";
 
-import {
-  getPostBySlug,
-  getPosts,
-} from "@/lib/api/wordpress";
+import { getPostBySlug, getPosts } from "@/lib/api/wordpress";
 
 import {
   mapWordPressPost,
@@ -55,30 +52,23 @@ export default async function ArticlePage({ params }: Props) {
     return (
       <div className="container py-20 text-center">
         <h1 className="text-4xl font-bold">Article Not Found</h1>
-        <p className="mt-4 text-gray-400">This article may have been removed or the URL is incorrect.</p>
+        <p className="mt-4 text-gray-400">
+          This article may have been removed or the URL is incorrect.
+        </p>
       </div>
     );
   }
 
   const rawLatest = await getPosts();
+
   const post = mapWordPressPost(rawPost);
   const latest = mapWordPressPosts(rawLatest || []);
 
   const imageUrl = post.image?.url;
 
-  // === STRONGER CLEANING: Remove featured image from body ===
-  let articleContent = rawPost.content?.rendered || "<p>No content available.</p>";
-
-  if (imageUrl) {
-    // Remove image that matches the featured image URL
-    const escapedUrl = imageUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    articleContent = articleContent
-      .replace(new RegExp(`<img[^>]*src=["']${escapedUrl}["'][^>]*>`, 'gi'), '')
-      .replace(/<figure[^>]*>[\s\S]*?<\/figure>/gi, '')           // Remove figure blocks
-      .replace(/<img[^>]*>/gi, (match) => {                       // Remove first image if still present
-        return articleContent.indexOf(match) < 300 ? '' : match;
-      });
-  }
+  // NO CONTENT MANIPULATION — PURE WORDPRESS OUTPUT
+  const articleContent =
+    rawPost.content?.rendered || "<p>No content available.</p>";
 
   return (
     <article className="article-page py-8">
@@ -89,13 +79,15 @@ export default async function ArticlePage({ params }: Props) {
           <span className="article-category uppercase tracking-widest text-red-500 text-sm font-medium">
             Arsenal
           </span>
+
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mt-3">
             {post.title}
           </h1>
+
           <ArticleMeta date={post.date} />
         </header>
 
-        {/* FEATURED IMAGE - ONLY ONCE */}
+        {/* FEATURED IMAGE */}
         {imageUrl && (
           <div className="article-featured-image mb-10 -mx-4 md:mx-0">
             <Image
@@ -109,7 +101,7 @@ export default async function ArticlePage({ params }: Props) {
           </div>
         )}
 
-        {/* ARTICLE LAYOUT */}
+        {/* ARTICLE BODY */}
         <div className="article-layout flex flex-col lg:flex-row gap-10">
 
           <main className="article-main flex-1 min-w-0">
@@ -118,7 +110,6 @@ export default async function ArticlePage({ params }: Props) {
             </div>
 
             <ShareBar slug={post.slug} title={post.title} />
-
             <AuthorBox />
           </main>
 
@@ -127,11 +118,13 @@ export default async function ArticlePage({ params }: Props) {
           </aside>
         </div>
 
+        {/* RELATED POSTS */}
         <RelatedPosts
           posts={latest
             .filter((item) => item.id !== post.id)
             .slice(0, 4)}
         />
+
       </div>
     </article>
   );
