@@ -18,7 +18,7 @@ export default function Hero({ featured }: Props) {
 
         {/* MAIN STORY */}
         <div className="hero-main">
-          <Link href={`/news/${main.slug}`}>
+          <Link href={`/news/${main.slug}`} className="hero-link">
 
             {main.image?.url && (
               <div className="hero-image">
@@ -36,9 +36,7 @@ export default function Hero({ featured }: Props) {
             <div className="hero-overlay">
               <h1>{main.title}</h1>
 
-              {main.excerpt && (
-                <p>{main.excerpt}</p>
-              )}
+              {main.excerpt && <p>{main.excerpt}</p>}
             </div>
 
           </Link>

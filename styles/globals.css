@@ -43,7 +43,7 @@ body {
 }
 
 /* ========================
-   HERO SYSTEM - MOBILE FIRST
+   HERO SYSTEM - FIXED
 ======================== */
 
 .hero-magazine {
@@ -53,25 +53,28 @@ body {
 .hero-grid {
   display: grid;
   gap: 20px;
-  grid-template-columns: 1fr; /* Force single column by default */
+  grid-template-columns: 1fr;
 }
 
 .hero-main {
-  position: relative;
+  position: relative; /* REQUIRED for Next/Image fill */
   overflow: hidden;
   border-radius: var(--radius-lg);
   aspect-ratio: 16 / 10;
 }
 
-.hero-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.6s ease;
+/* FIXED IMAGE CONTAINER FOR NEXT IMAGE */
+.hero-image {
+  position: absolute;
+  inset: 0;
 }
 
-.hero-main:hover .hero-image img {
-  transform: scale(1.05);
+/* ❌ REMOVED .hero-image img RULES COMPLETELY */
+
+/* hover effect applied safely via wrapper */
+.hero-main:hover .hero-image {
+  transform: scale(1.02);
+  transition: transform 0.6s ease;
 }
 
 .hero-overlay {
@@ -81,7 +84,12 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.4), transparent);
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.85),
+    rgba(0,0,0,0.4),
+    transparent
+  );
 }
 
 .hero-overlay h1 {
@@ -98,7 +106,10 @@ body {
   line-height: 1.5;
 }
 
-/* Side Stories */
+/* ========================
+   SIDE STORIES
+======================== */
+
 .hero-side {
   display: flex;
   flex-direction: column;
@@ -121,16 +132,10 @@ body {
 }
 
 .side-image {
+  position: relative; /* REQUIRED for fill safety */
   width: 140px;
-  flex-shrink: 0;
   height: 100px;
-  position: relative;
-}
-
-.side-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .side-text {
@@ -176,18 +181,18 @@ body {
   .hero-main {
     aspect-ratio: 16 / 9;
   }
-  
+
   .hero-overlay h1 {
     font-size: 2.25rem;
   }
-  
+
   .side-image {
     width: 160px;
     height: 110px;
   }
 }
 
-/* Desktop - Split Hero */
+/* Desktop */
 @media (min-width: 1024px) {
   .hero-grid {
     grid-template-columns: minmax(0, 1.8fr) minmax(320px, 1fr);
@@ -203,12 +208,12 @@ body {
   }
 }
 
-/* Extra Mobile Safety */
+/* Mobile safety */
 @media (max-width: 767px) {
   .hero-side-item {
     flex-direction: column;
   }
-  
+
   .side-image {
     width: 100%;
     height: 200px;
