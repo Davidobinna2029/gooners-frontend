@@ -6,6 +6,8 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://arsenaltalks.com"),
+
   title: {
     default: "ArsenalTalks",
     template: "%s | ArsenalTalks",
@@ -28,11 +30,19 @@ export const metadata: Metadata = {
     title: "ArsenalTalks",
     description:
       "Latest Arsenal news, transfer updates, fixtures, live scores and match analysis.",
-
     url: "https://arsenaltalks.com",
     siteName: "ArsenalTalks",
     locale: "en_GB",
     type: "website",
+
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "ArsenalTalks",
+      },
+    ],
   },
 
   twitter: {
@@ -40,6 +50,8 @@ export const metadata: Metadata = {
     title: "ArsenalTalks",
     description:
       "Latest Arsenal news, transfer updates, fixtures and live scores.",
+
+    images: ["/og-image.jpg"],
   },
 };
 
@@ -52,9 +64,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Header />
-
         <main>{children}</main>
-
         <Footer />
       </body>
     </html>
