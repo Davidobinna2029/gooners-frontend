@@ -1,17 +1,36 @@
 import type { CanonicalPost } from "@/types/content";
 
-const FALLBACK = "/fallback.jpg";
-
 /**
- * SAFE IMAGE ACCESSOR
+ * =========================
+ * SAFE IMAGE ACCESSOR (CLEAN)
+ * =========================
+ * - NO fallback image injection
+ * - UI decides fallback behavior
+ * - Strict single source of truth
  */
-export function getImage(post: CanonicalPost): string {
-  const imageUrl = post.image?.url;
 
-  if (!imageUrl) return FALLBACK;
+export function getImage(post: CanonicalPost): string | null {
+  const imageUrl = post?.image?.url;
 
-  // local image
-  if (imageUrl.startsWith("/")) return imageUrl;
+  if (!imageUrl || typeof imageUrl !== "string") {
+    return null;
+  }
 
-  return imageUrl;
+  const trimmed = imageUrl.trim();
+
+  if (trimmed.length === 0) {
+    return null;
+  }
+
+  // local images (Next public folder)
+  if (trimmed.startsWith("/")) {
+    return trimmed;
+  }
+
+  // external images
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+
+  return null;
 }

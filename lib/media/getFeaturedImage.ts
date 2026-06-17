@@ -2,23 +2,54 @@ import type { WordPressPostWithMedia } from "@/types/wordpress-media";
 
 /**
  * =========================
- * FEATURED IMAGE RESOLVER (STRICT)
+ * FEATURED IMAGE RESOLVER (CLEAN + SAFE)
  * =========================
- * - No fallback images
- * - No external guesswork
- * - Only real WordPress media
- * - Normalized to api.arsenaltalks.com
+ * - Strict WordPress featured media only
+ * - Normalized URLs
+ * - No fallback logic (UI handles fallback)
  */
 
 const MEDIA_HOST_REWRITE = "https://api.arsenaltalks.com";
 
+/**
+ * Normalize all known WP URL formats
+ */
 function normalize(url: string): string {
   return url
+    .trim()
     .replace(/^http:\/\/arsenaltalks\.com/i, MEDIA_HOST_REWRITE)
     .replace(/^https:\/\/arsenaltalks\.com/i, MEDIA_HOST_REWRITE)
+    .replace(/^http:\/\/www\.arsenaltalks\.com/i, MEDIA_HOST_REWRITE)
+    .replace(/^https:\/\/www\.arsenaltalks\.com/i, MEDIA_HOST_REWRITE)
     .replace(/^\/\/arsenaltalks\.com/i, MEDIA_HOST_REWRITE);
 }
 
+/**
+ * Validate real image URL
+ */
+function isValid(url: unknown): url is string {
+  if (typeof url !== "string") return false;
+
+  const clean = url.trim();
+
+  if (!clean) return false;
+
+  if (!clean.startsWith("http://") && !clean.startsWith("https://") && !clean.startsWith("//")) {
+    return false;
+  }
+
+  if (clean.includes("placeholder") || clean.includes("default")) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * =========================
+ * MAIN RESOLVER
+ * =========================
+ */
 export function getFeaturedImage(
   post: WordPressPostWithMedia
 ): string | null {
@@ -35,15 +66,9 @@ export function getFeaturedImage(
     media?.source_url ||
     null;
 
-  if (!rawUrl || typeof rawUrl !== "string") {
+  if (!isValid(rawUrl)) {
     return null;
   }
 
-  const cleaned = rawUrl.trim();
-
-  if (!cleaned.startsWith("http")) {
-    return null;
-  }
-
-  return normalize(cleaned);
+  return normalize(rawUrl);
 }

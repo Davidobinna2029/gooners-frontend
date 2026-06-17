@@ -1,11 +1,6 @@
 import type { CanonicalPost } from "@/types/content";
 import { clusterPosts } from "@/lib/engine/clusterPost";
 
-/**
- * =========================
- * TYPE: HOMEPAGE FEED
- * =========================
- */
 export interface HomepageFeed {
   hero: CanonicalPost[];
   breaking: CanonicalPost[];
@@ -26,14 +21,27 @@ function take(posts: CanonicalPost[], n: number) {
 }
 
 /**
- * STRICT IMAGE FILTER (CORE FIX)
+ * IMAGE-VALID POSTS ONLY
  */
 function withImages(posts: CanonicalPost[]) {
-  return posts.filter((p) => p.image?.url);
+  return posts.filter((p) => Boolean(p.image?.url));
 }
 
 /**
- * SORT BY SCORE SAFELY
+ * GLOBAL DEDUP (CRITICAL FIX)
+ */
+function uniqueById(posts: CanonicalPost[]) {
+  const seen = new Set<number>();
+
+  return posts.filter((p) => {
+    if (seen.has(p.id)) return false;
+    seen.add(p.id);
+    return true;
+  });
+}
+
+/**
+ * SORT BY SCORE
  */
 function sortByScore(posts: CanonicalPost[]) {
   return [...posts].sort(
@@ -50,70 +58,62 @@ export function buildHomepageFeed(posts: CanonicalPost[]): HomepageFeed {
   const clusters = clusterPosts(posts);
 
   /**
-   * HERO (STRICT IMAGE-FIRST)
-   * Must ALWAYS have images or it will break UI
+   * PREP BASE POOLS (DEDUPED ONCE)
+   */
+  const arsenal = uniqueById(withImages(clusters.arsenal));
+  const match = uniqueById(withImages(clusters.match));
+  const transfers = uniqueById(withImages(clusters.transfers));
+  const injury = uniqueById(withImages(clusters.injury));
+
+  const all = uniqueById(withImages(posts));
+
+  /**
+   * HERO (TOP PRIORITY CONTENT)
    */
   const hero = take(
-    sortByScore(
-      withImages([
-        ...clusters.arsenal,
-        ...clusters.match,
-      ])
-    ),
+    sortByScore([...arsenal, ...match]),
     5
   );
 
   /**
-   * BREAKING (IMPORTANT NEWS + IMAGE-FIRST)
+   * BREAKING
    */
   const breaking = take(
-    sortByScore(
-      withImages([
-        ...clusters.injury,
-        ...clusters.transfers,
-      ])
-    ),
+    sortByScore([...injury, ...transfers]),
     8
   );
 
   /**
-   * TRENDING (OPTIONAL IMAGE FILTER — but recommended)
+   * TRENDING
    */
   const trending = take(
-    sortByScore(
-      withImages(posts).filter(
-        (p) => (p.score ?? 0) >= 40
-      )
-    ),
+    sortByScore(all.filter((p) => (p.score ?? 0) >= 40)),
     10
   );
 
   /**
-   * EDITORS PICKS (HIGH QUALITY ONLY)
+   * EDITORS PICKS
    */
   const editors = take(
     sortByScore(
-      withImages([
-        ...clusters.arsenal,
-        ...clusters.match,
-      ]).filter((p) => (p.score ?? 0) >= 60)
+      all.filter((p) => (p.score ?? 0) >= 60)
     ),
     6
   );
 
   /**
-   * TRANSFERS (IMAGE-FIRST)
+   * TRANSFERS
    */
   const transfer = take(
-    sortByScore(withImages(clusters.transfers)),
+    sortByScore(transfers),
     8
   );
 
   /**
-   * FEATURED (GLOBAL TOP CONTENT, IMAGE-FIRST)
+   * FEATURED (GLOBAL UNIQUE POOL ONLY)
    */
   const featured = take(
-    sortByScore(withImages(posts)),
+    sortByScore(all),
     18
   );
 
