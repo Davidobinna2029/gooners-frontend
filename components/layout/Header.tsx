@@ -7,8 +7,6 @@ import { usePathname } from "next/navigation";
 const links = [
   { label: "Home", href: "/" },
   { label: "News", href: "/news" },
-  { label: "Transfers", href: "/transfers" },
-  { label: "Opinion", href: "/opinion" },
   { label: "Fixtures", href: "/fixtures" },
 ];
 
@@ -64,6 +62,7 @@ export default function Header() {
               key={link.href}
               href={link.href}
               onClick={() => setOpen(false)}
+              className="mobile-link"
             >
               {link.label}
             </Link>
