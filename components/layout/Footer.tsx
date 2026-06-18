@@ -1,9 +1,20 @@
-"use client";
+import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer style={{ padding: "1rem", textAlign: "center", background: "#f5f5f5" }}>
-      <p>© {new Date().getFullYear()} ArsenalTalks. All rights reserved.</p>
+    <footer className="footer">
+      <div className="container footer-inner">
+
+        <p>© {new Date().getFullYear()} ArsenalTalks</p>
+
+        <div className="footer-links">
+          <Link href="/legal/privacy-policy">Privacy</Link>
+          <Link href="/legal/terms">Terms</Link>
+          <Link href="/legal/about">About</Link>
+          <Link href="/contact">Contact</Link>
+        </div>
+
+      </div>
     </footer>
   );
 }
