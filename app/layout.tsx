@@ -2,7 +2,7 @@ import "../styles/globals.css";
 
 import type { Metadata } from "next";
 
-import Header from "@/components/layout/Header";
+import NewsroomHeader from "@/components/layout/NewsroomHeader";
 import Footer from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
@@ -34,7 +34,6 @@ export const metadata: Metadata = {
     siteName: "ArsenalTalks",
     locale: "en_GB",
     type: "website",
-
     images: [
       {
         url: "/og-image.jpg",
@@ -50,7 +49,6 @@ export const metadata: Metadata = {
     title: "ArsenalTalks",
     description:
       "Latest Arsenal news, transfer updates, fixtures and live scores.",
-
     images: ["/og-image.jpg"],
   },
 };
@@ -63,8 +61,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Header />
+        <NewsroomHeader />
+
         <main>{children}</main>
+
         <Footer />
       </body>
     </html>
