@@ -328,74 +328,51 @@ img {
   font-size: 15px;
 }
 
-/* ========================
-   ELITE FOOTER SYSTEM (NEW)
-======================== */
+/* =========================================
+   ESPN-STYLE LEGAL FOOTER
+========================================= */
 
-.footer {
+.legal-footer {
+  margin-top: 40px;
+  padding: 24px 0;
+  border-top: 1px solid #e5e7eb;
   background: #ffffff;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  margin-top: 80px;
 }
 
-.footer-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 40px;
-  padding: 50px 16px;
-}
-
-.footer-brand h3 {
-  font-size: 18px;
-  font-weight: 800;
-  color: #111827;
-  margin-bottom: 10px;
-}
-
-.footer-brand p {
-  color: rgba(17, 24, 39, 0.7);
-  font-size: 14px;
-  max-width: 280px;
-}
-
-.footer-column {
+.legal-links {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 14px;
 }
 
-.footer-column h4 {
+.legal-links a {
+  color: #374151;
   font-size: 14px;
-  font-weight: 700;
-  margin-bottom: 12px;
-  color: #111827;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  text-decoration: underline;
+  transition: color 0.2s ease;
 }
 
-.footer-column a {
-  color: rgba(17, 24, 39, 0.7);
-  text-decoration: none;
-  font-size: 14px;
-  transition: 0.2s ease;
+.legal-links a:hover {
+  color: #e10600;
 }
 
-.footer-column a:hover {
-  color: #111827;
-}
-
-.footer-bottom {
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  text-align: center;
-  padding: 18px;
+.legal-copyright {
+  color: #6b7280;
   font-size: 13px;
-  color: rgba(17, 24, 39, 0.6);
+  margin-bottom: 4px;
 }
 
-@media (min-width: 768px) {
-  .footer-grid {
-    grid-template-columns: 2fr 1fr 1fr;
-    align-items: start;
+.legal-disclaimer {
+  color: #9ca3af;
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: 700px;
+}
+
+@media (max-width: 768px) {
+  .legal-links {
+    gap: 14px;
   }
 }
 

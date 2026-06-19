@@ -2,42 +2,36 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="footer">
-      <div className="container footer-grid">
+    <footer className="legal-footer">
+      <div className="container">
 
-        {/* BRAND COLUMN */}
-        <div className="footer-brand">
-          <h3>ArsenalTalks</h3>
-          <p>
-            Independent Arsenal FC news covering transfers, fixtures, match
-            analysis and breaking stories.
-          </p>
+        <div className="legal-links">
+          <Link href="/legal/terms">
+            Terms of Use
+          </Link>
+
+          <Link href="/legal/privacy-policy">
+            Privacy Policy
+          </Link>
+
+          <Link href="/legal/about">
+            About
+          </Link>
+
+          <Link href="/contact">
+            Contact
+          </Link>
         </div>
 
-        {/* NAVIGATION */}
-        <div className="footer-column">
-          <h4>Navigate</h4>
-          <Link href="/">Home</Link>
-          <Link href="/news">News</Link>
-          <Link href="/fixtures">Fixtures</Link>
-        </div>
-
-        {/* LEGAL */}
-        <div className="footer-column">
-          <h4>Legal</h4>
-          <Link href="/legal/privacy-policy">Privacy Policy</Link>
-          <Link href="/legal/terms">Terms of Service</Link>
-          <Link href="/legal/about">About</Link>
-          <Link href="/contact">Contact</Link>
-        </div>
-
-      </div>
-
-      {/* BOTTOM BAR */}
-      <div className="footer-bottom">
-        <p>
+        <p className="legal-copyright">
           © {new Date().getFullYear()} ArsenalTalks. All rights reserved.
         </p>
+
+        <p className="legal-disclaimer">
+          ArsenalTalks is an independent Arsenal FC news publication and is not
+          affiliated with Arsenal Football Club.
+        </p>
+
       </div>
     </footer>
   );
