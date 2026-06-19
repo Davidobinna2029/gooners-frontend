@@ -1,5 +1,7 @@
-export const API_BASE = process.env.NEXT_PUBLIC_WORDPRESS_API_URL;
+const rawBase = process.env.NEXT_PUBLIC_WORDPRESS_API_URL;
 
-if (!API_BASE) {
+if (!rawBase) {
   throw new Error("Missing NEXT_PUBLIC_WORDPRESS_API_URL");
 }
+
+export const API_BASE = rawBase.replace(/\/$/, "");
