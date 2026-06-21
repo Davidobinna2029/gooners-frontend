@@ -29,18 +29,38 @@ export default async function HomePage() {
   const feed = buildHomepageFeed(posts);
 
   /**
-   * HERO (limit to 4 max, Hero already splits internally)
+   * =========================
+   * HERO SECTION (TOP PRIORITY)
+   * =========================
    */
-  const hero = feed.hero?.slice(0, 4) || [];
+  const hero = (feed.hero || []).slice(0, 4);
 
-  /**
-   * Prevent hero duplication in latest section
-   */
   const heroIds = new Set(hero.map((p) => p.id));
 
-  const latest = (feed.featured || []).filter(
+  /**
+   * =========================
+   * LATEST FEED (MAIN CONSUMPTION LAYER)
+   * =========================
+   */
+  const latestPool = (feed.featured || []).filter(
     (p) => !heroIds.has(p.id)
   );
+
+  const latest = latestPool.slice(0, 12);
+
+  /**
+   * =========================
+   * TRANSFERS (INTENT CLUSTER)
+   * =========================
+   */
+  const transfers = (feed.transfer || []).slice(0, 6);
+
+  /**
+   * =========================
+   * EDITORIAL PICKS (AUTHORITY LAYER)
+   * =========================
+   */
+  const editors = (feed.editors || []).slice(0, 6);
 
   return (
     <main className="home-page">
@@ -55,7 +75,7 @@ export default async function HomePage() {
       )}
 
       {/* =========================
-          LATEST NEWS
+          LATEST NEWS (PRIMARY FEED)
       ========================= */}
       {latest.length > 0 && (
         <section className="homepage-section">
@@ -63,7 +83,7 @@ export default async function HomePage() {
             <h2 className="section-title">Latest Arsenal News</h2>
 
             <div className="homepage-grid">
-              {latest.slice(0, 12).map((post) => (
+              {latest.map((post) => (
                 <NewsCard key={post.id} post={post} />
               ))}
             </div>
@@ -74,13 +94,13 @@ export default async function HomePage() {
       {/* =========================
           TRANSFER WATCH
       ========================= */}
-      {feed.transfer?.length > 0 && (
+      {transfers.length > 0 && (
         <section className="homepage-section">
           <div className="container">
             <h2 className="section-title">Transfer Watch</h2>
 
             <div className="homepage-grid">
-              {feed.transfer.slice(0, 6).map((post) => (
+              {transfers.map((post) => (
                 <NewsCard key={post.id} post={post} />
               ))}
             </div>
@@ -91,13 +111,13 @@ export default async function HomePage() {
       {/* =========================
           EDITOR'S PICKS
       ========================= */}
-      {feed.editors?.length > 0 && (
+      {editors.length > 0 && (
         <section className="homepage-section">
           <div className="container">
             <h2 className="section-title">Editor&apos;s Picks</h2>
 
             <div className="homepage-grid">
-              {feed.editors.slice(0, 6).map((post) => (
+              {editors.map((post) => (
                 <NewsCard key={post.id} post={post} />
               ))}
             </div>
