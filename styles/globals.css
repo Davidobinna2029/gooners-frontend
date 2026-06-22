@@ -1,5 +1,5 @@
 /* =============================================
-   GLOBAL STYLES - MOBILE-FIRST (ArsenalTalks)
+   GLOBAL STYLES - MOBILE-FIRST (Sky Sports)
    WHITE NEWSROOM THEME
 ============================================= */
 
@@ -60,97 +60,147 @@ img {
   display: block;
 }
 
-/* ========================
-   HERO SYSTEM (UNCHANGED)
-======================== */
+/* =====================================
+   SKY SPORTS HERO SYSTEM
+===================================== */
 
-.hero-magazine {
-  margin-top: 24px;
+.sky-hero {
+  margin-top: 20px;
 }
 
-.hero-grid {
+.sky-hero-grid {
   display: grid;
   gap: 20px;
-  grid-template-columns: 1fr;
 }
 
-.hero-main {
+.sky-hero-main {
   position: relative;
+  display: block;
   overflow: hidden;
-  border-radius: var(--radius-lg);
-  aspect-ratio: 16 / 10;
+  border-radius: 14px;
 }
 
-.hero-image {
+.sky-hero-image {
+  position: relative;
+  width: 100%;
+  height: 260px;
+}
+
+.sky-hero-image img {
+  transition: transform .5s ease;
+}
+
+.sky-hero-main:hover img {
+  transform: scale(1.04);
+}
+
+.sky-hero-overlay {
   position: absolute;
   inset: 0;
-}
-
-.hero-main:hover .hero-image {
-  transform: scale(1.02);
-  transition: transform 0.6s ease;
-}
-
-/* HERO OVERLAY */
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  padding: 20px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  padding: 18px;
   background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.65),
-    rgba(0, 0, 0, 0.25),
-    transparent
+    180deg,
+    rgba(0,0,0,.05) 0%,
+    rgba(0,0,0,.85) 100%
   );
-  z-index: 2;
 }
 
-.hero-overlay h1 {
-  color: #ffffff;
-  font-size: 1.75rem;
-  line-height: 1.1;
+.sky-hero-tag {
+  display: inline-flex;
+  width: fit-content;
+  background: #dc2626;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.sky-hero-overlay h1 {
+  color: white;
+  font-size: 24px;
+  line-height: 1.15;
   font-weight: 800;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
-.hero-overlay p {
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 1rem;
-  line-height: 1.5;
+.sky-hero-overlay p {
+  display: none;
 }
 
-/* SIDE STORIES */
-.hero-side {
+.sky-hero-side {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
-.hero-side-item {
+.sky-side-card {
   display: flex;
   gap: 12px;
-  background: #f3f4f6;
+  background: white;
   border-radius: 12px;
   overflow: hidden;
+  box-shadow: var(--shadow-soft);
   text-decoration: none;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-  will-change: transform;
 }
 
-.hero-side-item:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-hover);
-}
-
-.side-image {
+.sky-side-image {
   position: relative;
-  width: 140px;
-  height: 100px;
+  width: 120px;
+  height: 95px;
   flex-shrink: 0;
-  overflow: hidden;
+}
+
+.sky-side-content {
+  padding: 10px;
+}
+
+.sky-side-category {
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sky-side-content h3 {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 700;
+  color: #111827;
+}
+
+@media (min-width: 1024px) {
+  .sky-hero-grid {
+    grid-template-columns: minmax(0, 2fr) 360px;
+  }
+
+  .sky-hero-image {
+    height: 560px;
+  }
+
+  .sky-hero-overlay {
+    padding: 34px;
+  }
+
+  .sky-hero-overlay h1 {
+    font-size: 46px;
+  }
+
+  .sky-hero-overlay p {
+    display: block;
+    color: rgba(255,255,255,.9);
+    max-width: 700px;
+  }
+
+  .sky-side-image {
+    width: 140px;
+    height: 100px;
+  }
 }
 
 /* ========================
@@ -177,172 +227,149 @@ img {
   margin: 2rem 0;
 }
 
-/* ========================
-   RESPONSIVE BREAKPOINTS
-======================== */
+/* =====================================
+   SKY SPORTS NEWS CARDS
+===================================== */
 
-@media (min-width: 768px) {
-  .hero-main {
-    aspect-ratio: 16 / 9;
-  }
+.sky-news-card {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid #e5e7eb;
+  text-decoration: none;
+}
 
-  .hero-overlay h1 {
-    font-size: 2.25rem;
-  }
+.sky-news-image {
+  position: relative;
+  width: 120px;
+  height: 84px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 8px;
+}
 
-  .side-image {
-    width: 160px;
-    height: 110px;
-  }
+.sky-news-image img {
+  transition: transform .4s ease;
+}
+
+.sky-news-card:hover .sky-news-image img {
+  transform: scale(1.05);
+}
+
+.sky-news-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.sky-news-meta {
+  margin-bottom: 6px;
+}
+
+.sky-news-category {
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sky-news-title {
+  color: #111827;
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 700;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.sky-news-time {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #6b7280;
 }
 
 @media (min-width: 1024px) {
-  .hero-grid {
-    grid-template-columns: minmax(0, 1.8fr) minmax(320px, 1fr);
-  }
-
-  .hero-overlay {
-    padding: 40px;
-  }
-
-  .hero-overlay p {
-    display: block;
-    max-width: 700px;
+  .sky-news-image {
+    width: 140px;
+    height: 95px;
   }
 }
 
-@media (max-width: 767px) {
-  .hero-side-item {
-    flex-direction: column;
-  }
+/* =====================================
+   SKY SPORTS HOMEPAGE LAYOUT
+===================================== */
 
-  .side-image {
-    width: 100%;
-    height: 200px;
-  }
-
-  .hero-overlay p {
-    display: none;
-  }
+.sky-homepage {
+  width: 100%;
 }
 
-/* ========================
-   ========================
-   🆕 ESPN HOMEPAGE SYSTEM
-   ========================
-======================== */
+.homepage-shell {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: grid;
+  gap: 28px;
+}
 
-.home-page {
+.homepage-main {
   display: flex;
   flex-direction: column;
-  gap: 36px;
-  padding-bottom: 60px;
+  gap: 28px;
 }
 
-/* SECTION TITLES */
-.section-title {
-  font-size: 1.4rem;
+.homepage-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section-header {
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: -0.02em;
-  margin-bottom: 16px;
-  color: #111827;
-  position: relative;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 12px;
 }
 
-.section-title::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -6px;
-  width: 48px;
-  height: 3px;
-  background: #e50914;
-  border-radius: 2px;
+.section-header.breaking {
+  color: #dc2626;
 }
 
-/* GRID SYSTEM */
-.homepage-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-
-@media (min-width: 768px) {
-  .homepage-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .homepage-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* NEWS CARDS */
-.news-card {
-  background: #ffffff;
+.sidebar-card {
+  background: white;
   border-radius: 14px;
-  overflow: hidden;
+  padding: 16px;
   box-shadow: var(--shadow-soft);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-  text-decoration: none;
 }
 
-.news-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-hover);
+.sidebar-card h3 {
+  font-size: 14px;
+  font-weight: 800;
+  margin-bottom: 14px;
 }
 
-.news-title {
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.3;
-  padding: 12px 12px 16px;
-  color: #111827;
-}
-
-/* HERO ZONE SPACING */
-.hero-zone {
-  margin-top: 20px;
-}
-
-/* SECTION SPACING */
-.homepage-section {
-  margin-top: 20px;
-}
-
-/* MORE STORIES */
-.homepage-more {
-  text-align: center;
-  margin-top: 40px;
-}
-
-.more-stories-btn {
-  display: inline-block;
-  padding: 12px 18px;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
-  font-weight: 700;
+.sidebar-link,
+.trending-link {
+  display: block;
+  padding: 10px 0;
   color: #111827;
   text-decoration: none;
-  transition: all 0.2s ease;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.more-stories-btn:hover {
-  background: #111827;
-  color: #ffffff;
+.trending-link span {
+  color: #dc2626;
+  font-weight: 800;
+  margin-right: 8px;
 }
 
-/* IMAGE HOVER FIXES */
-.news-image img,
-.hero-image img {
-  transition: transform 0.4s ease;
-}
-
-.news-card:hover .news-image img,
-.hero-main:hover .hero-image img {
-  transform: scale(1.05);
+.transfer-hub {
+  background: linear-gradient(
+    180deg,
+    rgba(229,9,20,.05),
+    rgba(229,9,20,.12)
+  );
 }
 
 /* ========================
@@ -361,7 +388,7 @@ img {
 }
 
 /* ========================
-   HEADER SYSTEM (UNCHANGED)
+   HEADER SYSTEM
 ======================== */
 
 .site-header {
@@ -448,7 +475,6 @@ img {
   font-size: 15px;
 }
 
-/* MOBILE RULES */
 @media (max-width: 768px) {
   .nav {
     display: none;
@@ -464,7 +490,7 @@ img {
 }
 
 /* ========================
-   FOOTER SYSTEM (UNCHANGED)
+   FOOTER SYSTEM
 ======================== */
 
 .legal-footer {
@@ -503,4 +529,14 @@ img {
   font-size: 12px;
   line-height: 1.5;
   max-width: 700px;
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1320px;
+  }
+
+  .homepage-shell {
+    grid-template-columns: minmax(0, 2fr) 340px;
+  }
 }

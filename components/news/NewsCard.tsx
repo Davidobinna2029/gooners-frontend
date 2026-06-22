@@ -2,28 +2,53 @@ import Image from "next/image";
 import Link from "next/link";
 import type { CanonicalPost } from "@/types/content";
 
-export default function NewsCard({ post }: { post: CanonicalPost }) {
+export default function NewsCard({
+  post,
+}: {
+  post: CanonicalPost;
+}) {
   const imageUrl =
     post.image?.url?.trim() ||
     "https://via.placeholder.com/800x450?text=ArsenalTalks";
 
-  return (
-    <Link href={`/news/${post.slug}`} className="news-card block">
+  const category =
+    post.category ||
+    "Arsenal News";
 
-      <div className="news-image relative overflow-hidden aspect-video bg-gray-100">
+  return (
+    <Link
+      href={`/news/${post.slug}`}
+      className="sky-news-card"
+    >
+      {/* IMAGE */}
+      <div className="sky-news-image">
         <Image
           src={imageUrl}
           alt={post.title}
           fill
-          className="object-cover transition-transform duration-300"
-          sizes="(max-width:768px) 100vw, 33vw"
+          className="object-cover"
+          sizes="120px"
         />
       </div>
 
-      <h3 className="news-title line-clamp-2">
-        {post.title}
-      </h3>
+      {/* CONTENT */}
+      <div className="sky-news-content">
 
+        <div className="sky-news-meta">
+          <span className="sky-news-category">
+            {category}
+          </span>
+        </div>
+
+        <h3 className="sky-news-title">
+          {post.title}
+        </h3>
+
+        <div className="sky-news-time">
+          Latest Arsenal News
+        </div>
+
+      </div>
     </Link>
   );
 }

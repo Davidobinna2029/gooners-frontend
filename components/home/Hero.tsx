@@ -13,15 +13,18 @@ export default function Hero({ featured }: Props) {
   const side = featured.slice(1, 4);
 
   return (
-    <section className="hero-magazine">
-      <div className="container hero-grid">
+    <section className="sky-hero">
+      <div className="container">
 
-        {/* MAIN STORY */}
-        <div className="hero-main">
-          <Link href={`/news/${main.slug}`} className="hero-link">
+        <div className="sky-hero-grid">
 
+          {/* MAIN HERO */}
+          <Link
+            href={`/news/${main.slug}`}
+            className="sky-hero-main"
+          >
             {main.image?.url && (
-              <div className="hero-image">
+              <div className="sky-hero-image">
                 <Image
                   src={main.image.url}
                   alt={main.title}
@@ -33,40 +36,56 @@ export default function Hero({ featured }: Props) {
               </div>
             )}
 
-            <div className="hero-overlay">
+            <div className="sky-hero-overlay">
+
+              <div className="sky-hero-tag">
+                BREAKING
+              </div>
+
               <h1>{main.title}</h1>
 
-              {main.excerpt && <p>{main.excerpt}</p>}
-            </div>
-
-          </Link>
-        </div>
-
-        {/* SIDE STORIES */}
-        <div className="hero-side">
-          {side.map((post) => (
-            <Link
-              key={post.id}
-              href={`/news/${post.slug}`}
-              className="hero-side-item"
-            >
-              {post.image?.url && (
-                <div className="side-image">
-                  <Image
-                    src={post.image.url}
-                    alt={post.title}
-                    fill
-                    sizes="(max-width:768px) 100vw, 300px"
-                    className="object-cover"
-                  />
-                </div>
+              {main.excerpt && (
+                <p>{main.excerpt}</p>
               )}
 
-              <div className="side-text">
-                <h3>{post.title}</h3>
-              </div>
-            </Link>
-          ))}
+            </div>
+          </Link>
+
+          {/* SECONDARY STORIES */}
+          <div className="sky-hero-side">
+
+            {side.map((post) => (
+              <Link
+                key={post.id}
+                href={`/news/${post.slug}`}
+                className="sky-side-card"
+              >
+                {post.image?.url && (
+                  <div className="sky-side-image">
+                    <Image
+                      src={post.image.url}
+                      alt={post.title}
+                      fill
+                      sizes="300px"
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+
+                <div className="sky-side-content">
+
+                  <span className="sky-side-category">
+                    Arsenal
+                  </span>
+
+                  <h3>{post.title}</h3>
+
+                </div>
+              </Link>
+            ))}
+
+          </div>
+
         </div>
 
       </div>
