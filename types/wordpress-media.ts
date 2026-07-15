@@ -4,11 +4,56 @@ export interface WordPressMediaSize {
   height?: number;
 }
 
+export interface WordPressAuthor {
+  id?: number;
+  name?: string;
+  slug?: string;
+}
+
+export interface WordPressTerm {
+  id?: number;
+  name?: string;
+  taxonomy?: string;
+}
+
+export interface WordPressFeaturedMedia {
+  id?: number;
+  source_url?: string;
+
+  media_details?: {
+    width?: number;
+    height?: number;
+
+    sizes?: Record<
+      string,
+      WordPressMediaSize
+    >;
+  };
+}
+
 export interface WordPressPostWithMedia {
+  /**
+   * =========================
+   * CORE POST DATA
+   * =========================
+   */
   id: number;
+
   slug: string;
+
   date: string;
 
+  modified?: string;
+
+  author?: number;
+
+  sticky?: boolean;
+
+  /**
+   * =========================
+   * RENDERED CONTENT
+   * =========================
+   */
   title?: {
     rendered?: string;
   };
@@ -21,15 +66,20 @@ export interface WordPressPostWithMedia {
     rendered?: string;
   };
 
+  /**
+   * =========================
+   * TAXONOMIES
+   * =========================
+   */
   categories?: number[];
+
   tags?: number[];
 
   /**
    * =========================
-   * CORE WORDPRESS META
+   * WORDPRESS META
    * =========================
    */
-
   guid?: {
     rendered?: string;
   };
@@ -38,20 +88,23 @@ export interface WordPressPostWithMedia {
 
   /**
    * =========================
-   * FEATURED MEDIA (PRIMARY IMAGE SYSTEM)
+   * EMBEDDED RELATIONSHIPS
    * =========================
    */
   _embedded?: {
-    "wp:featuredmedia"?: Array<{
-      id?: number;
-      source_url?: string;
+    /**
+     * Featured Image
+     */
+    "wp:featuredmedia"?: WordPressFeaturedMedia[];
 
-      media_details?: {
-        width?: number;
-        height?: number;
+    /**
+     * Authors
+     */
+    author?: WordPressAuthor[];
 
-        sizes?: Record<string, WordPressMediaSize>;
-      };
-    }>;
+    /**
+     * Categories / Tags
+     */
+    "wp:term"?: WordPressTerm[][];
   };
 }

@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  WRITER
+  EDITOR
+  ADMIN
+  OWNER
+}
+
+enum WorkflowStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  PUBLISHED
+  REJECTED
+}
+
+enum OverrideType {
+  PIN_TO_HERO
+  HERO_POSITION
+  FORCE_BREAKING
+  BOOST_SCORE
+  BLOCK_POST
+  HIDE_POST
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(WRITER)
+  createdAt DateTime @default(now())
+
+  audits AuditLog[]
+}
+
+model Workflow {
+  id         String         @id @default(cuid())
+  postId     Int            @unique
+  status     WorkflowStatus
+  updatedBy  String
+  updatedAt  DateTime       @updatedAt
+}
+
+model Override {
+  id         String       @id @default(cuid())
+  postId     Int
+  type       OverrideType
+  value      Int?
+  reason     String?
+  createdBy  String
+  createdAt  DateTime     @default(now())
+  expiresAt  DateTime?
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  targetId  Int?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model HomepageLayout {
+  id          String   @id @default(cuid())
+  name        String   @default("Homepage Draft")
+  status      String   @default("draft")
+  layout      Json
+  createdBy   String?
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model HomepageDraft {
+  id          String   @id @default(cuid())
+  name        String
+  layout      Json
+  createdBy   String
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model HomepagePublication {
+  id            String   @id @default(cuid())
+
+  draftId       String?
+
+  title         String   @default("Homepage Publish")
+
+  layout        Json
+
+  publishedBy   String
+
+  publishedAt   DateTime @default(now())
+
+  restoredFrom  String?
+
+  notes         String?
+
+  /// Scheduled publish time.
+  /// If null, publication is immediately live.
+  scheduledFor  DateTime?
+
+  /// Current publication status.
+  /// Examples:
+  /// - published
+  /// - scheduled
+  /// - cancelled
+  status        String   @default("published")
+}
+
+model HomepageEditingSession {
+  id         String   @id @default(cuid())
+
+  layout     Json
+
+  editor     String
+
+  active     Boolean  @default(true)
+
+  createdAt  DateTime @default(now())
+
+  updatedAt  DateTime @updatedAt
+}

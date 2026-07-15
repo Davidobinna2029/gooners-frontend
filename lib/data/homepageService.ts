@@ -1,29 +1,72 @@
-// lib/data/HomepageService.ts
-
-import { getPosts } from "@/lib/api/wordpress";
-import { mapWordPressPosts } from "@/lib/mappers/wordpressMapper";
 import { buildHomepageFeed } from "@/lib/orchestrator/homepage";
-import { rankTrending } from "@/lib/orchestrator/trending";
 
-export async function getHomepageData() {
-  // 1. Fetch raw WordPress data safely
-  const rawPosts = await getPosts().catch(() => []);
+import {
+  getHomepageCache,
+  setHomepageCache,
+} from "@/lib/homepage/cache";
 
-  // 2. Normalize FIRST (critical fix)
-  const normalizedPosts = mapWordPressPosts(rawPosts || []);
+export async function buildHomepage() {
+  /**
+   * Serve valid cache immediately
+   */
+  const cached =
+    getHomepageCache();
 
-  // 3. SINGLE SOURCE OF TRUTH FEED ENGINE
-  const feed = buildHomepageFeed(normalizedPosts);
+  if (cached) {
+    console.log(
+      "Serving homepage from cache."
+    );
 
-  // 4. Trending is derived separately (OK)
-  const trending = rankTrending(normalizedPosts);
+    return {
+      ...cached,
+      lastUpdated: new Date(),
+      cached: true,
+    };
+  }
 
-  return {
-    posts: feed.hero,        // or feed.breaking if needed
-    breaking: feed.breaking,
-    trending,
-    editors: feed.editors,
-    transfer: feed.transfer,
-    featured: feed.featured,
-  };
+  console.log(
+    "Building homepage..."
+  );
+
+  try {
+    const feed =
+      await buildHomepageFeed();
+
+    /**
+     * Save successful homepage
+     */
+    setHomepageCache(feed);
+
+    return {
+      ...feed,
+      lastUpdated: new Date(),
+      cached: false,
+    };
+  } catch (error) {
+    console.error(
+      "Homepage build failed:",
+      error
+    );
+
+    /**
+     * One last attempt to return cache
+     */
+    const fallback =
+      getHomepageCache();
+
+    if (fallback) {
+      console.log(
+        "Serving stale homepage cache."
+      );
+
+      return {
+        ...fallback,
+        lastUpdated: new Date(),
+        cached: true,
+        stale: true,
+      };
+    }
+
+    throw error;
+  }
 }

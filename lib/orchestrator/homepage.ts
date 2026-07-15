@@ -1,128 +1,259 @@
-import type { CanonicalPost } from "@/types/content";
-import { clusterPosts } from "@/lib/engine/clusterPost";
+import { prisma } from "@/lib/db/prisma";
+import { getPosts } from "@/lib/api/wordpress";
+import { mapWordPressPosts } from "@/lib/mappers/wordpressMapper";
+import { applyOverrides } from "@/lib/editorial/overrides";
+import { buildHero } from "@/lib/homepage/hero";
+import { buildBreaking } from "@/lib/homepage/breaking";
+import { buildTrending } from "@/lib/homepage/trending";
+import { buildLatest } from "@/lib/homepage/latest";
+import { getPublishedHomepage } from "@/lib/homepage/publication";
+import { mergePublication } from "@/lib/homepage/mergePublication";
 
-export interface HomepageFeed {
-  hero: CanonicalPost[];
-  breaking: CanonicalPost[];
-  trending: CanonicalPost[];
-  editors: CanonicalPost[];
-  transfer: CanonicalPost[];
-  featured: CanonicalPost[];
+import {
+  buildHomepageLayout,
+  type HomepageLayout,
+} from "@/lib/homepage/layout";
+
+import {
+  rankPosts,
+} from "@/lib/engine/ranking";
+
+async function safeFetch<T>(
+  promise: Promise<T>,
+  fallback: T
+): Promise<T> {
+  try {
+    return await promise;
+  } catch (error) {
+    console.error(
+      "safeFetch error:",
+      error
+    );
+
+    return fallback;
+  }
 }
 
-/**
- * =========================
- * HELPERS
- * =========================
- */
+export type HomepageFeed =
+  HomepageLayout;
 
-function take(posts: CanonicalPost[], n: number) {
-  return posts.slice(0, n);
-}
+export async function buildHomepageFeed(): Promise<HomepageFeed> {
+  /**
+   * -------------------------------------------------------
+   * FETCH WORDPRESS POSTS
+   * -------------------------------------------------------
+   */
 
-/**
- * IMAGE-VALID POSTS ONLY
- */
-function withImages(posts: CanonicalPost[]) {
-  return posts.filter((p) => Boolean(p.image?.url));
-}
+  const rawPosts =
+    await safeFetch(
+      getPosts(),
+      []
+    );
 
-/**
- * GLOBAL DEDUP (CRITICAL FIX)
- */
-function uniqueById(posts: CanonicalPost[]) {
-  const seen = new Set<number>();
-
-  return posts.filter((p) => {
-    if (seen.has(p.id)) return false;
-    seen.add(p.id);
-    return true;
-  });
-}
-
-/**
- * SORT BY SCORE
- */
-function sortByScore(posts: CanonicalPost[]) {
-  return [...posts].sort(
-    (a, b) => (b.score ?? 0) - (a.score ?? 0)
+  console.log(
+    "RAW POSTS:",
+    Array.isArray(rawPosts)
+      ? rawPosts.length
+      : 0
   );
-}
 
-/**
- * =========================
- * MAIN ORCHESTRATOR
- * =========================
- */
-export function buildHomepageFeed(posts: CanonicalPost[]): HomepageFeed {
-  const clusters = clusterPosts(posts);
+  const posts =
+    mapWordPressPosts(
+      Array.isArray(rawPosts)
+        ? rawPosts
+        : []
+    );
 
-  /**
-   * PREP BASE POOLS (DEDUPED ONCE)
-   */
-  const arsenal = uniqueById(withImages(clusters.arsenal));
-  const match = uniqueById(withImages(clusters.match));
-  const transfers = uniqueById(withImages(clusters.transfers));
-  const injury = uniqueById(withImages(clusters.injury));
-
-  const all = uniqueById(withImages(posts));
-
-  /**
-   * HERO (TOP PRIORITY CONTENT)
-   */
-  const hero = take(
-    sortByScore([...arsenal, ...match]),
-    5
+  console.log(
+    "MAPPED POSTS:",
+    posts.length
   );
 
   /**
-   * BREAKING
+   * -------------------------------------------------------
+   * LOAD ACTIVE OVERRIDES
+   * -------------------------------------------------------
    */
-  const breaking = take(
-    sortByScore([...injury, ...transfers]),
-    8
+
+  const overrides =
+    await safeFetch(
+      prisma.override.findMany({
+        where: {
+          OR: [
+            {
+              expiresAt: null,
+            },
+            {
+              expiresAt: {
+                gt: new Date(),
+              },
+            },
+          ],
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+      []
+    );
+
+  /**
+   * -------------------------------------------------------
+   * LOAD WORKFLOWS
+   * -------------------------------------------------------
+   */
+
+  const workflows =
+    await safeFetch(
+      prisma.workflow.findMany(),
+      []
+    );
+
+  console.log(
+    "OVERRIDES:",
+    overrides.length
+  );
+
+  console.log(
+    "WORKFLOWS:",
+    workflows.length
   );
 
   /**
-   * TRENDING
+   * -------------------------------------------------------
+   * APPLY EDITORIAL OVERRIDES
+   * -------------------------------------------------------
    */
-  const trending = take(
-    sortByScore(all.filter((p) => (p.score ?? 0) >= 40)),
-    10
+
+  const overriddenPosts =
+    applyOverrides(
+      posts,
+      overrides
+    );
+
+  /**
+   * -------------------------------------------------------
+   * RANK POSTS
+   * -------------------------------------------------------
+   */
+
+  const ranked =
+    rankPosts(
+      overriddenPosts,
+      workflows,
+      overrides
+    );
+
+  console.log(
+    "RANKED POSTS:",
+    ranked.length
   );
 
   /**
-   * EDITORS PICKS
+   * -------------------------------------------------------
+   * HERO ENGINE
+   * -------------------------------------------------------
    */
-  const editors = take(
-    sortByScore(
-      all.filter((p) => (p.score ?? 0) >= 60)
-    ),
-    6
+
+  const hero =
+    buildHero(ranked);
+
+  const usedPostIds =
+    new Set(
+      hero.map(
+        (post) => post.id
+      )
+    );
+
+  /**
+   * -------------------------------------------------------
+   * BREAKING ENGINE
+   * -------------------------------------------------------
+   */
+
+  const breaking =
+    buildBreaking(
+      ranked,
+      overrides
+    );
+
+  /**
+   * -------------------------------------------------------
+   * TRENDING ENGINE
+   * -------------------------------------------------------
+   */
+
+  const trending =
+    buildTrending(
+      ranked,
+      usedPostIds
+    );
+
+  /**
+   * -------------------------------------------------------
+   * LATEST ENGINE
+   * -------------------------------------------------------
+   */
+
+  const latest =
+    buildLatest(
+      ranked
+    );
+
+  console.log(
+    "HERO:",
+    hero.map(
+      (post) => post.id
+    )
+  );
+
+  console.log(
+    "BREAKING:",
+    breaking.length
+  );
+
+  console.log(
+    "TRENDING:",
+    trending.length
+  );
+
+  console.log(
+    "LATEST:",
+    latest.length
   );
 
   /**
-   * TRANSFERS
+   * -------------------------------------------------------
+   * BUILD AUTOMATIC HOMEPAGE
+   * -------------------------------------------------------
    */
-  const transfer = take(
-    sortByScore(transfers),
-    8
-  );
+
+  const automatic =
+    buildHomepageLayout({
+      hero,
+      breaking,
+      trending,
+      latest,
+      all: ranked,
+    });
 
   /**
-   * FEATURED (GLOBAL UNIQUE POOL ONLY)
+   * -------------------------------------------------------
+   * LOAD PUBLISHED EDITORIAL LAYOUT
+   * -------------------------------------------------------
    */
-  const featured = take(
-    sortByScore(all),
-    18
-  );
 
-  return {
-    hero,
-    breaking,
-    trending,
-    editors,
-    transfer,
-    featured,
-  };
+  const published =
+    await getPublishedHomepage();
+
+  /**
+   * -------------------------------------------------------
+   * MERGE AUTOMATIC + EDITORIAL HOMEPAGE
+   * -------------------------------------------------------
+   */
+
+  return mergePublication(
+    automatic,
+    published
+  );
 }

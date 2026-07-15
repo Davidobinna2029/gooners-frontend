@@ -1,0 +1,553 @@
+/* =========================================
+ARSENALTALKS NEWSROOM ADMIN SYSTEM
+========================================= */
+
+.admin-shell {
+display: grid;
+grid-template-columns: 260px 1fr;
+min-height: 100vh;
+background: #f5f7fa;
+}
+
+/* =========================================
+SIDEBAR
+========================================= */
+
+.admin-sidebar {
+background: #111827;
+color: #fff;
+padding: 24px;
+display: flex;
+flex-direction: column;
+}
+
+.admin-sidebar h2 {
+margin: 0 0 24px;
+font-size: 22px;
+font-weight: 700;
+}
+
+.admin-sidebar nav {
+display: flex;
+flex-direction: column;
+gap: 12px;
+}
+
+.admin-sidebar a {
+color: #fff;
+text-decoration: none;
+padding: 10px 12px;
+border-radius: 8px;
+transition: 0.2s;
+opacity: 0.9;
+}
+
+.admin-sidebar a:hover {
+background: rgba(255,255,255,0.1);
+opacity: 1;
+}
+
+/* =========================================
+MAIN AREA
+========================================= */
+
+.admin-main {
+padding: 24px;
+overflow-x: hidden;
+}
+
+.admin-container {
+width: 100%;
+max-width: 1600px;
+margin: 0 auto;
+}
+
+.admin-header {
+margin-bottom: 24px;
+}
+
+.admin-header h1 {
+margin: 0;
+font-size: 34px;
+font-weight: 800;
+}
+
+.admin-header p {
+color: #6b7280;
+margin-top: 8px;
+}
+
+/* =========================================
+NEWSROOM STATS
+========================================= */
+
+.newsroom-stats {
+display: grid;
+grid-template-columns: repeat(
+auto-fit,
+minmax(180px, 1fr)
+);
+gap: 16px;
+margin-bottom: 24px;
+}
+
+.newsroom-stat-card {
+background: #fff;
+border: 1px solid #e5e7eb;
+border-radius: 14px;
+padding: 20px;
+box-shadow: 0 1px 2px rgba(0,0,0,.04);
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+
+.newsroom-stat-card span {
+color: #6b7280;
+font-size: 13px;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: .04em;
+}
+
+.newsroom-stat-card strong {
+font-size: 30px;
+font-weight: 800;
+color: #111827;
+line-height: 1;
+}
+
+.newsroom-stat-card:nth-child(1) {
+border-left: 4px solid #2563eb;
+}
+
+.newsroom-stat-card:nth-child(2) {
+border-left: 4px solid #6b7280;
+}
+
+.newsroom-stat-card:nth-child(3) {
+border-left: 4px solid #f59e0b;
+}
+
+.newsroom-stat-card:nth-child(4) {
+border-left: 4px solid #16a34a;
+}
+
+.newsroom-stat-card:nth-child(5) {
+border-left: 4px solid #8b5cf6;
+}
+
+.newsroom-stat-card:nth-child(6) {
+border-left: 4px solid #dc2626;
+}
+
+.newsroom-stat-card:nth-child(7) {
+border-left: 4px solid #0891b2;
+}
+
+/* =========================================
+GRID
+========================================= */
+
+.admin-grid {
+display: grid;
+grid-template-columns: 1fr 320px;
+gap: 24px;
+}
+
+.admin-main > * {
+margin-bottom: 24px;
+}
+
+/* =========================================
+CARDS
+========================================= */
+
+.admin-card {
+background: #fff;
+border: 1px solid #e5e7eb;
+border-radius: 14px;
+padding: 20px;
+box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+
+.admin-card h2,
+.admin-card h3 {
+margin-top: 0;
+}
+
+/* =========================================
+BUTTONS
+========================================= */
+
+button {
+cursor: pointer;
+border: none;
+border-radius: 8px;
+padding: 10px 14px;
+font-weight: 600;
+background: #dc2626;
+color: white;
+transition: 0.2s;
+}
+
+button:hover:not(:disabled) {
+opacity: 0.9;
+}
+
+button:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+
+/* =========================================
+INPUTS
+========================================= */
+
+input,
+select,
+textarea {
+width: 100%;
+padding: 10px 12px;
+border: 1px solid #d1d5db;
+border-radius: 8px;
+background: white;
+font-size: 14px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+outline: none;
+border-color: #dc2626;
+}
+
+/* =========================================
+WORKFLOW BOARD
+========================================= */
+
+.workflow-board {
+display: flex;
+flex-direction: column;
+gap: 16px;
+}
+
+.workflow-card {
+background: white;
+border: 1px solid #e5e7eb;
+border-radius: 12px;
+padding: 16px;
+}
+
+.workflow-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.workflow-meta {
+margin-top: 10px;
+font-size: 14px;
+color: #6b7280;
+}
+
+.workflow-actions {
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+margin-top: 16px;
+}
+
+.workflow-column {
+background: white;
+border-radius: 12px;
+border: 1px solid #e5e7eb;
+padding: 16px;
+}
+
+.workflow-column-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.workflow-count {
+background: #f3f4f6;
+padding: 4px 10px;
+border-radius: 999px;
+font-size: 12px;
+font-weight: 700;
+}
+
+.workflow-column-content {
+display: flex;
+flex-direction: column;
+gap: 12px;
+margin-top: 16px;
+}
+
+.workflow-empty {
+text-align: center;
+color: #6b7280;
+padding: 20px;
+border: 1px dashed #d1d5db;
+border-radius: 10px;
+margin-top: 16px;
+}
+
+/* =========================================
+STATUS PILLS
+========================================= */
+
+.workflow-status {
+padding: 4px 10px;
+border-radius: 999px;
+font-size: 12px;
+font-weight: 700;
+}
+
+.workflow-draft {
+background: #f3f4f6;
+}
+
+.workflow-in_review {
+background: #fef3c7;
+}
+
+.workflow-approved {
+background: #dbeafe;
+}
+
+.workflow-published {
+background: #dcfce7;
+}
+
+.workflow-rejected {
+background: #fee2e2;
+}
+
+/* =========================================
+OVERRIDES
+========================================= */
+
+.override-form {
+display: grid;
+gap: 12px;
+}
+
+.override-list {
+margin-top: 20px;
+}
+
+.override-item {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 12px 0;
+border-bottom: 1px solid #eee;
+}
+
+/* =========================================
+ANALYTICS
+========================================= */
+
+.analytics-grid {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 16px;
+}
+
+.analytics-grid > div {
+background: #f9fafb;
+border-radius: 10px;
+padding: 14px;
+}
+
+/* =========================================
+TIMELINE
+========================================= */
+
+.timeline-row {
+border-bottom: 1px solid #eee;
+padding: 12px 0;
+}
+
+.timeline-row:last-child {
+border-bottom: none;
+}
+
+/* =========================================
+AUDIT LOGS
+========================================= */
+
+.audit-row {
+border-bottom: 1px solid #eee;
+padding: 16px 0;
+}
+
+.audit-header {
+display: flex;
+justify-content: space-between;
+margin-bottom: 10px;
+}
+
+.audit-meta pre {
+overflow-x: auto;
+font-size: 12px;
+background: #f9fafb;
+padding: 10px;
+border-radius: 8px;
+}
+
+/* =========================================
+PREVIEW
+========================================= */
+
+.preview-section {
+margin-top: 20px;
+}
+
+.preview-section h3 {
+margin-bottom: 10px;
+}
+
+/* =========================================
+LIVE NEWSROOM
+========================================= */
+
+.live-panel {
+display: flex;
+flex-direction: column;
+gap: 20px;
+}
+
+.live-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.status.connected {
+color: #16a34a;
+}
+
+.status.disconnected {
+color: #dc2626;
+}
+
+.event-card {
+border: 1px solid #e5e7eb;
+border-radius: 10px;
+padding: 12px;
+margin-bottom: 10px;
+}
+
+.event-card.breaking {
+border-color: #dc2626;
+}
+
+/* =========================================
+MOBILE
+========================================= */
+
+@media (max-width: 1200px) {
+.admin-grid {
+grid-template-columns: 1fr;
+}
+
+.analytics-grid {
+grid-template-columns: repeat(2, 1fr);
+}
+}
+
+@media (max-width: 900px) {
+.admin-shell {
+grid-template-columns: 1fr;
+}
+
+.admin-sidebar {
+padding: 16px;
+}
+
+.admin-main {
+padding: 16px;
+}
+}
+
+@media (max-width: 640px) {
+.analytics-grid {
+grid-template-columns: 1fr;
+}
+
+.workflow-actions {
+flex-direction: column;
+}
+
+.newsroom-stats {
+grid-template-columns: 1fr;
+}
+}
+/* =========================================
+QUICK ACTIONS
+========================================= */
+
+.quick-actions-grid {
+display: grid;
+grid-template-columns: repeat(
+auto-fit,
+minmax(220px, 1fr)
+);
+gap: 16px;
+margin-top: 16px;
+}
+
+.quick-action-card {
+display: block;
+text-decoration: none;
+color: inherit;
+
+background: #fff;
+border: 1px solid #e5e7eb;
+border-radius: 12px;
+
+padding: 18px;
+
+transition:
+transform 0.15s ease,
+box-shadow 0.15s ease,
+border-color 0.15s ease;
+}
+
+.quick-action-card:hover {
+transform: translateY(-2px);
+
+border-color: #dc2626;
+
+box-shadow:
+0 8px 20px
+rgba(0, 0, 0, 0.08);
+}
+
+.quick-action-card h3 {
+margin: 0 0 8px;
+font-size: 18px;
+font-weight: 700;
+color: #111827;
+}
+
+.quick-action-card p {
+margin: 0;
+color: #6b7280;
+font-size: 14px;
+line-height: 1.5;
+}
+
+/* =========================================
+QUICK ACTIONS MOBILE
+========================================= */
+
+@media (max-width: 640px) {
+.quick-actions-grid {
+grid-template-columns: 1fr;
+}
+}

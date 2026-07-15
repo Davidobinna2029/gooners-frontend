@@ -12,15 +12,18 @@ export default function NewsCard({
     "https://via.placeholder.com/800x450?text=ArsenalTalks";
 
   const category =
-    post.category ||
-    "Arsenal News";
+    post.cluster
+      ? post.cluster
+          .charAt(0)
+          .toUpperCase() +
+        post.cluster.slice(1)
+      : "Arsenal News";
 
   return (
     <Link
       href={`/news/${post.slug}`}
       className="sky-news-card"
     >
-      {/* IMAGE */}
       <div className="sky-news-image">
         <Image
           src={imageUrl}
@@ -31,9 +34,7 @@ export default function NewsCard({
         />
       </div>
 
-      {/* CONTENT */}
       <div className="sky-news-content">
-
         <div className="sky-news-meta">
           <span className="sky-news-category">
             {category}
@@ -47,7 +48,6 @@ export default function NewsCard({
         <div className="sky-news-time">
           Latest Arsenal News
         </div>
-
       </div>
     </Link>
   );

@@ -5,6 +5,7 @@ import Script from "next/script";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import AuthProvider from "@/components/providers/SessionProvider";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://arsenaltalks.com"),
@@ -64,18 +65,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7096777123439259"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
+        <AuthProvider>
+          <Script
+            async
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7096777123439259"
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
 
-        <Header />
+          <Header />
 
-        <main>{children}</main>
+          <main>{children}</main>
 
-        <Footer />
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

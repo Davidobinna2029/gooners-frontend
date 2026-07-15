@@ -1,8 +1,13 @@
 import { wpFetch } from "./core/wpFetch";
+import { buildPostsQuery } from "./postsQuery";
 
 export async function getLatestPosts(perPage = 12) {
   return wpFetch<any[]>(
-    `/posts?_embed=1&per_page=${perPage}&orderby=date&order=desc`,
+    buildPostsQuery({
+      perPage,
+      orderBy: "date",
+      order: "desc",
+    }),
     {
       revalidate: 60,
     }
@@ -11,7 +16,7 @@ export async function getLatestPosts(perPage = 12) {
 
 export async function getPostBySlug(slug: string) {
   const posts = await wpFetch<any[]>(
-    `/posts?slug=${slug}&_embed=1`,
+    buildPostsQuery({ slug }),
     {
       revalidate: 300,
     }
@@ -35,7 +40,11 @@ export async function getRelatedPosts(
   perPage = 4
 ) {
   return wpFetch<any[]>(
-    `/posts?categories=${categoryId}&exclude=${excludeId}&_embed=1&per_page=${perPage}`,
+    buildPostsQuery({
+      category: categoryId,
+      exclude: [excludeId],
+      perPage,
+    }),
     {
       revalidate: 300,
     }
@@ -44,7 +53,11 @@ export async function getRelatedPosts(
 
 export async function getRecentPosts(perPage = 5) {
   return wpFetch<any[]>(
-    `/posts?_embed=1&per_page=${perPage}`,
+    buildPostsQuery({
+      perPage,
+      orderBy: "date",
+      order: "desc",
+    }),
     {
       revalidate: 60,
     }
