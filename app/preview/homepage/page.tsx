@@ -1,6 +1,10 @@
-import HomepageRenderer from "@/components/home/HomepageRenderer";
+// app/preview/homepage/page.tsx
 
+import HomepageRenderer from "@/components/home/HomepageRenderer";
 import { buildPreviewFeed } from "@/lib/orchestrator/previewHomepage";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function HomepagePreviewPage() {
   const feed = await buildPreviewFeed();
