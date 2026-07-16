@@ -1,25 +1,29 @@
+// components/sports/LiveBadge.tsx
+
 import type { Match } from "@/lib/football/types/match";
+
+import { FootballBadge } from "@/src/design-system";
 
 interface Props {
   match: Match;
 }
 
+const liveStatuses = [
+  "LIVE",
+  "IN_PLAY",
+  "PAUSED",
+] as const;
+
 export default function LiveBadge({
   match,
 }: Props) {
-  const liveStatuses = [
-    "LIVE",
-    "IN_PLAY",
-    "PAUSED",
-  ];
-
-  if (!liveStatuses.includes(match.status)) {
+  if (!liveStatuses.includes(match.status as (typeof liveStatuses)[number])) {
     return null;
   }
 
   return (
-    <span className="rounded bg-red-600 px-2 py-1 text-xs font-bold text-white">
-      LIVE
-    </span>
+    <FootballBadge
+      status="LIVE"
+    />
   );
 }
