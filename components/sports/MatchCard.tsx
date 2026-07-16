@@ -4,6 +4,8 @@ import Link from "next/link";
 
 import type { Match } from "@/lib/football/types/match";
 
+import { FootballCard } from "@/src/design-system";
+
 import LiveBadge from "./LiveBadge";
 import MatchClock from "./MatchClock";
 
@@ -19,7 +21,7 @@ export default function MatchCard({
       href={`/match/${match.id}`}
       className="block"
     >
-      <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+      <FootballCard className="p-5 transition-shadow hover:shadow-md">
         <div className="mb-4 flex items-center justify-between">
           <span className="text-sm text-gray-500">
             {match.competition.name}
@@ -30,7 +32,6 @@ export default function MatchCard({
 
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
           {/* Home */}
-
           <div className="text-center">
             {match.homeTeam.crest && (
               <img
@@ -46,7 +47,6 @@ export default function MatchCard({
           </div>
 
           {/* Score */}
-
           <div className="text-center">
             <div className="text-2xl font-bold">
               {match.score.home}
@@ -64,7 +64,6 @@ export default function MatchCard({
           </div>
 
           {/* Away */}
-
           <div className="text-center">
             {match.awayTeam.crest && (
               <img
@@ -79,7 +78,7 @@ export default function MatchCard({
             </p>
           </div>
         </div>
-      </article>
+      </FootballCard>
     </Link>
   );
 }
