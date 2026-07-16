@@ -3,45 +3,44 @@
 import type { Match } from "@/lib/football/types/match";
 import type { MatchStatistic } from "@/lib/football/advancedProvider";
 
+import {
+  FootballSection,
+  FootballStat,
+} from "@/src/design-system";
+
+import EmptyState from "@/src/design-system/ui/EmptyState";
+
 interface Props {
   match: Match;
   statistics?: MatchStatistic[];
 }
 
 export default function MatchStatistics({
-  match,
   statistics = [],
 }: Props) {
   if (!statistics.length) {
     return (
-      <section className="match-statistics">
-        <h3>Statistics</h3>
-
-        <p>
-          Statistics not available.
-        </p>
-      </section>
+      <FootballSection title="Match Statistics">
+        <EmptyState
+          title="No Statistics"
+          description="Statistics are not available for this match."
+        />
+      </FootballSection>
     );
   }
 
   return (
-    <section className="match-statistics">
-      <h3>Statistics</h3>
-
-      <div className="statistics-list">
+    <FootballSection title="Match Statistics">
+      <div className="grid gap-4 md:grid-cols-2">
         {statistics.map((stat, index) => (
-          <article
+          <FootballStat
             key={`${stat.type}-${index}`}
-            className="statistic-row"
-          >
-            <span>{stat.home}</span>
-
-            <span>{stat.type}</span>
-
-            <span>{stat.away}</span>
-          </article>
+            label={stat.type}
+            homeValue={stat.home}
+            awayValue={stat.away}
+          />
         ))}
       </div>
-    </section>
+    </FootballSection>
   );
 }
