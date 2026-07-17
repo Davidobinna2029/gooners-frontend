@@ -2,8 +2,13 @@
 
 import type { Match } from "@/lib/football/types/match";
 
-import LiveBadge from "@/components/sports/LiveBadge";
 import MatchClock from "@/components/sports/MatchClock";
+
+import {
+  FootballHero,
+  FootballScore,
+  FootballTeamHeader,
+} from "@/src/design-system";
 
 interface Props {
   match: Match;
@@ -13,64 +18,41 @@ export default function MatchScoreboard({
   match,
 }: Props) {
   return (
-    <section className="match-scoreboard rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-      <div className="mb-5 flex items-center justify-between">
-        <LiveBadge match={match} />
-
-        <MatchClock match={match} />
-      </div>
-
-      <div className="grid grid-cols-3 items-center text-center">
-        {/* Home Team */}
-
-        <div>
-          {match.homeTeam.crest && (
-            <img
-              src={match.homeTeam.crest}
-              alt={match.homeTeam.name}
-              className="mx-auto mb-3 h-16 w-16 object-contain"
-            />
-          )}
-
-          <h3 className="font-semibold">
-            {match.homeTeam.name}
-          </h3>
+    <FootballHero
+      title={`${match.homeTeam.name} vs ${match.awayTeam.name}`}
+      subtitle={match.competition.name}
+      status={match.status}
+      home={
+        <FootballTeamHeader
+          name={match.homeTeam.name}
+          crest={match.homeTeam.crest}
+          size="lg"
+        />
+      }
+      center={
+        <FootballScore
+          home={match.score.home}
+          away={match.score.away}
+          live={[
+            "LIVE",
+            "IN_PLAY",
+            "PAUSED",
+          ].includes(match.status)}
+          size="lg"
+        />
+      }
+      away={
+        <FootballTeamHeader
+          name={match.awayTeam.name}
+          crest={match.awayTeam.crest}
+          size="lg"
+        />
+      }
+      footer={
+        <div className="flex items-center justify-center">
+          <MatchClock match={match} />
         </div>
-
-        {/* Score */}
-
-        <div>
-          <div className="text-5xl font-bold">
-            <span>
-              {match.score.home}
-            </span>
-
-            <span className="mx-3 text-gray-400">
-              -
-            </span>
-
-            <span>
-              {match.score.away}
-            </span>
-          </div>
-        </div>
-
-        {/* Away Team */}
-
-        <div>
-          {match.awayTeam.crest && (
-            <img
-              src={match.awayTeam.crest}
-              alt={match.awayTeam.name}
-              className="mx-auto mb-3 h-16 w-16 object-contain"
-            />
-          )}
-
-          <h3 className="font-semibold">
-            {match.awayTeam.name}
-          </h3>
-        </div>
-      </div>
-    </section>
+      }
+    />
   );
 }

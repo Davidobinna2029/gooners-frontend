@@ -3,6 +3,13 @@
 import type { Match } from "@/lib/football/types/match";
 import type { HeadToHeadMatch } from "@/lib/football/advancedProvider";
 
+import {
+  FootballCard,
+  FootballSection,
+} from "@/src/design-system";
+
+import EmptyState from "@/src/design-system/ui/EmptyState";
+
 interface Props {
   match: Match;
   headToHead: HeadToHeadMatch[];
@@ -13,87 +20,97 @@ export default function MatchFacts({
   headToHead,
 }: Props) {
   return (
-    <section className="match-facts">
+    <FootballSection title="Match Facts">
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Match Information */}
 
-      <h3>
-        Match Facts
-      </h3>
+        <FootballCard>
+          <h4 className="mb-4 text-lg font-semibold">
+            Match Information
+          </h4>
 
-      <ul>
+          <dl className="space-y-4">
+            <div>
+              <dt className="text-sm font-medium text-gray-500">
+                Competition
+              </dt>
 
-        <li>
-          <strong>Competition:</strong>{" "}
-          {match.competition.name}
-        </li>
+              <dd className="text-base font-semibold text-gray-900">
+                {match.competition.name}
+              </dd>
+            </div>
 
-        <li>
-          <strong>Status:</strong>{" "}
-          {match.status}
-        </li>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">
+                Status
+              </dt>
 
-        <li>
-          <strong>Kickoff:</strong>{" "}
-          {new Date(
-            match.kickoff
-          ).toLocaleString()}
-        </li>
+              <dd className="text-base font-semibold text-gray-900">
+                {match.status}
+              </dd>
+            </div>
 
-        <li>
-          <strong>Venue:</strong>{" "}
-          {match.venue ?? "TBC"}
-        </li>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">
+                Kickoff
+              </dt>
 
-      </ul>
+              <dd className="text-base font-semibold text-gray-900">
+                {new Date(match.kickoff).toLocaleString()}
+              </dd>
+            </div>
 
-      <div className="head-to-head">
+            <div>
+              <dt className="text-sm font-medium text-gray-500">
+                Venue
+              </dt>
 
-        <h4>
-          Previous Meetings
-        </h4>
+              <dd className="text-base font-semibold text-gray-900">
+                {match.venue ?? "TBC"}
+              </dd>
+            </div>
+          </dl>
+        </FootballCard>
 
-        {!headToHead.length ? (
-          <p>
-            No previous meetings found.
-          </p>
-        ) : (
+        {/* Head-to-Head */}
 
-          <ul>
+        <FootballCard>
+          <h4 className="mb-4 text-lg font-semibold">
+            Previous Meetings
+          </h4>
 
-            {headToHead.map((game) => (
-              <li key={game.id}>
+          {!headToHead.length ? (
+            <EmptyState
+              title="No Previous Meetings"
+              description="No historical fixtures are available."
+            />
+          ) : (
+            <div className="space-y-4">
+              {headToHead.map((game) => (
+                <div
+                  key={game.id}
+                  className="border-b border-gray-100 pb-4 last:border-0 last:pb-0"
+                >
+                  <div className="flex items-center justify-between font-semibold">
+                    <span>{game.homeTeam}</span>
 
-                <strong>
-                  {game.homeTeam}
-                </strong>
+                    <span>
+                      {game.homeScore} - {game.awayScore}
+                    </span>
 
-                {" "}
-                {game.homeScore}
-                {" - "}
-                {game.awayScore}
-                {" "}
+                    <span>{game.awayTeam}</span>
+                  </div>
 
-                <strong>
-                  {game.awayTeam}
-                </strong>
-
-                <br />
-
-                <small>
-                  {game.competition} ·{" "}
-                  {new Date(
-                    game.date
-                  ).toLocaleDateString()}
-                </small>
-
-              </li>
-            ))}
-
-          </ul>
-
-        )}
-
+                  <p className="mt-2 text-sm text-gray-500">
+                    {game.competition} •{" "}
+                    {new Date(game.date).toLocaleDateString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </FootballCard>
       </div>
-
-    </section>
+    </FootballSection>
   );
 }

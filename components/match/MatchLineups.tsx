@@ -1,121 +1,103 @@
 // components/match/MatchLineups.tsx
 
-import type { Match } from "@/lib/football/types/match";
 import type {
   TeamLineup,
 } from "@/lib/football/advancedProvider";
 
+import {
+  FootballCard,
+  FootballPlayerRow,
+  FootballSection,
+} from "@/src/design-system";
+
+import EmptyState from "@/src/design-system/ui/EmptyState";
+
 interface Props {
-  match: Match;
   lineups: TeamLineup[];
 }
 
 export default function MatchLineups({
-  match,
   lineups,
 }: Props) {
   if (!lineups.length) {
     return (
-      <section className="match-lineups">
-        <h3>Lineups</h3>
-
-        <p>
-          Lineups have not been announced.
-        </p>
-      </section>
+      <FootballSection title="Lineups">
+        <EmptyState
+          title="Lineups Not Available"
+          description="The starting lineups have not been announced yet."
+        />
+      </FootballSection>
     );
   }
 
   return (
-    <section className="match-lineups">
-
-      <h3>
-        Lineups
-      </h3>
-
-      <div className="lineups-grid">
-
+    <FootballSection title="Lineups">
+      <div className="grid gap-6 lg:grid-cols-2">
         {lineups.map((team) => (
-          <div
-            key={team.teamId}
-            className="lineup-team"
-          >
+          <FootballCard key={team.teamId}>
+            <div className="space-y-6">
+              {/* Team Header */}
 
-            <h4>
-              {team.teamName}
-            </h4>
+              <div>
+                <h3 className="text-xl font-bold">
+                  {team.teamName}
+                </h3>
 
-            <p>
-              Formation: {team.formation}
-            </p>
+                <p className="mt-1 text-sm text-gray-500">
+                  Formation: {team.formation}
+                </p>
 
-            <p>
-              Coach: {team.coach}
-            </p>
+                <p className="text-sm text-gray-500">
+                  Coach: {team.coach}
+                </p>
+              </div>
 
-            <h5>
-              Starting XI
-            </h5>
+              {/* Starting XI */}
 
-            <ul>
+              <div>
+                <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">
+                  Starting XI
+                </h4>
 
-              {team.startingXI.map((player) => (
-                <li key={player.id}>
-                  {player.number && (
-                    <>#{player.number} </>
-                  )}
+                <div className="space-y-2">
+                  {team.startingXI.map((player) => (
+                    <FootballPlayerRow
+                      key={player.id}
+                      number={player.number}
+                      name={player.name}
+                      position={player.position}
+                      captain={player.captain}
+                      starter
+                    />
+                  ))}
+                </div>
+              </div>
 
-                  {player.name}
+              {/* Substitutes */}
 
-                  {player.position && (
-                    <> ({player.position})</>
-                  )}
+              {team.substitutes.length > 0 && (
+                <div>
+                  <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">
+                    Substitutes
+                  </h4>
 
-                  {player.captain && (
-                    <> (C)</>
-                  )}
-                </li>
-              ))}
-
-            </ul>
-
-            {team.substitutes.length > 0 && (
-              <>
-
-                <h5>
-                  Substitutes
-                </h5>
-
-                <ul>
-
-                  {team.substitutes.map(
-                    (player) => (
-                      <li
+                  <div className="space-y-2">
+                    {team.substitutes.map((player) => (
+                      <FootballPlayerRow
                         key={player.id}
-                      >
-                        {player.number && (
-                          <>#{player.number} </>
-                        )}
-
-                        {player.name}
-
-                        {player.position && (
-                          <> ({player.position})</>
-                        )}
-                      </li>
-                    )
-                  )}
-
-                </ul>
-
-              </>
-            )}
-
-          </div>
+                        number={player.number}
+                        name={player.name}
+                        position={player.position}
+                        substitute
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </FootballCard>
         ))}
-
       </div>
-
-    </section>
+    </FootballSection>
   );
 }

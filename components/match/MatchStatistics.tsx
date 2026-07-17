@@ -1,18 +1,33 @@
 // components/match/MatchStatistics.tsx
 
-import type { Match } from "@/lib/football/types/match";
-import type { MatchStatistic } from "@/lib/football/advancedProvider";
+import type {
+  MatchStatistic,
+} from "@/lib/football/advancedProvider";
 
 import {
   FootballSection,
-  FootballStat,
+  FootballStatBar,
 } from "@/src/design-system";
 
 import EmptyState from "@/src/design-system/ui/EmptyState";
 
 interface Props {
-  match: Match;
   statistics?: MatchStatistic[];
+}
+
+function parseNumeric(value: string | number | null | undefined): number {
+  if (typeof value === "number") return value;
+
+  if (!value) return 0;
+
+  const cleaned = String(value)
+    .replace("%", "")
+    .replace(",", "")
+    .trim();
+
+  const parsed = Number(cleaned);
+
+  return Number.isNaN(parsed) ? 0 : parsed;
 }
 
 export default function MatchStatistics({
@@ -31,13 +46,15 @@ export default function MatchStatistics({
 
   return (
     <FootballSection title="Match Statistics">
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="space-y-5">
         {statistics.map((stat, index) => (
-          <FootballStat
+          <FootballStatBar
             key={`${stat.type}-${index}`}
             label={stat.type}
-            homeValue={stat.home}
-            awayValue={stat.away}
+            home={parseNumeric(stat.home)}
+            away={parseNumeric(stat.away)}
+            homeDisplay={String(stat.home ?? "-")}
+            awayDisplay={String(stat.away ?? "-")}
           />
         ))}
       </div>

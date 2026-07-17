@@ -5,6 +5,13 @@ import type {
   MatchEvent,
 } from "@/lib/football/advancedProvider";
 
+import {
+  FootballEventCard,
+  FootballSection,
+} from "@/src/design-system";
+
+import EmptyState from "@/src/design-system/ui/EmptyState";
+
 interface Props {
   match: Match;
   events: MatchEvent[];
@@ -16,87 +23,58 @@ export default function MatchTimeline({
 }: Props) {
   if (!events.length) {
     return (
-      <section className="match-timeline">
-        <h3>
-          Timeline
-        </h3>
-
-        <p>
-          No match events available.
-        </p>
-      </section>
+      <FootballSection title="Match Timeline">
+        <EmptyState
+          title="No Match Events"
+          description="Timeline events are not available."
+        />
+      </FootballSection>
     );
   }
 
   return (
-    <section className="match-timeline">
-
-      <h3>
-        Timeline
-      </h3>
-
-      <div className="timeline-events">
-
+    <FootballSection title="Match Timeline">
+      <div className="space-y-4">
         {events.map((event) => {
           const teamName =
-            event.teamId ===
-            match.homeTeam.id
+            event.teamId === match.homeTeam.id
               ? match.homeTeam.name
-              : event.teamId ===
-                  match.awayTeam.id
+              : event.teamId === match.awayTeam.id
                 ? match.awayTeam.name
                 : "Unknown Team";
 
+          const minute = `${event.minute}${
+            event.extraMinute
+              ? `+${event.extraMinute}`
+              : ""
+          }'`;
+
+          const detail = [
+            event.assist
+              ? `Assist: ${event.assist}`
+              : null,
+            event.detail,
+          ]
+            .filter(Boolean)
+            .join(" • ");
+
           return (
-            <article
+            <FootballEventCard
               key={event.id}
-              className="timeline-event"
-            >
-
-              <div className="timeline-minute">
-                {event.minute}
-                {event.extraMinute
-                  ? `+${event.extraMinute}`
-                  : ""}
-                '
-              </div>
-
-              <div className="timeline-content">
-
-                <strong>
-                  {event.player ??
-                    "Unknown Player"}
-                </strong>
-
-                {event.assist && (
-                  <p>
-                    Assist:{" "}
-                    {event.assist}
-                  </p>
-                )}
-
-                <p>
-                  {event.type}
-                </p>
-
-                {event.detail && (
-                  <small>
-                    {event.detail}
-                  </small>
-                )}
-
-              </div>
-
-              <div className="timeline-team">
-                {teamName}
-              </div>
-
-            </article>
+              minute={minute}
+              eventType={event.type}
+              player={
+                event.player ??
+                "Unknown Player"
+              }
+              detail={
+                detail || undefined
+              }
+              team={teamName}
+            />
           );
         })}
-
       </div>
-
-    </section>
+    </FootballSection>
   );
 }

@@ -20,8 +20,7 @@ interface Props {
 export default async function MatchCentre({
   match,
 }: Props) {
-  const advanced =
-    resolveAdvancedProvider();
+  const advanced = resolveAdvancedProvider();
 
   const [
     events,
@@ -41,7 +40,6 @@ export default async function MatchCentre({
   return (
     <main className="match-centre">
       <div className="container">
-
         <MatchHeader match={match} />
 
         <MatchScoreboard match={match} />
@@ -49,28 +47,22 @@ export default async function MatchCentre({
         <MatchTabs />
 
         <div className="match-centre-grid">
-
           <section className="match-centre-main">
-
             <MatchTimeline
               match={match}
               events={events}
             />
 
             <MatchStatistics
-              match={match}
               statistics={statistics}
             />
 
             <MatchLineups
-              match={match}
               lineups={lineups}
             />
-
           </section>
 
           <aside className="match-centre-sidebar">
-
             <MatchFacts
               match={match}
               headToHead={headToHead}
@@ -79,11 +71,8 @@ export default async function MatchCentre({
             <MatchNews
               match={match}
             />
-
           </aside>
-
         </div>
-
       </div>
     </main>
   );

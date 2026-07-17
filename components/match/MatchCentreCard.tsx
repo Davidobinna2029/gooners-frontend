@@ -29,7 +29,7 @@ export default function MatchCentreCard({
         )}
 
         <MatchStatistics
-          match={match}
+          statistics={[]}
         />
 
         <MatchFooter
