@@ -9,3 +9,4 @@ export { default as FootballScore } from "./FootballScore";
 export { default as FootballTeamHeader } from "./FootballTeamHeader";
 export { default as FootballFixtureCard } from "./FootballFixtureCard";
 export { default as FootballStatBar } from "./FootballStatBar";
+export * from "./pitch";
