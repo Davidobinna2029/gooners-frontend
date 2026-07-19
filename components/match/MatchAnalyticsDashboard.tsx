@@ -1,6 +1,7 @@
 "use client";
 
 import MatchMomentum from "./MatchMomentum";
+import ShotMap from "./ShotMap";
 
 import PressureMeter
   from "@/src/design-system/football/momentum/PressureMeter";
@@ -20,6 +21,10 @@ import {
 import {
   calculateTerritory,
 } from "@/src/lib/football/analytics/territoryEngine";
+
+import {
+  buildShotMap,
+} from "@/src/lib/football/analytics/shotMapEngine";
 
 import {
   useLiveStore,
@@ -77,6 +82,14 @@ export default function MatchAnalyticsDashboard({
     );
 
 
+  const shots =
+    buildShotMap(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
   return (
 
     <section
@@ -115,16 +128,12 @@ export default function MatchAnalyticsDashboard({
         />
 
 
-        {/* Expected Goals */}
-
         <AnalyticsCard
           title="Expected Goals (xG)"
           home={xg.home}
           away={xg.away}
         />
 
-
-        {/* Big Chances */}
 
         <AnalyticsCard
           title="Big Chances"
@@ -133,12 +142,16 @@ export default function MatchAnalyticsDashboard({
         />
 
 
-        {/* Territory */}
-
         <AnalyticsCard
           title="Territory Control %"
           home={`${territory.home}%`}
           away={`${territory.away}%`}
+        />
+
+
+        <ShotMap
+          shots={shots}
+          homeTeamId={homeTeamId}
         />
 
 
