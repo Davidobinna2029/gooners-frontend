@@ -3,6 +3,7 @@
 import MatchMomentum from "./MatchMomentum";
 import ShotMap from "./ShotMap";
 import HeatMap from "./HeatMap";
+import PassNetwork from "./PassNetwork";
 
 import PressureMeter
   from "@/src/design-system/football/momentum/PressureMeter";
@@ -32,12 +33,15 @@ import {
 } from "@/src/lib/football/analytics/heatMapEngine";
 
 import {
+  buildPassNetwork,
+} from "@/src/lib/football/analytics/passNetworkEngine";
+
+import {
   useLiveStore,
 } from "@/src/lib/football/live/liveStore";
 
 interface Props {
   homeTeamId: number;
-
   awayTeamId: number;
 }
 
@@ -88,6 +92,12 @@ export default function MatchAnalyticsDashboard({
 
   const heatMap =
     buildHeatMap(
+      events,
+      homeTeamId
+    );
+
+  const passNetwork =
+    buildPassNetwork(
       events,
       homeTeamId
     );
@@ -153,6 +163,10 @@ export default function MatchAnalyticsDashboard({
           points={heatMap.points}
         />
 
+        <PassNetwork
+          network={passNetwork}
+        />
+
       </div>
 
     </section>
@@ -167,11 +181,8 @@ function AnalyticsCard({
   away,
 }: {
   title: string;
-
   home: string | number;
-
   away: string | number;
-
 }) {
 
   return (
