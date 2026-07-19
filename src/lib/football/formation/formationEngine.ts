@@ -1,93 +1,59 @@
 // src/lib/football/formation/formationEngine.ts
 
 import {
-  DEFAULT_FORMATION,
-  FORMATIONS,
-} from "./formations";
+  formationCoordinates,
+} from "./formationCoordinates";
 
 import type {
-  FormationCoordinate,
-  FormationPlayer,
   PositionedPlayer,
 } from "./types";
 
-const GOALKEEPER: FormationCoordinate = {
-  x: 50,
-  y: 92,
-};
+export interface FormationPlayer {
+  id: number;
 
-function buildRowCoordinates(
-  playersInRow: number,
-  y: number
-): FormationCoordinate[] {
-  if (playersInRow <= 0) return [];
+  name: string;
 
-  const spacing = 100 / (playersInRow + 1);
+  number?: number;
 
-  return Array.from(
-    { length: playersInRow },
-    (_, index) => ({
-      x: spacing * (index + 1),
-      y,
-    })
-  );
+  position?: string;
+
+  captain?: boolean;
 }
 
 export function buildFormation(
   formation: string,
   players: FormationPlayer[]
 ): PositionedPlayer[] {
-  if (!players.length) {
+
+  const coordinates =
+    formationCoordinates[formation];
+
+  if (!coordinates) {
+
+    console.warn(
+      `Unknown formation: ${formation}`
+    );
+
     return [];
+
   }
 
-  const definition =
-    FORMATIONS[formation] ??
-    DEFAULT_FORMATION;
+  return players.map((player, index) => {
 
-  const goalkeeper = players[0];
+    const coordinate =
+      coordinates[index] ??
+      coordinates[coordinates.length - 1];
 
-  const outfield = players.slice(1);
+    return {
 
-  const positioned: PositionedPlayer[] = [
-    {
-      player: goalkeeper,
-      coordinate: GOALKEEPER,
-    },
-  ];
+      ...player,
 
-  const rows = definition.rows;
+      x: coordinate.x,
 
-  const rowSpacing =
-    80 / (rows.length + 1);
+      y: coordinate.y,
 
-  let playerIndex = 0;
+    };
 
-  rows.forEach((playersInRow, rowIndex) => {
-    const y =
-      80 -
-      rowSpacing * rowIndex;
-
-    const coordinates =
-      buildRowCoordinates(
-        playersInRow,
-        y
-      );
-
-    coordinates.forEach((coordinate) => {
-      const player =
-        outfield[playerIndex];
-
-      if (!player) return;
-
-      positioned.push({
-        player,
-        coordinate,
-      });
-
-      playerIndex++;
-    });
   });
 
-  return positioned;
 }

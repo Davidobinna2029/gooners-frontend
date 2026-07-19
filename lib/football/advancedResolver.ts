@@ -1,11 +1,14 @@
 // lib/football/advancedResolver.ts
 
 import { footballConfig } from "./config";
-import { ProviderNotFoundError } from "./errors";
 
 import {
   apiFootballAdvancedProvider,
 } from "./providers/apiFootball/advancedProvider";
+
+import {
+  advancedFallbackProvider,
+} from "./providers/fallback/advancedFallbackProvider";
 
 import type {
   AdvancedFootballProvider,
@@ -13,23 +16,31 @@ import type {
 
 
 export function resolveAdvancedProvider(): AdvancedFootballProvider {
+
   switch (footballConfig.provider) {
+
     case "api-football":
+
       return apiFootballAdvancedProvider;
 
+
     case "football-data":
-      throw new ProviderNotFoundError(
-        "Football Data does not support advanced features"
-      );
+
+      /**
+       * Football-Data.org has limited coverage.
+       * Use safe empty responses for advanced features.
+       */
+
+      return advancedFallbackProvider;
+
 
     case "mock":
-      throw new ProviderNotFoundError(
-        "Mock provider does not support advanced features"
-      );
+
+      return advancedFallbackProvider;
+
 
     default:
-      throw new ProviderNotFoundError(
-        footballConfig.provider
-      );
+
+      return advancedFallbackProvider;
   }
 }
