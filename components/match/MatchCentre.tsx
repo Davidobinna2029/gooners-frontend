@@ -8,7 +8,7 @@ import MatchHeader from "./MatchHeader";
 import MatchScoreboard from "./MatchScoreboard";
 import MatchTabs from "./MatchTabs";
 import MatchTimeline from "./MatchTimeline";
-import MatchMomentum from "./MatchMomentum";
+import MatchAnalyticsDashboard from "./MatchAnalyticsDashboard";
 import MatchStatistics from "./MatchStatistics";
 import MatchLineups from "./MatchLineups";
 import MatchNews from "./MatchNews";
@@ -92,7 +92,7 @@ export default async function MatchCentre({
               events={events}
             />
 
-            <MatchMomentum
+            <MatchAnalyticsDashboard
               homeTeamId={match.homeTeam.id}
               awayTeamId={match.awayTeam.id}
             />

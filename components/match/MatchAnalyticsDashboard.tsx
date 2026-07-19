@@ -1,0 +1,253 @@
+"use client";
+
+import MatchMomentum from "./MatchMomentum";
+
+import PressureMeter
+  from "@/src/design-system/football/momentum/PressureMeter";
+
+import {
+  calculateMomentum,
+} from "@/src/lib/football/momentum/momentumEngine";
+
+import {
+  calculateExpectedGoals,
+} from "@/src/lib/football/xg/xgEngine";
+
+import {
+  calculateBigChances,
+} from "@/src/lib/football/analytics/bigChancesEngine";
+
+import {
+  calculateTerritory,
+} from "@/src/lib/football/analytics/territoryEngine";
+
+import {
+  useLiveStore,
+} from "@/src/lib/football/live/liveStore";
+
+
+interface Props {
+  homeTeamId: number;
+
+  awayTeamId: number;
+}
+
+
+export default function MatchAnalyticsDashboard({
+  homeTeamId,
+  awayTeamId,
+}: Props) {
+
+
+  const events =
+    useLiveStore(
+      (state) => state.events
+    );
+
+
+  const momentum =
+    calculateMomentum(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+  const xg =
+    calculateExpectedGoals(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+  const bigChances =
+    calculateBigChances(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+  const territory =
+    calculateTerritory(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+  return (
+
+    <section
+      className="
+        mb-8
+        rounded-xl
+        border
+        bg-white
+        p-5
+        shadow-sm
+      "
+    >
+
+      <h2
+        className="
+          mb-5
+          text-lg
+          font-bold
+        "
+      >
+        Live Analytics
+      </h2>
+
+
+      <div className="space-y-6">
+
+
+        <MatchMomentum
+          homeTeamId={homeTeamId}
+          awayTeamId={awayTeamId}
+        />
+
+
+        <PressureMeter
+          pressure={momentum.home}
+        />
+
+
+        {/* Expected Goals */}
+
+        <AnalyticsCard
+          title="Expected Goals (xG)"
+          home={xg.home}
+          away={xg.away}
+        />
+
+
+        {/* Big Chances */}
+
+        <AnalyticsCard
+          title="Big Chances"
+          home={bigChances.home}
+          away={bigChances.away}
+        />
+
+
+        {/* Territory */}
+
+        <AnalyticsCard
+          title="Territory Control %"
+          home={`${territory.home}%`}
+          away={`${territory.away}%`}
+        />
+
+
+      </div>
+
+
+    </section>
+
+  );
+
+}
+
+
+
+function AnalyticsCard({
+  title,
+  home,
+  away,
+}: {
+  title: string;
+
+  home: string | number;
+
+  away: string | number;
+
+}) {
+
+  return (
+
+    <div
+      className="
+        rounded-xl
+        border
+        bg-neutral-50
+        p-4
+      "
+    >
+
+      <h3
+        className="
+          mb-3
+          font-semibold
+        "
+      >
+        {title}
+      </h3>
+
+
+      <div
+        className="
+          flex
+          justify-between
+          text-center
+        "
+      >
+
+        <div>
+
+          <p
+            className="
+              text-sm
+              text-neutral-500
+            "
+          >
+            Home
+          </p>
+
+          <p
+            className="
+              text-2xl
+              font-bold
+            "
+          >
+            {home}
+          </p>
+
+        </div>
+
+
+        <div>
+
+          <p
+            className="
+              text-sm
+              text-neutral-500
+            "
+          >
+            Away
+          </p>
+
+
+          <p
+            className="
+              text-2xl
+              font-bold
+            "
+          >
+            {away}
+          </p>
+
+
+        </div>
+
+
+      </div>
+
+
+    </div>
+
+  );
+
+}
