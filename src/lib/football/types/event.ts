@@ -41,6 +41,7 @@ export type FootballEventType =
   | "second_yellow"
 
   | "substitution"
+  | "formation_change"
 
   | "var"
   | "injury"
@@ -50,6 +51,7 @@ export type FootballEventType =
   | "fulltime";
 
 export interface FootballEvent {
+
   id: ID;
 
   type: FootballEventType;
@@ -71,4 +73,14 @@ export interface FootballEvent {
   side?: TeamSide;
 
   detail?: string;
+
+  /**
+   * Used only for formation_change events.
+   * Example:
+   * "4-3-3"
+   * "4-2-3-1"
+   * "3-5-2"
+   */
+  formation?: string;
+
 }
