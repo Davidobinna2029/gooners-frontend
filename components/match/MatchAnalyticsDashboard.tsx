@@ -7,6 +7,7 @@ import PassNetwork from "./PassNetwork";
 import WinProbability from "./WinProbability";
 import PlayerRatings from "./PlayerRatings";
 import ExpectedThreat from "./ExpectedThreat";
+import MatchInsights from "./MatchInsights";
 
 import PressureMeter
   from "@/src/design-system/football/momentum/PressureMeter";
@@ -50,6 +51,10 @@ import {
 import {
   calculatePlayerRatings,
 } from "@/src/lib/football/analytics/playerRatingEngine";
+
+import {
+  generateInsights,
+} from "@/src/lib/football/insights/insightsEngine";
 
 import {
   useLiveStore,
@@ -144,6 +149,29 @@ export default function MatchAnalyticsDashboard({
       match?.minute ?? 0
     );
 
+  const insights =
+    generateInsights({
+
+      homeXG: xg.home,
+
+      awayXG: xg.away,
+
+      homeMomentum: momentum.home,
+
+      awayMomentum: momentum.away,
+
+      homeTerritory: territory.home,
+
+      awayTerritory: territory.away,
+
+      homeWinProbability:
+        probability.homeWin,
+
+      awayWinProbability:
+        probability.awayWin,
+
+    });
+
   return (
 
     <section
@@ -173,6 +201,10 @@ export default function MatchAnalyticsDashboard({
           home={probability.homeWin}
           draw={probability.draw}
           away={probability.awayWin}
+        />
+
+        <MatchInsights
+          insights={insights}
         />
 
         <MatchMomentum
