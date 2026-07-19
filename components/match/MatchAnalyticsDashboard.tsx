@@ -2,6 +2,7 @@
 
 import MatchMomentum from "./MatchMomentum";
 import ShotMap from "./ShotMap";
+import HeatMap from "./HeatMap";
 
 import PressureMeter
   from "@/src/design-system/football/momentum/PressureMeter";
@@ -27,9 +28,12 @@ import {
 } from "@/src/lib/football/analytics/shotMapEngine";
 
 import {
+  buildHeatMap,
+} from "@/src/lib/football/analytics/heatMapEngine";
+
+import {
   useLiveStore,
 } from "@/src/lib/football/live/liveStore";
-
 
 interface Props {
   homeTeamId: number;
@@ -37,18 +41,15 @@ interface Props {
   awayTeamId: number;
 }
 
-
 export default function MatchAnalyticsDashboard({
   homeTeamId,
   awayTeamId,
 }: Props) {
 
-
   const events =
     useLiveStore(
       (state) => state.events
     );
-
 
   const momentum =
     calculateMomentum(
@@ -57,14 +58,12 @@ export default function MatchAnalyticsDashboard({
       awayTeamId
     );
 
-
   const xg =
     calculateExpectedGoals(
       events,
       homeTeamId,
       awayTeamId
     );
-
 
   const bigChances =
     calculateBigChances(
@@ -73,14 +72,12 @@ export default function MatchAnalyticsDashboard({
       awayTeamId
     );
 
-
   const territory =
     calculateTerritory(
       events,
       homeTeamId,
       awayTeamId
     );
-
 
   const shots =
     buildShotMap(
@@ -89,6 +86,11 @@ export default function MatchAnalyticsDashboard({
       awayTeamId
     );
 
+  const heatMap =
+    buildHeatMap(
+      events,
+      homeTeamId
+    );
 
   return (
 
@@ -113,20 +115,16 @@ export default function MatchAnalyticsDashboard({
         Live Analytics
       </h2>
 
-
       <div className="space-y-6">
-
 
         <MatchMomentum
           homeTeamId={homeTeamId}
           awayTeamId={awayTeamId}
         />
 
-
         <PressureMeter
           pressure={momentum.home}
         />
-
 
         <AnalyticsCard
           title="Expected Goals (xG)"
@@ -134,13 +132,11 @@ export default function MatchAnalyticsDashboard({
           away={xg.away}
         />
 
-
         <AnalyticsCard
           title="Big Chances"
           home={bigChances.home}
           away={bigChances.away}
         />
-
 
         <AnalyticsCard
           title="Territory Control %"
@@ -148,23 +144,22 @@ export default function MatchAnalyticsDashboard({
           away={`${territory.away}%`}
         />
 
-
         <ShotMap
           shots={shots}
           homeTeamId={homeTeamId}
         />
 
+        <HeatMap
+          points={heatMap.points}
+        />
 
       </div>
-
 
     </section>
 
   );
 
 }
-
-
 
 function AnalyticsCard({
   title,
@@ -199,7 +194,6 @@ function AnalyticsCard({
         {title}
       </h3>
 
-
       <div
         className="
           flex
@@ -230,7 +224,6 @@ function AnalyticsCard({
 
         </div>
 
-
         <div>
 
           <p
@@ -242,7 +235,6 @@ function AnalyticsCard({
             Away
           </p>
 
-
           <p
             className="
               text-2xl
@@ -252,12 +244,9 @@ function AnalyticsCard({
             {away}
           </p>
 
-
         </div>
 
-
       </div>
-
 
     </div>
 
