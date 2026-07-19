@@ -6,6 +6,7 @@ import HeatMap from "./HeatMap";
 import PassNetwork from "./PassNetwork";
 import WinProbability from "./WinProbability";
 import PlayerRatings from "./PlayerRatings";
+import ExpectedThreat from "./ExpectedThreat";
 
 import PressureMeter
   from "@/src/design-system/football/momentum/PressureMeter";
@@ -25,6 +26,10 @@ import {
 import {
   calculateTerritory,
 } from "@/src/lib/football/analytics/territoryEngine";
+
+import {
+  calculateExpectedThreat,
+} from "@/src/lib/football/analytics/xTEngine";
 
 import {
   buildShotMap,
@@ -93,6 +98,13 @@ export default function MatchAnalyticsDashboard({
 
   const territory =
     calculateTerritory(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+  const xT =
+    calculateExpectedThreat(
       events,
       homeTeamId,
       awayTeamId
@@ -188,6 +200,17 @@ export default function MatchAnalyticsDashboard({
           title="Territory Control %"
           home={`${territory.home}%`}
           away={`${territory.away}%`}
+        />
+
+        <AnalyticsCard
+          title="Expected Threat (xT)"
+          home={xT.home}
+          away={xT.away}
+        />
+
+        <ExpectedThreat
+          home={xT.home}
+          away={xT.away}
         />
 
         <ShotMap
