@@ -5,6 +5,7 @@ import ShotMap from "./ShotMap";
 import HeatMap from "./HeatMap";
 import PassNetwork from "./PassNetwork";
 import WinProbability from "./WinProbability";
+import PlayerRatings from "./PlayerRatings";
 
 import PressureMeter
   from "@/src/design-system/football/momentum/PressureMeter";
@@ -40,6 +41,10 @@ import {
 import {
   calculateWinProbability,
 } from "@/src/lib/football/analytics/winProbabilityEngine";
+
+import {
+  calculatePlayerRatings,
+} from "@/src/lib/football/analytics/playerRatingEngine";
 
 import {
   useLiveStore,
@@ -110,6 +115,11 @@ export default function MatchAnalyticsDashboard({
     buildPassNetwork(
       events,
       homeTeamId
+    );
+
+  const ratings =
+    calculatePlayerRatings(
+      events
     );
 
   const probability =
@@ -191,6 +201,10 @@ export default function MatchAnalyticsDashboard({
 
         <PassNetwork
           network={passNetwork}
+        />
+
+        <PlayerRatings
+          ratings={ratings}
         />
 
       </div>
