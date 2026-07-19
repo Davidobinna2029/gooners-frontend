@@ -9,6 +9,7 @@ import PlayerRatings from "./PlayerRatings";
 import ExpectedThreat from "./ExpectedThreat";
 import MatchInsights from "./MatchInsights";
 import FormationTracker from "./FormationTracker";
+import PressingIntensity from "./PressingIntensity";
 
 import PressureMeter
   from "@/src/design-system/football/momentum/PressureMeter";
@@ -62,6 +63,10 @@ import {
 } from "@/src/lib/football/tactical/formationTracker";
 
 import {
+  calculatePressingIntensity,
+} from "@/src/lib/football/tactical/pressingEngine";
+
+import {
   useLiveStore,
 } from "@/src/lib/football/live/liveStore";
 
@@ -76,6 +81,7 @@ export default function MatchAnalyticsDashboard({
   homeTeamId,
   awayTeamId,
 }: Props) {
+
 
   const events =
     useLiveStore(
@@ -198,6 +204,14 @@ export default function MatchAnalyticsDashboard({
     );
 
 
+  const pressing =
+    calculatePressingIntensity(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
   return (
 
     <section
@@ -239,6 +253,12 @@ export default function MatchAnalyticsDashboard({
 
         <FormationTracker
           timeline={formationTimeline}
+        />
+
+
+        <PressingIntensity
+          home={pressing.home}
+          away={pressing.away}
         />
 
 
