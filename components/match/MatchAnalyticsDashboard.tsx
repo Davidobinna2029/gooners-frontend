@@ -4,6 +4,7 @@ import MatchMomentum from "./MatchMomentum";
 import ShotMap from "./ShotMap";
 import HeatMap from "./HeatMap";
 import PassNetwork from "./PassNetwork";
+import WinProbability from "./WinProbability";
 
 import PressureMeter
   from "@/src/design-system/football/momentum/PressureMeter";
@@ -37,6 +38,10 @@ import {
 } from "@/src/lib/football/analytics/passNetworkEngine";
 
 import {
+  calculateWinProbability,
+} from "@/src/lib/football/analytics/winProbabilityEngine";
+
+import {
   useLiveStore,
 } from "@/src/lib/football/live/liveStore";
 
@@ -53,6 +58,11 @@ export default function MatchAnalyticsDashboard({
   const events =
     useLiveStore(
       (state) => state.events
+    );
+
+  const match =
+    useLiveStore(
+      (state) => state.match
     );
 
   const momentum =
@@ -102,6 +112,16 @@ export default function MatchAnalyticsDashboard({
       homeTeamId
     );
 
+  const probability =
+    calculateWinProbability(
+      events,
+      homeTeamId,
+      awayTeamId,
+      match?.score.home ?? 0,
+      match?.score.away ?? 0,
+      match?.minute ?? 0
+    );
+
   return (
 
     <section
@@ -126,6 +146,12 @@ export default function MatchAnalyticsDashboard({
       </h2>
 
       <div className="space-y-6">
+
+        <WinProbability
+          home={probability.homeWin}
+          draw={probability.draw}
+          away={probability.awayWin}
+        />
 
         <MatchMomentum
           homeTeamId={homeTeamId}

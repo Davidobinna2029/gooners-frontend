@@ -38,4 +38,9 @@ export interface Match {
   awayTeam: Team;
 
   score: Score;
+
+  /**
+   * Current elapsed minute for live matches.
+   */
+  minute?: number;
 }
