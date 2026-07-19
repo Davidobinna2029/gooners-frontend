@@ -8,6 +8,7 @@ import WinProbability from "./WinProbability";
 import PlayerRatings from "./PlayerRatings";
 import ExpectedThreat from "./ExpectedThreat";
 import MatchInsights from "./MatchInsights";
+import FormationTracker from "./FormationTracker";
 
 import PressureMeter
   from "@/src/design-system/football/momentum/PressureMeter";
@@ -57,13 +58,19 @@ import {
 } from "@/src/lib/football/insights/insightsEngine";
 
 import {
+  buildFormationTimeline,
+} from "@/src/lib/football/tactical/formationTracker";
+
+import {
   useLiveStore,
 } from "@/src/lib/football/live/liveStore";
+
 
 interface Props {
   homeTeamId: number;
   awayTeamId: number;
 }
+
 
 export default function MatchAnalyticsDashboard({
   homeTeamId,
@@ -75,10 +82,12 @@ export default function MatchAnalyticsDashboard({
       (state) => state.events
     );
 
+
   const match =
     useLiveStore(
       (state) => state.match
     );
+
 
   const momentum =
     calculateMomentum(
@@ -87,12 +96,14 @@ export default function MatchAnalyticsDashboard({
       awayTeamId
     );
 
+
   const xg =
     calculateExpectedGoals(
       events,
       homeTeamId,
       awayTeamId
     );
+
 
   const bigChances =
     calculateBigChances(
@@ -101,12 +112,14 @@ export default function MatchAnalyticsDashboard({
       awayTeamId
     );
 
+
   const territory =
     calculateTerritory(
       events,
       homeTeamId,
       awayTeamId
     );
+
 
   const xT =
     calculateExpectedThreat(
@@ -115,6 +128,7 @@ export default function MatchAnalyticsDashboard({
       awayTeamId
     );
 
+
   const shots =
     buildShotMap(
       events,
@@ -122,11 +136,13 @@ export default function MatchAnalyticsDashboard({
       awayTeamId
     );
 
+
   const heatMap =
     buildHeatMap(
       events,
       homeTeamId
     );
+
 
   const passNetwork =
     buildPassNetwork(
@@ -134,10 +150,12 @@ export default function MatchAnalyticsDashboard({
       homeTeamId
     );
 
+
   const ratings =
     calculatePlayerRatings(
       events
     );
+
 
   const probability =
     calculateWinProbability(
@@ -148,6 +166,7 @@ export default function MatchAnalyticsDashboard({
       match?.score.away ?? 0,
       match?.minute ?? 0
     );
+
 
   const insights =
     generateInsights({
@@ -172,6 +191,13 @@ export default function MatchAnalyticsDashboard({
 
     });
 
+
+  const formationTimeline =
+    buildFormationTimeline(
+      events
+    );
+
+
   return (
 
     <section
@@ -195,7 +221,9 @@ export default function MatchAnalyticsDashboard({
         Live Analytics
       </h2>
 
+
       <div className="space-y-6">
+
 
         <WinProbability
           home={probability.homeWin}
@@ -203,18 +231,27 @@ export default function MatchAnalyticsDashboard({
           away={probability.awayWin}
         />
 
+
         <MatchInsights
           insights={insights}
         />
+
+
+        <FormationTracker
+          timeline={formationTimeline}
+        />
+
 
         <MatchMomentum
           homeTeamId={homeTeamId}
           awayTeamId={awayTeamId}
         />
 
+
         <PressureMeter
           pressure={momentum.home}
         />
+
 
         <AnalyticsCard
           title="Expected Goals (xG)"
@@ -222,11 +259,13 @@ export default function MatchAnalyticsDashboard({
           away={xg.away}
         />
 
+
         <AnalyticsCard
           title="Big Chances"
           home={bigChances.home}
           away={bigChances.away}
         />
+
 
         <AnalyticsCard
           title="Territory Control %"
@@ -234,41 +273,50 @@ export default function MatchAnalyticsDashboard({
           away={`${territory.away}%`}
         />
 
+
         <AnalyticsCard
           title="Expected Threat (xT)"
           home={xT.home}
           away={xT.away}
         />
 
+
         <ExpectedThreat
           home={xT.home}
           away={xT.away}
         />
+
 
         <ShotMap
           shots={shots}
           homeTeamId={homeTeamId}
         />
 
+
         <HeatMap
           points={heatMap.points}
         />
+
 
         <PassNetwork
           network={passNetwork}
         />
 
+
         <PlayerRatings
           ratings={ratings}
         />
 
+
       </div>
+
 
     </section>
 
   );
 
 }
+
 
 function AnalyticsCard({
   title,
@@ -300,6 +348,7 @@ function AnalyticsCard({
         {title}
       </h3>
 
+
       <div
         className="
           flex
@@ -310,49 +359,32 @@ function AnalyticsCard({
 
         <div>
 
-          <p
-            className="
-              text-sm
-              text-neutral-500
-            "
-          >
+          <p className="text-sm text-neutral-500">
             Home
           </p>
 
-          <p
-            className="
-              text-2xl
-              font-bold
-            "
-          >
+          <p className="text-2xl font-bold">
             {home}
           </p>
 
         </div>
 
+
         <div>
 
-          <p
-            className="
-              text-sm
-              text-neutral-500
-            "
-          >
+          <p className="text-sm text-neutral-500">
             Away
           </p>
 
-          <p
-            className="
-              text-2xl
-              font-bold
-            "
-          >
+          <p className="text-2xl font-bold">
             {away}
           </p>
 
         </div>
 
+
       </div>
+
 
     </div>
 
