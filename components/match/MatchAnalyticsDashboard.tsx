@@ -12,6 +12,7 @@ import FormationTracker from "./FormationTracker";
 import PressingIntensity from "./PressingIntensity";
 import DefensiveLineHeight from "./DefensiveLineHeight";
 import AttackingWidth from "./AttackingWidth";
+import FieldTilt from "./FieldTilt";
 
 import PressureMeter
   from "@/src/design-system/football/momentum/PressureMeter";
@@ -75,6 +76,10 @@ import {
 import {
   calculateAttackingWidth,
 } from "@/src/lib/football/tactical/attackingWidthEngine";
+
+import {
+  calculateFieldTilt,
+} from "@/src/lib/football/tactical/fieldTiltEngine";
 
 import {
   useLiveStore,
@@ -254,6 +259,15 @@ export default function MatchAnalyticsDashboard({
 
 
 
+  const fieldTilt =
+    calculateFieldTilt(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+
   return (
 
     <section
@@ -321,6 +335,13 @@ export default function MatchAnalyticsDashboard({
         <AttackingWidth
           home={attackingWidth.home}
           away={attackingWidth.away}
+        />
+
+
+
+        <FieldTilt
+          home={fieldTilt.home}
+          away={fieldTilt.away}
         />
 
 
