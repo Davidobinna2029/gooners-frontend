@@ -10,6 +10,7 @@ import ExpectedThreat from "./ExpectedThreat";
 import MatchInsights from "./MatchInsights";
 import FormationTracker from "./FormationTracker";
 import PressingIntensity from "./PressingIntensity";
+import DefensiveLineHeight from "./DefensiveLineHeight";
 
 import PressureMeter
   from "@/src/design-system/football/momentum/PressureMeter";
@@ -67,6 +68,10 @@ import {
 } from "@/src/lib/football/tactical/pressingEngine";
 
 import {
+  calculateDefensiveLineHeight,
+} from "@/src/lib/football/tactical/defensiveLineEngine";
+
+import {
   useLiveStore,
 } from "@/src/lib/football/live/liveStore";
 
@@ -95,12 +100,14 @@ export default function MatchAnalyticsDashboard({
     );
 
 
+
   const momentum =
     calculateMomentum(
       events,
       homeTeamId,
       awayTeamId
     );
+
 
 
   const xg =
@@ -111,12 +118,14 @@ export default function MatchAnalyticsDashboard({
     );
 
 
+
   const bigChances =
     calculateBigChances(
       events,
       homeTeamId,
       awayTeamId
     );
+
 
 
   const territory =
@@ -127,12 +136,14 @@ export default function MatchAnalyticsDashboard({
     );
 
 
+
   const xT =
     calculateExpectedThreat(
       events,
       homeTeamId,
       awayTeamId
     );
+
 
 
   const shots =
@@ -143,11 +154,13 @@ export default function MatchAnalyticsDashboard({
     );
 
 
+
   const heatMap =
     buildHeatMap(
       events,
       homeTeamId
     );
+
 
 
   const passNetwork =
@@ -157,10 +170,12 @@ export default function MatchAnalyticsDashboard({
     );
 
 
+
   const ratings =
     calculatePlayerRatings(
       events
     );
+
 
 
   const probability =
@@ -172,6 +187,7 @@ export default function MatchAnalyticsDashboard({
       match?.score.away ?? 0,
       match?.minute ?? 0
     );
+
 
 
   const insights =
@@ -198,10 +214,12 @@ export default function MatchAnalyticsDashboard({
     });
 
 
+
   const formationTimeline =
     buildFormationTimeline(
       events
     );
+
 
 
   const pressing =
@@ -210,6 +228,16 @@ export default function MatchAnalyticsDashboard({
       homeTeamId,
       awayTeamId
     );
+
+
+
+  const defensiveLine =
+    calculateDefensiveLineHeight(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
 
 
   return (
@@ -225,6 +253,7 @@ export default function MatchAnalyticsDashboard({
       "
     >
 
+
       <h2
         className="
           mb-5
@@ -236,7 +265,9 @@ export default function MatchAnalyticsDashboard({
       </h2>
 
 
+
       <div className="space-y-6">
+
 
 
         <WinProbability
@@ -246,14 +277,17 @@ export default function MatchAnalyticsDashboard({
         />
 
 
+
         <MatchInsights
           insights={insights}
         />
 
 
+
         <FormationTracker
           timeline={formationTimeline}
         />
+
 
 
         <PressingIntensity
@@ -262,15 +296,25 @@ export default function MatchAnalyticsDashboard({
         />
 
 
+
+        <DefensiveLineHeight
+          home={defensiveLine.home}
+          away={defensiveLine.away}
+        />
+
+
+
         <MatchMomentum
           homeTeamId={homeTeamId}
           awayTeamId={awayTeamId}
         />
 
 
+
         <PressureMeter
           pressure={momentum.home}
         />
+
 
 
         <AnalyticsCard
@@ -280,11 +324,13 @@ export default function MatchAnalyticsDashboard({
         />
 
 
+
         <AnalyticsCard
           title="Big Chances"
           home={bigChances.home}
           away={bigChances.away}
         />
+
 
 
         <AnalyticsCard
@@ -294,11 +340,13 @@ export default function MatchAnalyticsDashboard({
         />
 
 
+
         <AnalyticsCard
           title="Expected Threat (xT)"
           home={xT.home}
           away={xT.away}
         />
+
 
 
         <ExpectedThreat
@@ -307,10 +355,12 @@ export default function MatchAnalyticsDashboard({
         />
 
 
+
         <ShotMap
           shots={shots}
           homeTeamId={homeTeamId}
         />
+
 
 
         <HeatMap
@@ -318,14 +368,17 @@ export default function MatchAnalyticsDashboard({
         />
 
 
+
         <PassNetwork
           network={passNetwork}
         />
 
 
+
         <PlayerRatings
           ratings={ratings}
         />
+
 
 
       </div>
@@ -338,6 +391,7 @@ export default function MatchAnalyticsDashboard({
 }
 
 
+
 function AnalyticsCard({
   title,
   home,
@@ -347,6 +401,7 @@ function AnalyticsCard({
   home: string | number;
   away: string | number;
 }) {
+
 
   return (
 
@@ -359,6 +414,7 @@ function AnalyticsCard({
       "
     >
 
+
       <h3
         className="
           mb-3
@@ -369,6 +425,7 @@ function AnalyticsCard({
       </h3>
 
 
+
       <div
         className="
           flex
@@ -377,11 +434,13 @@ function AnalyticsCard({
         "
       >
 
+
         <div>
 
           <p className="text-sm text-neutral-500">
             Home
           </p>
+
 
           <p className="text-2xl font-bold">
             {home}
@@ -390,17 +449,20 @@ function AnalyticsCard({
         </div>
 
 
+
         <div>
 
           <p className="text-sm text-neutral-500">
             Away
           </p>
 
+
           <p className="text-2xl font-bold">
             {away}
           </p>
 
         </div>
+
 
 
       </div>
