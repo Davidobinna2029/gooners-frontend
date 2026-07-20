@@ -13,6 +13,7 @@ import PressingIntensity from "./PressingIntensity";
 import DefensiveLineHeight from "./DefensiveLineHeight";
 import AttackingWidth from "./AttackingWidth";
 import BallProgression from "./BallProgression";
+import ProgressivePasses from "./ProgressivePasses";
 import FieldTilt from "./FieldTilt";
 
 import PressureMeter
@@ -81,6 +82,10 @@ import {
 import {
   calculateBallProgression,
 } from "@/src/lib/football/tactical/ballProgressionEngine";
+
+import {
+  calculateProgressivePasses,
+} from "@/src/lib/football/tactical/progressivePassesEngine";
 
 import {
   calculateFieldTilt,
@@ -273,6 +278,15 @@ export default function MatchAnalyticsDashboard({
 
 
 
+  const progressivePasses =
+    calculateProgressivePasses(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+
   const fieldTilt =
     calculateFieldTilt(
       events,
@@ -356,6 +370,13 @@ export default function MatchAnalyticsDashboard({
         <BallProgression
           home={ballProgression.home}
           away={ballProgression.away}
+        />
+
+
+
+        <ProgressivePasses
+          home={progressivePasses.home}
+          away={progressivePasses.away}
         />
 
 
