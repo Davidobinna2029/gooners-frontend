@@ -9,6 +9,8 @@ import PlayerRatings from "./PlayerRatings";
 import ExpectedThreat from "./ExpectedThreat";
 import ExpectedAssists
   from "./ExpectedAssists";
+import KeyPassChains
+  from "./KeyPassChains";
 import MatchInsights from "./MatchInsights";
 import FormationTracker from "./FormationTracker";
 import PressingIntensity from "./PressingIntensity";
@@ -56,6 +58,10 @@ import {
 import {
   calculateExpectedAssists,
 } from "@/src/lib/football/analytics/expectedAssistsEngine";
+
+import {
+  calculateKeyPassChains,
+} from "@/src/lib/football/analytics/keyPassChainsEngine";
 
 import {
   buildShotMap,
@@ -222,6 +228,15 @@ export default function MatchAnalyticsDashboard({
 
   const expectedAssists =
     calculateExpectedAssists(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+
+  const keyPassChains =
+    calculateKeyPassChains(
       events,
       homeTeamId,
       awayTeamId
@@ -650,6 +665,13 @@ export default function MatchAnalyticsDashboard({
         <ExpectedAssists
           home={expectedAssists.home}
           away={expectedAssists.away}
+        />
+
+
+
+        <KeyPassChains
+          home={keyPassChains.home}
+          away={keyPassChains.away}
         />
 
 
