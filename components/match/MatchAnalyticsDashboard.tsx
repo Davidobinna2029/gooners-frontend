@@ -11,6 +11,7 @@ import MatchInsights from "./MatchInsights";
 import FormationTracker from "./FormationTracker";
 import PressingIntensity from "./PressingIntensity";
 import PPDA from "./PPDA";
+import HighTurnovers from "./HighTurnovers";
 import DefensiveLineHeight from "./DefensiveLineHeight";
 import AttackingWidth from "./AttackingWidth";
 import BallProgression from "./BallProgression";
@@ -79,6 +80,10 @@ import {
 import {
   calculatePPDA,
 } from "@/src/lib/football/tactical/ppdaEngine";
+
+import {
+  calculateHighTurnovers,
+} from "@/src/lib/football/tactical/highTurnoversEngine";
 
 import {
   calculateDefensiveLineHeight,
@@ -285,6 +290,15 @@ export default function MatchAnalyticsDashboard({
 
 
 
+  const highTurnovers =
+    calculateHighTurnovers(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+
   const defensiveLine =
     calculateDefensiveLineHeight(
       events,
@@ -426,6 +440,13 @@ export default function MatchAnalyticsDashboard({
         <PPDA
           home={ppda.home}
           away={ppda.away}
+        />
+
+
+
+        <HighTurnovers
+          home={highTurnovers.home}
+          away={highTurnovers.away}
         />
 
 
