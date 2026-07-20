@@ -20,6 +20,7 @@ import SequenceThreat from "./SequenceThreat";
 import DangerousAttacks
   from "./DangerousAttacks";
 import TempoIndex from "./TempoIndex";
+import ControlIndex from "./ControlIndex";
 import MatchInsights from "./MatchInsights";
 import FormationTracker from "./FormationTracker";
 import PressingIntensity from "./PressingIntensity";
@@ -95,6 +96,10 @@ import {
 import {
   calculateTempoIndex,
 } from "@/src/lib/football/analytics/tempoIndexEngine";
+
+import {
+  calculateControlIndex,
+} from "@/src/lib/football/analytics/controlIndexEngine";
 
 import {
   buildShotMap,
@@ -542,6 +547,28 @@ export default function MatchAnalyticsDashboard({
 
 
 
+  const controlIndex =
+    calculateControlIndex(
+      {
+        possessionValue: possessionValue.home,
+        sequenceThreat: sequenceThreat.home,
+        dangerousAttacks: dangerousAttacks.home,
+        tempoIndex: tempoIndex.home,
+        fieldTilt: fieldTilt.home,
+        pressingIntensity: pressing.home,
+      },
+      {
+        possessionValue: possessionValue.away,
+        sequenceThreat: sequenceThreat.away,
+        dangerousAttacks: dangerousAttacks.away,
+        tempoIndex: tempoIndex.away,
+        fieldTilt: fieldTilt.away,
+        pressingIntensity: pressing.away,
+      }
+    );
+
+
+
   return (
 
     <section
@@ -801,6 +828,13 @@ export default function MatchAnalyticsDashboard({
         <TempoIndex
           home={tempoIndex.home}
           away={tempoIndex.away}
+        />
+
+
+
+        <ControlIndex
+          home={controlIndex.home}
+          away={controlIndex.away}
         />
 
 
