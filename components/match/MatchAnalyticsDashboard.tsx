@@ -14,6 +14,7 @@ import DefensiveLineHeight from "./DefensiveLineHeight";
 import AttackingWidth from "./AttackingWidth";
 import BallProgression from "./BallProgression";
 import ProgressivePasses from "./ProgressivePasses";
+import CarryDistance from "./CarryDistance";
 import FieldTilt from "./FieldTilt";
 
 import PressureMeter
@@ -86,6 +87,10 @@ import {
 import {
   calculateProgressivePasses,
 } from "@/src/lib/football/tactical/progressivePassesEngine";
+
+import {
+  calculateCarryDistance,
+} from "@/src/lib/football/tactical/carryDistanceEngine";
 
 import {
   calculateFieldTilt,
@@ -287,6 +292,15 @@ export default function MatchAnalyticsDashboard({
 
 
 
+  const carryDistance =
+    calculateCarryDistance(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+
   const fieldTilt =
     calculateFieldTilt(
       events,
@@ -377,6 +391,13 @@ export default function MatchAnalyticsDashboard({
         <ProgressivePasses
           home={progressivePasses.home}
           away={progressivePasses.away}
+        />
+
+
+
+        <CarryDistance
+          home={carryDistance.home}
+          away={carryDistance.away}
         />
 
 
