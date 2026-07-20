@@ -16,6 +16,7 @@ import BallProgression from "./BallProgression";
 import ProgressivePasses from "./ProgressivePasses";
 import CarryDistance from "./CarryDistance";
 import ProgressiveCarries from "./ProgressiveCarries";
+import FinalThirdEntries from "./FinalThirdEntries";
 import FieldTilt from "./FieldTilt";
 
 import PressureMeter
@@ -96,6 +97,10 @@ import {
 import {
   calculateProgressiveCarries,
 } from "@/src/lib/football/tactical/progressiveCarriesEngine";
+
+import {
+  calculateFinalThirdEntries,
+} from "@/src/lib/football/tactical/finalThirdEntriesEngine";
 
 import {
   calculateFieldTilt,
@@ -315,6 +320,15 @@ export default function MatchAnalyticsDashboard({
 
 
 
+  const finalThirdEntries =
+    calculateFinalThirdEntries(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+
   const fieldTilt =
     calculateFieldTilt(
       events,
@@ -419,6 +433,13 @@ export default function MatchAnalyticsDashboard({
         <ProgressiveCarries
           home={progressiveCarries.home}
           away={progressiveCarries.away}
+        />
+
+
+
+        <FinalThirdEntries
+          home={finalThirdEntries.home}
+          away={finalThirdEntries.away}
         />
 
 
