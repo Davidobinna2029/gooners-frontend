@@ -10,6 +10,7 @@ import ExpectedThreat from "./ExpectedThreat";
 import MatchInsights from "./MatchInsights";
 import FormationTracker from "./FormationTracker";
 import PressingIntensity from "./PressingIntensity";
+import PPDA from "./PPDA";
 import DefensiveLineHeight from "./DefensiveLineHeight";
 import AttackingWidth from "./AttackingWidth";
 import BallProgression from "./BallProgression";
@@ -74,6 +75,10 @@ import {
 import {
   calculatePressingIntensity,
 } from "@/src/lib/football/tactical/pressingEngine";
+
+import {
+  calculatePPDA,
+} from "@/src/lib/football/tactical/ppdaEngine";
 
 import {
   calculateDefensiveLineHeight,
@@ -271,6 +276,15 @@ export default function MatchAnalyticsDashboard({
 
 
 
+  const ppda =
+    calculatePPDA(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+
   const defensiveLine =
     calculateDefensiveLineHeight(
       events,
@@ -405,6 +419,13 @@ export default function MatchAnalyticsDashboard({
         <PressingIntensity
           home={pressing.home}
           away={pressing.away}
+        />
+
+
+
+        <PPDA
+          home={ppda.home}
+          away={ppda.away}
         />
 
 
