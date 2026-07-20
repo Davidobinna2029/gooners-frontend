@@ -19,6 +19,7 @@ import PossessionValue from "./PossessionValue";
 import SequenceThreat from "./SequenceThreat";
 import DangerousAttacks
   from "./DangerousAttacks";
+import TempoIndex from "./TempoIndex";
 import MatchInsights from "./MatchInsights";
 import FormationTracker from "./FormationTracker";
 import PressingIntensity from "./PressingIntensity";
@@ -90,6 +91,10 @@ import {
 import {
   calculateDangerousAttacks,
 } from "@/src/lib/football/analytics/dangerousAttacksEngine";
+
+import {
+  calculateTempoIndex,
+} from "@/src/lib/football/analytics/tempoIndexEngine";
 
 import {
   buildShotMap,
@@ -310,6 +315,15 @@ export default function MatchAnalyticsDashboard({
 
   const dangerousAttacks =
     calculateDangerousAttacks(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+
+  const tempoIndex =
+    calculateTempoIndex(
       events,
       homeTeamId,
       awayTeamId
@@ -780,6 +794,13 @@ export default function MatchAnalyticsDashboard({
         <DangerousAttacks
           home={dangerousAttacks.home}
           away={dangerousAttacks.away}
+        />
+
+
+
+        <TempoIndex
+          home={tempoIndex.home}
+          away={tempoIndex.away}
         />
 
 
