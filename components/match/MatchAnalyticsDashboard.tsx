@@ -13,6 +13,8 @@ import KeyPassChains
   from "./KeyPassChains";
 import ShotCreatingActions
   from "./ShotCreatingActions";
+import GoalCreatingActions
+  from "./GoalCreatingActions";
 import MatchInsights from "./MatchInsights";
 import FormationTracker from "./FormationTracker";
 import PressingIntensity from "./PressingIntensity";
@@ -68,6 +70,10 @@ import {
 import {
   calculateShotCreatingActions,
 } from "@/src/lib/football/analytics/shotCreatingActionsEngine";
+
+import {
+  calculateGoalCreatingActions,
+} from "@/src/lib/football/analytics/goalCreatingActionsEngine";
 
 import {
   buildShotMap,
@@ -252,6 +258,15 @@ export default function MatchAnalyticsDashboard({
 
   const shotCreatingActions =
     calculateShotCreatingActions(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+
+  const goalCreatingActions =
+    calculateGoalCreatingActions(
       events,
       homeTeamId,
       awayTeamId
@@ -694,6 +709,13 @@ export default function MatchAnalyticsDashboard({
         <ShotCreatingActions
           home={shotCreatingActions.home}
           away={shotCreatingActions.away}
+        />
+
+
+
+        <GoalCreatingActions
+          home={goalCreatingActions.home}
+          away={goalCreatingActions.away}
         />
 
 
