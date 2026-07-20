@@ -12,6 +12,7 @@ import FormationTracker from "./FormationTracker";
 import PressingIntensity from "./PressingIntensity";
 import DefensiveLineHeight from "./DefensiveLineHeight";
 import AttackingWidth from "./AttackingWidth";
+import BallProgression from "./BallProgression";
 import FieldTilt from "./FieldTilt";
 
 import PressureMeter
@@ -76,6 +77,10 @@ import {
 import {
   calculateAttackingWidth,
 } from "@/src/lib/football/tactical/attackingWidthEngine";
+
+import {
+  calculateBallProgression,
+} from "@/src/lib/football/tactical/ballProgressionEngine";
 
 import {
   calculateFieldTilt,
@@ -259,6 +264,15 @@ export default function MatchAnalyticsDashboard({
 
 
 
+  const ballProgression =
+    calculateBallProgression(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+
   const fieldTilt =
     calculateFieldTilt(
       events,
@@ -335,6 +349,13 @@ export default function MatchAnalyticsDashboard({
         <AttackingWidth
           home={attackingWidth.home}
           away={attackingWidth.away}
+        />
+
+
+
+        <BallProgression
+          home={ballProgression.home}
+          away={ballProgression.away}
         />
 
 

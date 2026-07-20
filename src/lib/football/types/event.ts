@@ -24,13 +24,28 @@ export type FootballEventType =
   | "successful_pass"
   | "key_pass"
   | "cross"
+  | "through_ball"
+  | "switch_play"
+  | "progressive_pass"
+
+  | "carry"
+  | "carry_end"
+  | "dribble"
+  | "take_on"
+  | "progressive_carry"
 
   | "tackle"
   | "interception"
   | "clearance"
   | "block"
   | "recovery"
+  | "ball_recovery"
   | "duel_won"
+
+  | "press"
+  | "pressure_regain"
+
+  | "turnover"
 
   | "corner"
   | "offside"
@@ -42,6 +57,8 @@ export type FootballEventType =
 
   | "substitution"
   | "formation_change"
+
+  | "counter_attack"
 
   | "var"
   | "injury"
@@ -60,6 +77,15 @@ export interface FootballEvent {
 
   extraMinute?: number;
 
+  /**
+   * Match period
+   * 1 = First Half
+   * 2 = Second Half
+   * 3 = Extra Time 1
+   * 4 = Extra Time 2
+   */
+  period?: 1 | 2 | 3 | 4;
+
   playerId?: ID;
 
   playerName?: string;
@@ -68,6 +94,13 @@ export interface FootballEvent {
 
   assistPlayerName?: string;
 
+  /**
+   * Receiver of a pass
+   */
+  receiverId?: ID;
+
+  receiverName?: string;
+
   teamId?: ID;
 
   side?: TeamSide;
@@ -75,12 +108,126 @@ export interface FootballEvent {
   detail?: string;
 
   /**
-   * Used only for formation_change events.
-   * Example:
-   * "4-3-3"
-   * "4-2-3-1"
-   * "3-5-2"
+   * Formation after change.
+   * Used only for formation_change.
    */
   formation?: string;
+
+  /**
+   * Player replaced during substitution.
+   */
+  replacedPlayerId?: ID;
+
+  replacedPlayerName?: string;
+
+  /**
+   * Start location
+   * Normalized pitch coordinates (0–100)
+   */
+  x?: number;
+
+  y?: number;
+
+  /**
+   * End location
+   * Normalized pitch coordinates (0–100)
+   */
+  endX?: number;
+
+  endY?: number;
+
+  /**
+   * Event outcome
+   */
+  successful?: boolean;
+
+  /**
+   * Outcome of defensive action
+   */
+  outcome?:
+    | "won"
+    | "lost"
+    | "blocked"
+    | "saved";
+
+  /**
+   * Tactical zone
+   */
+  zone?:
+    | "defensive_third"
+    | "middle_third"
+    | "final_third"
+    | "left_flank"
+    | "right_flank"
+    | "half_space_left"
+    | "half_space_right"
+    | "box";
+
+  /**
+   * Distance travelled (meters)
+   */
+  distance?: number;
+
+  /**
+   * Speed (m/s)
+   */
+  speed?: number;
+
+  /**
+   * Possession sequence identifier
+   */
+  possessionId?: ID;
+
+  /**
+   * Possession duration (seconds)
+   */
+  possessionDuration?: number;
+
+  /**
+   * Player applying pressure
+   */
+  pressure?: boolean;
+
+  /**
+   * Player performing action while under pressure
+   */
+  underPressure?: boolean;
+
+  /**
+   * Body part used
+   */
+  bodyPart?:
+    | "left_foot"
+    | "right_foot"
+    | "head"
+    | "other";
+
+  /**
+   * Pass height
+   */
+  passHeight?:
+    | "ground"
+    | "low"
+    | "high";
+
+  /**
+   * Pass length (meters)
+   */
+  passLength?: number;
+
+  /**
+   * Expected Goals
+   */
+  xG?: number;
+
+  /**
+   * Expected Threat
+   */
+  xT?: number;
+
+  /**
+   * Progressive action flag
+   */
+  progressive?: boolean;
 
 }
