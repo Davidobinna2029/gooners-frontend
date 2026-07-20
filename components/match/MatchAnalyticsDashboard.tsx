@@ -14,6 +14,8 @@ import PPDA from "./PPDA";
 import HighTurnovers from "./HighTurnovers";
 import CounterPressRecoveries
   from "./CounterPressRecoveries";
+import DefensiveActionsByThird
+  from "./DefensiveActionsByThird";
 import DefensiveLineHeight from "./DefensiveLineHeight";
 import AttackingWidth from "./AttackingWidth";
 import BallProgression from "./BallProgression";
@@ -90,6 +92,10 @@ import {
 import {
   calculateCounterPressRecoveries,
 } from "@/src/lib/football/tactical/counterPressRecoveriesEngine";
+
+import {
+  calculateDefensiveActionsByThird,
+} from "@/src/lib/football/tactical/defensiveActionsByThirdEngine";
 
 import {
   calculateDefensiveLineHeight,
@@ -314,6 +320,15 @@ export default function MatchAnalyticsDashboard({
 
 
 
+  const defensiveActions =
+    calculateDefensiveActionsByThird(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+
   const defensiveLine =
     calculateDefensiveLineHeight(
       events,
@@ -469,6 +484,13 @@ export default function MatchAnalyticsDashboard({
         <CounterPressRecoveries
           home={counterPress.home}
           away={counterPress.away}
+        />
+
+
+
+        <DefensiveActionsByThird
+          home={defensiveActions.home}
+          away={defensiveActions.away}
         />
 
 
