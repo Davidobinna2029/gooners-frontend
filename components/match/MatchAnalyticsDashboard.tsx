@@ -16,6 +16,7 @@ import ShotCreatingActions
 import GoalCreatingActions
   from "./GoalCreatingActions";
 import PossessionValue from "./PossessionValue";
+import SequenceThreat from "./SequenceThreat";
 import MatchInsights from "./MatchInsights";
 import FormationTracker from "./FormationTracker";
 import PressingIntensity from "./PressingIntensity";
@@ -79,6 +80,10 @@ import {
 import {
   calculatePossessionValue,
 } from "@/src/lib/football/analytics/possessionValueEngine";
+
+import {
+  calculateSequenceThreat,
+} from "@/src/lib/football/analytics/sequenceThreatEngine";
 
 import {
   buildShotMap,
@@ -281,6 +286,15 @@ export default function MatchAnalyticsDashboard({
 
   const possessionValue =
     calculatePossessionValue(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+
+  const sequenceThreat =
+    calculateSequenceThreat(
       events,
       homeTeamId,
       awayTeamId
@@ -737,6 +751,13 @@ export default function MatchAnalyticsDashboard({
         <PossessionValue
           home={possessionValue.home}
           away={possessionValue.away}
+        />
+
+
+
+        <SequenceThreat
+          home={sequenceThreat.home}
+          away={sequenceThreat.away}
         />
 
 
