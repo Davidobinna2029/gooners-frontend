@@ -7,6 +7,8 @@ import PassNetwork from "./PassNetwork";
 import WinProbability from "./WinProbability";
 import PlayerRatings from "./PlayerRatings";
 import ExpectedThreat from "./ExpectedThreat";
+import ExpectedAssists
+  from "./ExpectedAssists";
 import MatchInsights from "./MatchInsights";
 import FormationTracker from "./FormationTracker";
 import PressingIntensity from "./PressingIntensity";
@@ -50,6 +52,10 @@ import {
 import {
   calculateExpectedThreat,
 } from "@/src/lib/football/analytics/xTEngine";
+
+import {
+  calculateExpectedAssists,
+} from "@/src/lib/football/analytics/expectedAssistsEngine";
 
 import {
   buildShotMap,
@@ -207,6 +213,15 @@ export default function MatchAnalyticsDashboard({
 
   const xT =
     calculateExpectedThreat(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+
+  const expectedAssists =
+    calculateExpectedAssists(
       events,
       homeTeamId,
       awayTeamId
@@ -628,6 +643,13 @@ export default function MatchAnalyticsDashboard({
         <ExpectedThreat
           home={xT.home}
           away={xT.away}
+        />
+
+
+
+        <ExpectedAssists
+          home={expectedAssists.home}
+          away={expectedAssists.away}
         />
 
 
