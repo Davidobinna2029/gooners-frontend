@@ -15,6 +15,7 @@ import ShotCreatingActions
   from "./ShotCreatingActions";
 import GoalCreatingActions
   from "./GoalCreatingActions";
+import PossessionValue from "./PossessionValue";
 import MatchInsights from "./MatchInsights";
 import FormationTracker from "./FormationTracker";
 import PressingIntensity from "./PressingIntensity";
@@ -74,6 +75,10 @@ import {
 import {
   calculateGoalCreatingActions,
 } from "@/src/lib/football/analytics/goalCreatingActionsEngine";
+
+import {
+  calculatePossessionValue,
+} from "@/src/lib/football/analytics/possessionValueEngine";
 
 import {
   buildShotMap,
@@ -267,6 +272,15 @@ export default function MatchAnalyticsDashboard({
 
   const goalCreatingActions =
     calculateGoalCreatingActions(
+      events,
+      homeTeamId,
+      awayTeamId
+    );
+
+
+
+  const possessionValue =
+    calculatePossessionValue(
       events,
       homeTeamId,
       awayTeamId
@@ -716,6 +730,13 @@ export default function MatchAnalyticsDashboard({
         <GoalCreatingActions
           home={goalCreatingActions.home}
           away={goalCreatingActions.away}
+        />
+
+
+
+        <PossessionValue
+          home={possessionValue.home}
+          away={possessionValue.away}
         />
 
 
