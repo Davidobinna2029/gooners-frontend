@@ -1,21 +1,18 @@
-// src/lib/football/intelligence/matchIntelligence.ts
+// lib/football/intelligence/matchIntelligence.ts
 
-import type { ID } from "@/src/lib/football/types";
+import type { MatchData } from "@/lib/football/data/types";
 
 /* ==========================================================
    MATCH
 ========================================================== */
 
 export interface MatchMetadata {
-  matchId: ID;
+  matchId: number;
   competition?: string;
   season?: string;
   round?: string;
-
   venue?: string;
-
   kickoff?: string;
-
   referee?: string;
 }
 
@@ -33,14 +30,10 @@ export interface MatchScore {
 ========================================================== */
 
 export interface TeamInformation {
-  id: ID;
-
+  id: number;
   name: string;
-
   shortName?: string;
-
   formation?: string;
-
   manager?: string;
 }
 
@@ -50,15 +43,10 @@ export interface TeamInformation {
 
 export interface DominanceMetrics {
   possessionValue: number;
-
   sequenceThreat: number;
-
   dangerousAttacks: number;
-
   controlIndex: number;
-
   fieldTilt: number;
-
   tempoIndex: number;
 }
 
@@ -68,17 +56,11 @@ export interface DominanceMetrics {
 
 export interface ProgressionMetrics {
   attackingWidth: number;
-
   ballProgression: number;
-
   progressivePasses: number;
-
   progressiveCarries: number;
-
   carryDistance: number;
-
   finalThirdEntries: number;
-
   penaltyAreaEntries: number;
 }
 
@@ -88,11 +70,8 @@ export interface ProgressionMetrics {
 
 export interface ChanceCreationMetrics {
   xA: number;
-
   shotCreatingActions: number;
-
   goalCreatingActions: number;
-
   keyPassChains: number;
 }
 
@@ -102,15 +81,10 @@ export interface ChanceCreationMetrics {
 
 export interface DefensiveMetrics {
   defensiveLineHeight: number;
-
   pressingIntensity: number;
-
   PPDA: number;
-
   defensiveCompactness: number;
-
   highTurnovers: number;
-
   counterPressRecoveries: number;
 
   defensiveActionsByThird: {
@@ -126,7 +100,6 @@ export interface DefensiveMetrics {
 
 export interface MomentumMetrics {
   home: number[];
-
   away: number[];
 
   dominantTeam?:
@@ -136,22 +109,19 @@ export interface MomentumMetrics {
 }
 
 /* ==========================================================
-   PLAYER INSIGHTS
+   PLAYER
 ========================================================== */
 
 export interface PlayerInsight {
-  playerId: ID;
-
+  playerId: number;
   playerName: string;
 
   rating?: number;
 
   xG?: number;
-
   xA?: number;
 
   progressivePasses?: number;
-
   progressiveCarries?: number;
 
   defensiveActions?: number;
@@ -192,11 +162,114 @@ export interface MatchIntelligence {
 }
 
 /* ==========================================================
+   DEFAULT TEAM METRICS
+========================================================== */
+
+function createDefaultTeam(
+  id: number,
+  name: string,
+  shortName?: string,
+  formation?: string
+): TeamIntelligence {
+
+  return {
+
+    information: {
+      id,
+      name,
+      shortName,
+      formation,
+    },
+
+    dominance: {
+      possessionValue: 50,
+      sequenceThreat: 50,
+      dangerousAttacks: 10,
+      controlIndex: 50,
+      fieldTilt: 50,
+      tempoIndex: 50,
+    },
+
+    progression: {
+      attackingWidth: 50,
+      ballProgression: 50,
+      progressivePasses: 20,
+      progressiveCarries: 15,
+      carryDistance: 100,
+      finalThirdEntries: 15,
+      penaltyAreaEntries: 8,
+    },
+
+    chanceCreation: {
+      xA: 0,
+      shotCreatingActions: 0,
+      goalCreatingActions: 0,
+      keyPassChains: 0,
+    },
+
+    defending: {
+      defensiveLineHeight: 50,
+      pressingIntensity: 50,
+      PPDA: 10,
+      defensiveCompactness: 50,
+      highTurnovers: 0,
+      counterPressRecoveries: 0,
+
+      defensiveActionsByThird: {
+        defensive: 0,
+        middle: 0,
+        attacking: 0,
+      },
+    },
+
+    players: [],
+  };
+
+}
+
+/* ==========================================================
    BUILDER
 ========================================================== */
 
 export function buildMatchIntelligence(
-  intelligence: MatchIntelligence
+  data: MatchData
 ): MatchIntelligence {
-  return intelligence;
+
+  return {
+
+    metadata: {
+      matchId: data.match.id,
+      competition: data.match.competition.name,
+      round: data.match.stage,
+      venue: data.match.venue,
+      kickoff: data.match.utcDate,
+    },
+
+    score: {
+      home: data.match.score.home,
+      away: data.match.score.away,
+    },
+
+    home: createDefaultTeam(
+      data.match.homeTeam.id,
+      data.match.homeTeam.name,
+      data.match.homeTeam.shortName,
+      data.homeLineup?.formation
+    ),
+
+    away: createDefaultTeam(
+      data.match.awayTeam.id,
+      data.match.awayTeam.name,
+      data.match.awayTeam.shortName,
+      data.awayLineup?.formation
+    ),
+
+    momentum: {
+      home: [],
+      away: [],
+      dominantTeam: "balanced",
+    },
+
+  };
+
 }

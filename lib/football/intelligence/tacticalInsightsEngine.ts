@@ -1,4 +1,4 @@
-// src/lib/football/intelligence/tacticalInsightsEngine.ts
+// lib/football/intelligence/tacticalInsightsEngine.ts
 import type {
   MatchIntelligence,
 } from "./matchIntelligence";
