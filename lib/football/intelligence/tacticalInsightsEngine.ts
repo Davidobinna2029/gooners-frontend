@@ -895,10 +895,10 @@ const xARule: TacticalInsightRule = {
 
     const insights: TacticalInsight[] = [];
 
-    if (
-      intelligence.home.chanceCreation.xA >
-      intelligence.away.chanceCreation.xA * 1.35
-    ) {
+    const homeXA = intelligence.home.chanceCreation.xA ?? 0;
+    const awayXA = intelligence.away.chanceCreation.xA ?? 0;
+
+    if (homeXA > awayXA * 1.35 && homeXA > 0) {
 
       insights.push(
         createInsight(
@@ -914,10 +914,7 @@ const xARule: TacticalInsightRule = {
 
     }
 
-    if (
-      intelligence.away.chanceCreation.xA >
-      intelligence.home.chanceCreation.xA * 1.35
-    ) {
+    if (awayXA > homeXA * 1.35 && awayXA > 0) {
 
       insights.push(
         createInsight(

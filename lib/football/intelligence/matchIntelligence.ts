@@ -2,6 +2,33 @@
 
 import type { MatchData } from "@/lib/football/data/types";
 
+import { buildPlayerIntelligence } from "@/lib/football/intelligence/player/buildPlayerIntelligence";
+
+import {
+  calculatePossession,
+  calculateControlIndex,
+  calculateFieldTilt,
+  calculatePPDA,
+  calculateProgressivePasses,
+  calculateDangerousAttacks,
+} from "@/lib/football/calculators";
+
+/* ==========================================================
+   PROVIDER CONFIDENCE
+   Rough reliability score per data provider, used to flag
+   how much an AI engine downstream should trust this payload.
+========================================================== */
+
+const PROVIDER_CONFIDENCE: Record<string, number> = {
+  "football-data.org": 0.95,
+  "api-football": 0.99,
+  mock: 0.4,
+};
+
+const DEFAULT_CONFIDENCE = 0.9;
+
+const MATCH_INTELLIGENCE_VERSION = "1.0.0";
+
 /* ==========================================================
    MATCH
 ========================================================== */
@@ -35,6 +62,9 @@ export interface TeamInformation {
   shortName?: string;
   formation?: string;
   manager?: string;
+  crest?: string;
+  country?: string;
+  code?: string;
 }
 
 /* ==========================================================
@@ -69,7 +99,7 @@ export interface ProgressionMetrics {
 ========================================================== */
 
 export interface ChanceCreationMetrics {
-  xA: number;
+  xA?: number;
   shotCreatingActions: number;
   goalCreatingActions: number;
   keyPassChains: number;
@@ -115,16 +145,50 @@ export interface MomentumMetrics {
 export interface PlayerInsight {
   playerId: number;
   playerName: string;
+  team: "home" | "away";
 
+  shirtNumber?: number;
+  position?: string;
+
+  /**
+   * 0-10. Undefined (not 0) when the provider has no rating for
+   * this player — e.g. an unused substitute — since 0 would read
+   * as "rated zero" rather than "not rated."
+   */
   rating?: number;
 
-  xG?: number;
-  xA?: number;
+  minutesPlayed: number;
 
-  progressivePasses?: number;
-  progressiveCarries?: number;
+  goals: number;
+  assists: number;
 
-  defensiveActions?: number;
+  shots: number;
+  shotsOnTarget: number;
+
+  keyPasses: number;
+  passesAttempted: number;
+  passesCompleted: number;
+  /** 0-100. Derived from passesAttempted × passAccuracy, not a literal provider field — see calculatePlayerPassing.ts. */
+  passAccuracy: number;
+
+  tackles: number;
+  interceptions: number;
+  duelsWon: number;
+  duelsTotal: number;
+  dribblesSuccessful: number;
+
+  foulsCommitted: number;
+  foulsDrawn: number;
+
+  yellowCards: number;
+  redCards: number;
+
+  /**
+   * Derived composite score (see calculatePlayerContribution.ts),
+   * not a provider stat — used for ranking players against each
+   * other, not displayed as if it were a measured metric.
+   */
+  contributionScore: number;
 }
 
 /* ==========================================================
@@ -152,6 +216,16 @@ export interface TeamIntelligence {
 export interface MatchIntelligence {
   metadata: MatchMetadata;
 
+  generatedAt: string;
+
+  updatedAt: string;
+
+  provider: string;
+
+  confidence: number;
+
+  version: string;
+
   score: MatchScore;
 
   home: TeamIntelligence;
@@ -165,11 +239,20 @@ export interface MatchIntelligence {
    DEFAULT TEAM METRICS
 ========================================================== */
 
+interface TeamMetricOverrides {
+  dominance?: Partial<DominanceMetrics>;
+  progression?: Partial<ProgressionMetrics>;
+  chanceCreation?: Partial<ChanceCreationMetrics>;
+  defending?: Partial<DefensiveMetrics>;
+  players?: PlayerInsight[];
+}
+
 function createDefaultTeam(
   id: number,
   name: string,
   shortName?: string,
-  formation?: string
+  formation?: string,
+  metrics?: TeamMetricOverrides
 ): TeamIntelligence {
 
   return {
@@ -188,6 +271,7 @@ function createDefaultTeam(
       controlIndex: 50,
       fieldTilt: 50,
       tempoIndex: 50,
+      ...(metrics?.dominance ?? {}),
     },
 
     progression: {
@@ -198,13 +282,14 @@ function createDefaultTeam(
       carryDistance: 100,
       finalThirdEntries: 15,
       penaltyAreaEntries: 8,
+      ...(metrics?.progression ?? {}),
     },
 
     chanceCreation: {
-      xA: 0,
       shotCreatingActions: 0,
       goalCreatingActions: 0,
       keyPassChains: 0,
+      ...(metrics?.chanceCreation ?? {}),
     },
 
     defending: {
@@ -220,9 +305,10 @@ function createDefaultTeam(
         middle: 0,
         attacking: 0,
       },
+      ...(metrics?.defending ?? {}),
     },
 
-    players: [],
+    players: metrics?.players ?? [],
   };
 
 }
@@ -235,6 +321,32 @@ export function buildMatchIntelligence(
   data: MatchData
 ): MatchIntelligence {
 
+  const provider =
+    process.env.NEXT_PUBLIC_FOOTBALL_PROVIDER ?? "football-data.org";
+
+  const confidence =
+    PROVIDER_CONFIDENCE[provider] ?? DEFAULT_CONFIDENCE;
+
+  const timestamp = new Date().toISOString();
+
+  const metrics = {
+    possession: calculatePossession(data),
+    controlIndex: calculateControlIndex(data),
+    fieldTilt: calculateFieldTilt(data),
+    ppda: calculatePPDA(data),
+    progressivePasses: calculateProgressivePasses(data),
+    dangerousAttacks: calculateDangerousAttacks(data),
+  };
+
+
+  const homePlayers = buildPlayerIntelligence(
+    (data.players ?? []).filter(player => player.team === "home")
+  );
+
+  const awayPlayers = buildPlayerIntelligence(
+    (data.players ?? []).filter(player => player.team === "away")
+  );
+
   return {
 
     metadata: {
@@ -245,6 +357,16 @@ export function buildMatchIntelligence(
       kickoff: data.match.utcDate,
     },
 
+    generatedAt: timestamp,
+
+    updatedAt: timestamp,
+
+    provider,
+
+    confidence,
+
+    version: MATCH_INTELLIGENCE_VERSION,
+
     score: {
       home: data.match.score.home,
       away: data.match.score.away,
@@ -254,14 +376,50 @@ export function buildMatchIntelligence(
       data.match.homeTeam.id,
       data.match.homeTeam.name,
       data.match.homeTeam.shortName,
-      data.homeLineup?.formation
+      data.homeLineup?.formation,
+      {
+        dominance: {
+          possessionValue: metrics.possession.home,
+          controlIndex: metrics.controlIndex.home,
+          fieldTilt: metrics.fieldTilt.home,
+          dangerousAttacks: metrics.dangerousAttacks.home,
+        },
+
+        progression: {
+          progressivePasses: metrics.progressivePasses.home,
+        },
+
+        defending: {
+          PPDA: metrics.ppda.home,
+        },
+
+        players: homePlayers,
+      }
     ),
 
     away: createDefaultTeam(
       data.match.awayTeam.id,
       data.match.awayTeam.name,
       data.match.awayTeam.shortName,
-      data.awayLineup?.formation
+      data.awayLineup?.formation,
+      {
+        dominance: {
+          possessionValue: metrics.possession.away,
+          controlIndex: metrics.controlIndex.away,
+          fieldTilt: metrics.fieldTilt.away,
+          dangerousAttacks: metrics.dangerousAttacks.away,
+        },
+
+        progression: {
+          progressivePasses: metrics.progressivePasses.away,
+        },
+
+        defending: {
+          PPDA: metrics.ppda.away,
+        },
+
+        players: awayPlayers,
+      }
     ),
 
     momentum: {

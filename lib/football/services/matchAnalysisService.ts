@@ -6,6 +6,7 @@
 
 import { loadMatchData } from "@/lib/football/data/loadMatchData";
 import { mapMatchToViewModel } from "@/lib/football/mappers/mapMatchToViewModel";
+import { mapNormalizedEventsToMomentum } from "@/lib/football/data/mapEventsToMomentum";
 
 import {
   buildMatchIntelligence,
@@ -13,7 +14,7 @@ import {
 
 import {
   buildTacticalInsights,
-} from "@/lib/football/intelligence/tacticalInsightsEngine";
+} from "@/lib/football/intelligence/tacticalInsights";
 
 import {
   buildMatchMomentum,
@@ -22,6 +23,10 @@ import {
 import {
   buildFormationShifts,
 } from "@/lib/football/intelligence/formationShiftEngine";
+
+import {
+  buildPlayerRankings,
+} from "@/lib/football/intelligence/player";
 
 import {
   buildMatchAnalysis,
@@ -36,8 +41,8 @@ import type {
 } from "@/lib/football/intelligence/matchIntelligence";
 
 import type {
-  TacticalInsight,
-} from "@/lib/football/intelligence/tacticalInsightsEngine";
+  MatchTacticalInsights,
+} from "@/lib/football/intelligence/tacticalInsights";
 
 import type {
   MatchMomentum,
@@ -46,6 +51,10 @@ import type {
 import type {
   MatchFormations,
 } from "@/lib/football/intelligence/formationShiftEngine";
+
+import type {
+  PlayerRankings,
+} from "@/lib/football/intelligence/player";
 
 import type {
   MatchAnalysis,
@@ -99,7 +108,7 @@ export interface MatchAnalysisResponse {
   /**
    * Tactical Engine
    */
-  tacticalInsights: TacticalInsight[];
+  tacticalInsights: MatchTacticalInsights;
 
   /**
    * Momentum Engine
@@ -110,6 +119,11 @@ export interface MatchAnalysisResponse {
    * Formation Engine
    */
   formationShifts: MatchFormations;
+
+  /**
+   * Player Rankings (Man of the Match, Best Defender, etc.)
+   */
+  playerRankings: PlayerRankings;
 
   /**
    * Editorial Report
@@ -166,18 +180,23 @@ export async function getMatchAnalysis(
     buildMatchIntelligence(rawMatch);
 
   //----------------------------------------------------------
+  // Momentum Engine
+  // (must run before Tactical Insights — detectMatchControl
+  // depends on the momentum verdict)
+  //----------------------------------------------------------
+
+  const momentumEvents =
+    mapNormalizedEventsToMomentum(rawMatch.events);
+
+  const momentum =
+    buildMatchMomentum(intelligence, momentumEvents);
+
+  //----------------------------------------------------------
   // Tactical Insights
   //----------------------------------------------------------
 
   const tacticalInsights =
-    buildTacticalInsights(intelligence);
-
-  //----------------------------------------------------------
-  // Momentum Engine
-  //----------------------------------------------------------
-
-  const momentum =
-    buildMatchMomentum(intelligence);
+    buildTacticalInsights(intelligence, momentum);
 
   //----------------------------------------------------------
   // Formation Engine
@@ -185,6 +204,18 @@ export async function getMatchAnalysis(
 
   const formationShifts =
     buildFormationShifts(intelligence);
+
+  //----------------------------------------------------------
+  // Player Rankings
+  // (match-wide superlatives — combines both teams' players,
+  // since Man of the Match etc. aren't per-team concepts)
+  //----------------------------------------------------------
+
+  const playerRankings =
+    buildPlayerRankings([
+      ...intelligence.home.players,
+      ...intelligence.away.players,
+    ]);
 
   //----------------------------------------------------------
   // AI Editorial Analysis
@@ -197,7 +228,26 @@ export async function getMatchAnalysis(
       tacticalInsights,
       momentum,
       formationShifts,
+      playerRankings,
     });
+
+  //----------------------------------------------------------
+  // Player Ratings
+  // (flat per-player list, distinct from playerRankings'
+  // superlatives — every rated player, not just the standouts)
+  //----------------------------------------------------------
+
+  const playerRatings: PlayerRating[] = [
+    ...intelligence.home.players,
+    ...intelligence.away.players,
+  ]
+    .filter(player => player.rating !== undefined)
+    .map(player => ({
+      playerId: String(player.playerId),
+      playerName: player.playerName,
+      team: player.team,
+      rating: player.rating as number,
+    }));
 
   //----------------------------------------------------------
   // Placeholder Data
@@ -206,8 +256,6 @@ export async function getMatchAnalysis(
   const timeline: TimelineEvent[] = [];
 
   const statistics: MatchStatistic[] = [];
-
-  const playerRatings: PlayerRating[] = [];
 
   //----------------------------------------------------------
   // Response
@@ -220,6 +268,7 @@ export async function getMatchAnalysis(
     tacticalInsights,
     momentum,
     formationShifts,
+    playerRankings,
     report,
     timeline,
     statistics,

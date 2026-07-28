@@ -1,19 +1,25 @@
-// src/lib/football/data/loadMatchData.ts
+// lib/football/data/loadMatchData.ts
 
 import {
-  getMatch,
-} from "./footballDataClient";
+  getFixture,
+  getFixtureEvents,
+  getFixtureLineups,
+  getFixturePlayers,
+} from "./apiFootball/client";
 
-import {
-  normalizeMatch,
-} from "./normalizeMatch";
+import { mapApiFootballFixtureToNormalized } from "./apiFootball/mapMatchToNormalized";
+import { mapApiFootballEventsToNormalized } from "./apiFootball/mapEventsToNormalized";
+import { mapApiFootballLineupsToNormalized } from "./apiFootball/mapLineupsToNormalized";
+import { mapApiFootballPlayersToNormalized } from "./apiFootball/mapPlayersToNormalized";
 
-import type {
-  MatchData,
-} from "./types";
+import type { MatchData } from "./types";
 
 /* ==========================================================
-   LOAD MATCH DATA
+   LOAD MATCH DATA (API-Football)
+
+   Fetches all four endpoints needed for one match in parallel,
+   then normalizes each into MatchData's provider-agnostic shape.
+   Requires API_FOOTBALL_KEY to be set — see client.ts.
 ========================================================== */
 
 export async function loadMatchData(
@@ -22,25 +28,64 @@ export async function loadMatchData(
 
   try {
 
-    const rawMatch =
-      await getMatch(Number(matchId));
+    const fixtureId = Number(matchId);
 
-    const normalized =
-      normalizeMatch(rawMatch);
+    const [rawFixture, rawEvents, rawLineups, rawPlayersByTeam] =
+      await Promise.all([
+        getFixture(fixtureId),
+        getFixtureEvents(fixtureId),
+        getFixtureLineups(fixtureId),
+        getFixturePlayers(fixtureId),
+      ]);
 
-    return normalized;
+    const match = mapApiFootballFixtureToNormalized(rawFixture);
+
+    const events = mapApiFootballEventsToNormalized(
+      rawEvents,
+      match.homeTeam.id,
+      match.awayTeam.id
+    );
+
+    const lineups = mapApiFootballLineupsToNormalized(
+      rawLineups,
+      match.homeTeam.id,
+      match.awayTeam.id
+    );
+
+    const homePlayerBlock = rawPlayersByTeam.find(
+      block => block.team.id === match.homeTeam.id
+    );
+
+    const awayPlayerBlock = rawPlayersByTeam.find(
+      block => block.team.id === match.awayTeam.id
+    );
+
+    const players = [
+      ...(homePlayerBlock
+        ? mapApiFootballPlayersToNormalized(homePlayerBlock.players, "home")
+        : []),
+      ...(awayPlayerBlock
+        ? mapApiFootballPlayersToNormalized(awayPlayerBlock.players, "away")
+        : []),
+    ];
+
+    return {
+      match,
+      events,
+      players,
+      homeLineup: lineups.home,
+      awayLineup: lineups.away,
+      raw: {
+        fixture: rawFixture,
+        events: rawEvents,
+        lineups: rawLineups,
+        players: rawPlayersByTeam,
+      },
+    };
 
   } catch (error) {
-
-    console.error(
-      "[loadMatchData]",
-      error
-    );
-
-    throw new Error(
-      "Unable to load match data."
-    );
-
+    console.error("[loadMatchData]", error);
+    throw new Error("Unable to load match data.");
   }
 
 }
