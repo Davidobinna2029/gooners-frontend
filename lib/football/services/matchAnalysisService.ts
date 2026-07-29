@@ -7,6 +7,7 @@
 import { loadMatchData } from "@/lib/football/data/loadMatchData";
 import { mapMatchToViewModel } from "@/lib/football/mappers/mapMatchToViewModel";
 import { mapNormalizedEventsToMomentum } from "@/lib/football/data/mapEventsToMomentum";
+import { mapEventsToTimeline } from "@/lib/football/mappers/mapEventsToTimeline";
 
 import {
   buildMatchIntelligence,
@@ -60,6 +61,10 @@ import type {
   MatchAnalysis,
 } from "@/lib/football/ai/matchAnalysisEngine";
 
+import type {
+  TimelineEvent,
+} from "@/components/football/match-centre/timeline";
+
 // ==========================================================
 // Future Types
 // ==========================================================
@@ -68,14 +73,6 @@ export interface MatchStatistic {
   label: string;
   home: number | string;
   away: number | string;
-}
-
-export interface TimelineEvent {
-  minute: number;
-  type: string;
-  team: "home" | "away";
-  title: string;
-  description?: string;
 }
 
 export interface PlayerRating {
@@ -90,64 +87,28 @@ export interface PlayerRating {
 // ==========================================================
 
 export interface MatchAnalysisResponse {
-  /**
-   * Match Header
-   */
   match: MatchViewModel;
 
-  /**
-   * Raw Provider Response
-   */
   rawMatch: unknown;
 
-  /**
-   * Football Intelligence
-   */
   intelligence: MatchIntelligence;
 
-  /**
-   * Tactical Engine
-   */
   tacticalInsights: MatchTacticalInsights;
 
-  /**
-   * Momentum Engine
-   */
   momentum: MatchMomentum;
 
-  /**
-   * Formation Engine
-   */
   formationShifts: MatchFormations;
 
-  /**
-   * Player Rankings (Man of the Match, Best Defender, etc.)
-   */
   playerRankings: PlayerRankings;
 
-  /**
-   * Editorial Report
-   */
   report: MatchAnalysis;
 
-  /**
-   * Timeline
-   */
   timeline: TimelineEvent[];
 
-  /**
-   * Statistics
-   */
   statistics: MatchStatistic[];
 
-  /**
-   * Player Ratings
-   */
   playerRatings: PlayerRating[];
 
-  /**
-   * Metadata
-   */
   generatedAt: string;
 }
 
@@ -181,34 +142,38 @@ export async function getMatchAnalysis(
 
   //----------------------------------------------------------
   // Momentum Engine
-  // (must run before Tactical Insights — detectMatchControl
-  // depends on the momentum verdict)
   //----------------------------------------------------------
 
   const momentumEvents =
     mapNormalizedEventsToMomentum(rawMatch.events);
 
   const momentum =
-    buildMatchMomentum(intelligence, momentumEvents);
+    buildMatchMomentum(
+      intelligence,
+      momentumEvents
+    );
 
   //----------------------------------------------------------
   // Tactical Insights
   //----------------------------------------------------------
 
   const tacticalInsights =
-    buildTacticalInsights(intelligence, momentum);
+    buildTacticalInsights(
+      intelligence,
+      momentum
+    );
 
   //----------------------------------------------------------
   // Formation Engine
   //----------------------------------------------------------
 
   const formationShifts =
-    buildFormationShifts(intelligence);
+    buildFormationShifts(
+      intelligence
+    );
 
   //----------------------------------------------------------
   // Player Rankings
-  // (match-wide superlatives — combines both teams' players,
-  // since Man of the Match etc. aren't per-team concepts)
   //----------------------------------------------------------
 
   const playerRankings =
@@ -218,7 +183,7 @@ export async function getMatchAnalysis(
     ]);
 
   //----------------------------------------------------------
-  // AI Editorial Analysis
+  // Editorial Analysis
   //----------------------------------------------------------
 
   const report =
@@ -232,9 +197,16 @@ export async function getMatchAnalysis(
     });
 
   //----------------------------------------------------------
+  // Timeline
+  //----------------------------------------------------------
+
+  const timeline =
+    mapEventsToTimeline(
+      rawMatch.events
+    );
+
+  //----------------------------------------------------------
   // Player Ratings
-  // (flat per-player list, distinct from playerRankings'
-  // superlatives — every rated player, not just the standouts)
   //----------------------------------------------------------
 
   const playerRatings: PlayerRating[] = [
@@ -250,10 +222,8 @@ export async function getMatchAnalysis(
     }));
 
   //----------------------------------------------------------
-  // Placeholder Data
+  // Statistics
   //----------------------------------------------------------
-
-  const timeline: TimelineEvent[] = [];
 
   const statistics: MatchStatistic[] = [];
 
