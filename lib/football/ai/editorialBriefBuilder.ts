@@ -1,5 +1,12 @@
+// lib/football/ai/editorialBriefBuilder.ts
+
 import type { MatchIntelligence } from "../intelligence/matchIntelligence";
-import type { TacticalInsight } from "../intelligence/tacticalInsightsEngine";
+
+import type {
+  MatchTacticalInsights,
+  TacticalInsight,
+} from "../intelligence/tacticalInsights";
+
 import type { MatchMomentum } from "../intelligence/momentumEngine";
 import type { MatchFormations } from "../intelligence/formationShiftEngine";
 
@@ -9,7 +16,7 @@ import type { MatchFormations } from "../intelligence/formationShiftEngine";
 
 export interface PromptBuilderInput {
   intelligence: MatchIntelligence;
-  tacticalInsights: TacticalInsight[];
+  tacticalInsights: MatchTacticalInsights;
   momentum: MatchMomentum;
   formations: MatchFormations;
 }
@@ -36,16 +43,42 @@ function formatConfidence(value: number): string {
 }
 
 /* ==========================================================
+   FLATTEN TACTICAL INSIGHTS
+========================================================== */
+
+function flattenInsights(
+  insights: MatchTacticalInsights
+): TacticalInsight[] {
+  return [
+    ...insights.home.attacking,
+    ...insights.home.defending,
+    ...insights.home.transition,
+    ...insights.home.possession,
+
+    ...insights.away.attacking,
+    ...insights.away.defending,
+    ...insights.away.transition,
+    ...insights.away.possession,
+  ];
+}
+
+/* ==========================================================
    TACTICAL INSIGHTS
 ========================================================== */
 
-function buildTacticalSection(insights: TacticalInsight[]): string {
-  if (!insights.length) {
+function buildTacticalSection(
+  insights: MatchTacticalInsights
+): string {
+  const allInsights = flattenInsights(insights);
+
+  if (allInsights.length === 0) {
     return "No major tactical insights detected.";
   }
-  return insights
+
+  return allInsights
+    .sort((a, b) => b.confidence - a.confidence)
     .map(
-      insight =>
+      (insight) =>
         `• ${insight.title} (${formatConfidence(
           insight.confidence
         )}) — ${insight.description}`
@@ -57,13 +90,16 @@ function buildTacticalSection(insights: TacticalInsight[]): string {
    MOMENTUM TIMELINE
 ========================================================== */
 
-function buildMomentumSection(momentum: MatchMomentum): string {
-  if (!momentum.timeline.length) {
+function buildMomentumSection(
+  momentum: MatchMomentum
+): string {
+  if (momentum.timeline.length === 0) {
     return "No momentum timeline available.";
   }
+
   return momentum.timeline
     .map(
-      window =>
+      (window) =>
         `${window.minuteStart}'-${window.minuteEnd}' : ${window.dominantTeam.toUpperCase()} (${window.intensity.toFixed(
           0
         )})`
@@ -75,51 +111,71 @@ function buildMomentumSection(momentum: MatchMomentum): string {
    FORMATION SHIFTS
 ========================================================== */
 
-function buildFormationSection(formations: MatchFormations): string {
+function buildFormationSection(
+  formations: MatchFormations
+): string {
   const lines: string[] = [];
+
   for (const shift of formations.home) {
     lines.push(
       `HOME ${shift.minute}' : ${shift.fromFormation} → ${shift.toFormation} (${shift.reason})`
     );
   }
+
   for (const shift of formations.away) {
     lines.push(
       `AWAY ${shift.minute}' : ${shift.fromFormation} → ${shift.toFormation} (${shift.reason})`
     );
   }
-  if (!lines.length) {
+
+  if (lines.length === 0) {
     return "No major formation changes detected.";
   }
+
   return lines.join("\n");
 }
 
 /* ==========================================================
-   MATCH INTELLIGENCE SUMMARY
+   MATCH SUMMARY
 ========================================================== */
 
-function buildMatchSummary(intelligence: MatchIntelligence): string {
+function buildMatchSummary(
+  intelligence: MatchIntelligence
+): string {
   return [
     `HOME CONTROL INDEX: ${intelligence.home.dominance.controlIndex.toFixed(1)}`,
     `AWAY CONTROL INDEX: ${intelligence.away.dominance.controlIndex.toFixed(1)}`,
+
     "",
+
     `HOME POSSESSION VALUE: ${formatPercent(
       intelligence.home.dominance.possessionValue
     )}`,
+
     `AWAY POSSESSION VALUE: ${formatPercent(
       intelligence.away.dominance.possessionValue
     )}`,
+
     "",
+
     `HOME FIELD TILT: ${formatPercent(
       intelligence.home.dominance.fieldTilt
     )}`,
+
     `AWAY FIELD TILT: ${formatPercent(
       intelligence.away.dominance.fieldTilt
     )}`,
+
     "",
+
     `HOME TEMPO: ${intelligence.home.dominance.tempoIndex.toFixed(0)}`,
+
     `AWAY TEMPO: ${intelligence.away.dominance.tempoIndex.toFixed(0)}`,
+
     "",
+
     `HOME DANGEROUS ATTACKS: ${intelligence.home.dominance.dangerousAttacks}`,
+
     `AWAY DANGEROUS ATTACKS: ${intelligence.away.dominance.dangerousAttacks}`,
   ].join("\n");
 }
@@ -131,17 +187,20 @@ function buildMatchSummary(intelligence: MatchIntelligence): string {
 function buildSystemPrompt(): string {
   return `
 You are an elite football tactical analyst.
-Your job is to produce a professional match analysis.
+
+Your task is to produce a professional tactical match analysis.
+
 Rules:
+
 - Never invent statistics.
-- Use only supplied intelligence.
+- Use ONLY supplied football intelligence.
 - Explain tactical behaviour.
 - Mention momentum swings.
 - Mention formation changes.
 - Explain why the match evolved.
 - Write naturally.
 - Avoid repetition.
-- Sound like a professional analyst rather than a commentator.
+- Sound like an elite analyst rather than a commentator.
 `.trim();
 }
 
@@ -149,23 +208,36 @@ Rules:
    USER PROMPT
 ========================================================== */
 
-function buildUserPrompt(input: PromptBuilderInput): string {
+function buildUserPrompt(
+  input: PromptBuilderInput
+): string {
   return [
     "# MATCH INTELLIGENCE",
     buildMatchSummary(input.intelligence),
+
     "",
+
     "# TACTICAL INSIGHTS",
     buildTacticalSection(input.tacticalInsights),
+
     "",
+
     "# MOMENTUM",
     buildMomentumSection(input.momentum),
+
     "",
+
     "# FORMATION SHIFTS",
     buildFormationSection(input.formations),
+
     "",
+
     "# TASK",
+
     "Write a professional tactical match analysis using only the supplied football intelligence.",
+
     "Explain:",
+
     "- overall match flow",
     "- tactical battles",
     "- momentum swings",
@@ -180,7 +252,9 @@ function buildUserPrompt(input: PromptBuilderInput): string {
    PUBLIC API
 ========================================================== */
 
-export function buildPrompt(input: PromptBuilderInput): BuiltPrompt {
+export function buildPrompt(
+  input: PromptBuilderInput
+): BuiltPrompt {
   return {
     system: buildSystemPrompt(),
     user: buildUserPrompt(input),

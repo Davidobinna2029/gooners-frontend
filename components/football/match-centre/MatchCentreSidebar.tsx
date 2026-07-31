@@ -1,36 +1,27 @@
-import type { MatchAnalysisResponse } from "@/lib/football/services/matchAnalysisService";
+import type { PlayerRatingsViewModel } from "@/lib/football/mappers/mapPlayerRatings";
+import type { MatchIntelligenceDashboardViewModel } from "@/lib/football/mappers/mapMatchIntelligenceDashboard";
 
 import MatchCentreSection from "./MatchCentreSection";
 
 interface Props {
-  data: MatchAnalysisResponse;
+  playerRatings: PlayerRatingsViewModel;
+  dashboard: MatchIntelligenceDashboardViewModel;
 }
 
 export default function MatchCentreSidebar({
-  data,
+  playerRatings,
+  dashboard,
 }: Props) {
   return (
     <div className="space-y-6">
 
-      <MatchCentreSection title="Next Match">
+      <MatchCentreSection title="Player Ratings">
         <p className="text-gray-500">
           Coming soon...
         </p>
       </MatchCentreSection>
 
-      <MatchCentreSection title="League Table">
-        <p className="text-gray-500">
-          Coming soon...
-        </p>
-      </MatchCentreSection>
-
-      <MatchCentreSection title="Related News">
-        <p className="text-gray-500">
-          Coming soon...
-        </p>
-      </MatchCentreSection>
-
-      <MatchCentreSection title="Match Facts">
+      <MatchCentreSection title="Match Intelligence">
         <p className="text-gray-500">
           Coming soon...
         </p>
