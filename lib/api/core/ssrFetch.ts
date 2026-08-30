@@ -4,18 +4,31 @@ export async function ssrFetch<T>(
   url: string,
   revalidate = 60
 ): Promise<T> {
-  const res = await fetchWithTimeout(
-    url,
-    {
-      next: { revalidate },
-      headers: { Accept: "application/json" },
-    },
-    8000
-  );
+  try {
+    const res = await fetchWithTimeout(
+      url,
+      {
+        next: { revalidate },
+        headers: {
+          Accept: "application/json",
+        },
+      },
+      20000
+    );
 
-  if (!res.ok) {
-    throw new Error(`[SSR FETCH ERROR] ${res.status}: ${url}`);
+    if (!res.ok) {
+      throw new Error(
+        `[SSR FETCH ERROR] ${res.status}: ${url}`
+      );
+    }
+
+    return (await res.json()) as T;
+  } catch (error) {
+    console.error("[SSR FETCH ERROR]", {
+      url,
+      error,
+    });
+
+    throw error;
   }
-
-  return (await res.json()) as T;
 }
