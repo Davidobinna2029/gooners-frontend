@@ -6,7 +6,7 @@ export const revalidate = 30;
 async function getPosts() {
   try {
     const res = await fetch(
-      `${API_BASE}/posts?per_page=20&_embed=1`,
+      `${API_BASE}/posts?per_page=5&_embed=1`,
       { next: { revalidate: 30 } }
     );
 

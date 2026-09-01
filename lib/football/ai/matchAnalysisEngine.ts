@@ -2,7 +2,7 @@
 
 import type { MatchViewModel } from "@/lib/football/models/matchViewModel";
 import type { MatchIntelligence } from "@/lib/football/intelligence/matchIntelligence";
-import type { MatchMomentum } from "@/lib/football/intelligence/momentumEngine";
+import type { MatchMomentum } from "@/lib/football/types/matchEvents";
 import type { MatchFormations } from "@/lib/football/intelligence/formationShiftEngine";
 import type { MatchTacticalInsights } from "@/lib/football/intelligence/tacticalInsights";
 import type { PlayerRankings } from "@/lib/football/intelligence/player";

@@ -2,158 +2,56 @@
 
 import type { MatchIntelligence } from "./matchIntelligence";
 
+import {
+  MOMENTUM_ENGINE_VERSION,
+} from "@/lib/football/types/matchEvents";
+
+import type {
+  MomentumTeam,
+  PressureLevel,
+  MatchEventType,
+  MatchMomentEvent,
+  MomentumWindow,
+  PressureWave,
+  MomentumShift,
+  MatchMomentum,
+} from "@/lib/football/types/matchEvents";
+
 /* ==========================================================
-   VERSION / CONFIDENCE
+   CONFIDENCE
+
+   Confidence is lower when no event timeline is supplied, because the
+   engine then has nothing to differentiate one window from another
+   besides the (identical, whole-match) MatchIntelligence metrics.
+   See the note above buildTimeline() for details.
 ========================================================== */
 
-const MOMENTUM_ENGINE_VERSION = "1.1.0";
-
-/**
- * Confidence is lower when no event timeline is supplied, because the
- * engine then has nothing to differentiate one window from another
- * besides the (identical, whole-match) MatchIntelligence metrics.
- * See the note above buildTimeline() for details.
- */
 const STATIC_ESTIMATE_CONFIDENCE = 0.5;
 const EVENT_AWARE_CONFIDENCE = 0.85;
 
 /* ==========================================================
-   TEAM
+   EVENT IMPACT WEIGHTS
+
+   How much each event type shifts a window's momentum score toward
+   the team it happened for. Tune freely — these are starting points,
+   not measured values.
 ========================================================== */
 
-export type MomentumTeam =
-  | "home"
-  | "away"
-  | "balanced";
-
-/* ==========================================================
-   PRESSURE LEVEL
-========================================================== */
-
-export type PressureLevel =
-  | "low"
-  | "medium"
-  | "high"
-  | "extreme";
-
-/* ==========================================================
-   MATCH EVENTS
-
-   Momentum should ultimately be driven by what actually happened
-   in the match, not just the final aggregate metrics. This is a
-   provisional shape — swap it for your real event feed's type
-   once `MatchData` exposes one, and update EVENT_IMPACT to taste.
-========================================================== */
-
-export type MomentumEventType =
-  | "goal"
-  | "big_chance"
-  | "shot_on_target"
-  | "shot_off_target"
-  | "red_card"
-  | "yellow_card"
-  | "substitution"
-  | "var_review";
-
-export interface MatchMomentEvent {
-  minute: number;
-  team: "home" | "away";
-  type: MomentumEventType;
-  /** Overrides the default EVENT_IMPACT weight for this one event. */
-  impact?: number;
-}
-
-/**
- * How much each event type shifts a window's momentum score toward
- * the team it happened for. Tune freely — these are starting points,
- * not measured values.
- */
-const EVENT_IMPACT: Record<MomentumEventType, number> = {
+const EVENT_IMPACT: Record<MatchEventType, number> = {
   goal: 25,
+  own_goal: 25,
+  penalty_goal: 25,
+  penalty_miss: 5,
   big_chance: 12,
   shot_on_target: 6,
   shot_off_target: 3,
   red_card: 20,
   yellow_card: 4,
   substitution: 2,
-  var_review: 3,
+  corner: 2,
+  var: 3,
+  injury: 1,
 };
-
-/* ==========================================================
-   MOMENTUM WINDOW
-========================================================== */
-
-export interface MomentumWindow {
-
-  minuteStart: number;
-
-  minuteEnd: number;
-
-  dominantTeam: MomentumTeam;
-
-  intensity: number;
-
-  reason: string;
-
-}
-
-/* ==========================================================
-   PRESSURE WAVE
-========================================================== */
-
-export interface PressureWave {
-
-  team: MomentumTeam;
-
-  minuteStart: number;
-
-  minuteEnd: number;
-
-  level: PressureLevel;
-
-  intensity: number;
-
-  description: string;
-
-}
-
-/* ==========================================================
-   MOMENTUM SHIFT
-========================================================== */
-
-export interface MomentumShift {
-
-  minute: number;
-
-  from: MomentumTeam;
-
-  to: MomentumTeam;
-
-  reason: string;
-
-}
-
-/* ==========================================================
-   MATCH MOMENTUM
-========================================================== */
-
-export interface MatchMomentum {
-
-  generatedAt: string;
-
-  version: string;
-
-  confidence: number;
-
-  timeline: MomentumWindow[];
-
-  pressureWaves: PressureWave[];
-
-  swings: MomentumShift[];
-
-  overallWinner: MomentumTeam;
-
-}
 
 /* ==========================================================
    CONTEXT
@@ -165,9 +63,113 @@ export interface MomentumContext {
 
 }
 
+interface RunningMatchState {
+
+  homeGoals: number;
+
+  awayGoals: number;
+
+  homeRedCards: number;
+
+  awayRedCards: number;
+
+  homeMomentum: number;
+
+  awayMomentum: number;
+
+}
+
 /* ==========================================================
    HELPERS
 ========================================================== */
+
+function createInitialState(): RunningMatchState {
+
+  return {
+
+    homeGoals: 0,
+
+    awayGoals: 0,
+
+    homeRedCards: 0,
+
+    awayRedCards: 0,
+
+    homeMomentum: 50,
+
+    awayMomentum: 50,
+
+  };
+
+}
+
+function applyEventToState(
+
+  state: RunningMatchState,
+
+  event: MatchMomentEvent
+
+) {
+
+  switch (event.type) {
+
+    case "goal":
+
+      if (event.team === "home") {
+
+        state.homeGoals++;
+
+        state.homeMomentum += 8;
+
+        state.awayMomentum -= 5;
+
+      } else {
+
+        state.awayGoals++;
+
+        state.awayMomentum += 8;
+
+        state.homeMomentum -= 5;
+
+      }
+
+      break;
+
+    case "red_card":
+
+      if (event.team === "home") {
+
+        state.homeRedCards++;
+
+        state.homeMomentum -= 15;
+
+      } else {
+
+        state.awayRedCards++;
+
+        state.awayMomentum -= 15;
+
+      }
+
+      break;
+
+    case "big_chance":
+
+      if (event.team === "home") {
+
+        state.homeMomentum += 4;
+
+      } else {
+
+        state.awayMomentum += 4;
+
+      }
+
+      break;
+
+  }
+
+}
 
 function clamp(
 
@@ -430,6 +432,10 @@ function buildWindow(
    them. Pass a MatchMomentEvent[] once your event feed exists;
    until then, timeline shape mainly reflects the flat match-wide
    averages rather than genuine minute-by-minute momentum.
+
+   `state` is threaded through segment-by-segment via
+   applyEventToState() but is not yet consumed by buildWindow() —
+   that wiring is the next step, once real events are flowing in.
 ========================================================== */
 
 function buildTimeline(
@@ -437,22 +443,34 @@ function buildTimeline(
   events: MatchMomentEvent[]
 ): MomentumWindow[] {
 
-  if (!events.length) {
-    console.warn(
-      "[MomentumEngine] No match events supplied — momentum timeline " +
-      "is derived from whole-match aggregates and will look flat. " +
-      "Pass MatchMomentEvent[] for genuine minute-by-minute momentum."
+  const state = createInitialState();
+
+  const timeline: MomentumWindow[] = [];
+
+  for (const segment of MOMENTUM_SEGMENTS) {
+
+    const segmentEvents = events.filter(
+      event =>
+        event.minute >= segment.start &&
+        event.minute < segment.end
     );
+
+    for (const event of segmentEvents) {
+      applyEventToState(state, event);
+    }
+
+    timeline.push(
+      buildWindow(
+        segment.start,
+        segment.end,
+        context,
+        segmentEvents
+      )
+    );
+
   }
 
-  return MOMENTUM_SEGMENTS.map(segment =>
-    buildWindow(
-      segment.start,
-      segment.end,
-      context,
-      events
-    )
-  );
+  return timeline;
 
 }
 
@@ -619,3 +637,17 @@ export function buildMatchMomentum(
   };
 
 }
+/* ==========================================================
+   RE-EXPORT TYPES
+========================================================== */
+
+export type {
+  MatchMomentum,
+  MatchMomentEvent,
+  MomentumShift,
+  MomentumWindow,
+  PressureWave,
+  MomentumTeam,
+  PressureLevel,
+  MatchEventType,
+} from "@/lib/football/types/matchEvents";

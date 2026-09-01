@@ -15,7 +15,7 @@ export async function getPostsSafe(): Promise<
   WordPressPostWithMedia[]
 > {
   const posts = await ssrFetch<WordPressPostWithMedia[]>(
-    `${API_BASE}/posts?per_page=20&${WP_EMBED}`
+    `${API_BASE}/posts?per_page=5&${WP_EMBED}`
   );
 
   if (!Array.isArray(posts)) {

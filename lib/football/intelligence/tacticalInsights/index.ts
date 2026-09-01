@@ -1,7 +1,8 @@
 // lib/football/intelligence/tacticalInsights/index.ts
 
 import type { MatchIntelligence } from "../matchIntelligence";
-import type { MatchMomentum } from "../momentumEngine";
+
+import type { MatchMomentum } from "@/lib/football/types/matchEvents";
 
 import type {
   DetectorContext,
@@ -30,23 +31,35 @@ const TACTICAL_INSIGHTS_VERSION = "1.0.0";
  * phenomenon and "shape" (width) is an attacking one, so they fold
  * into those buckets rather than getting buckets of their own.
  */
-function bucketFor(category: TacticalCategory): keyof TacticalInsights {
+function bucketFor(
+  category: TacticalCategory
+): keyof TacticalInsights {
+
   switch (category) {
+
     case "attack":
     case "shape":
       return "attacking";
+
     case "defence":
     case "pressing":
       return "defending";
+
     case "transition":
       return "transition";
+
     case "possession":
     default:
       return "possession";
+
   }
+
 }
 
-function groupIntoBuckets(insights: TacticalInsight[]): TacticalInsights {
+function groupIntoBuckets(
+  insights: TacticalInsight[]
+): TacticalInsights {
+
   const grouped: TacticalInsights = {
     attacking: [],
     defending: [],
@@ -59,6 +72,7 @@ function groupIntoBuckets(insights: TacticalInsight[]): TacticalInsights {
   }
 
   return grouped;
+
 }
 
 function buildTeamTacticalInsights(
@@ -119,10 +133,6 @@ export function buildTacticalInsights(
 
 /* ==========================================================
    RE-EXPORTS
-
-   So consumers can `import { TacticalInsight } from
-   "@/lib/football/intelligence/tacticalInsights"` without
-   reaching into individual detector files.
 ========================================================== */
 
 export type {

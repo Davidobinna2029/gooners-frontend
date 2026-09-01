@@ -30,8 +30,8 @@ import {
 } from "@/lib/football/intelligence/player";
 
 import {
-  buildMatchAnalysis,
-} from "@/lib/football/ai/matchAnalysisEngine";
+  generateMatchReport,
+} from "@/lib/football/ai/generateMatchReport";
 
 import type {
   MatchViewModel,
@@ -47,7 +47,7 @@ import type {
 
 import type {
   MatchMomentum,
-} from "@/lib/football/intelligence/momentumEngine";
+} from "@/lib/football/types/matchEvents";
 
 import type {
   MatchFormations,
@@ -65,9 +65,9 @@ import type {
   TimelineEvent,
 } from "@/components/football/match-centre/timeline";
 
-// ==========================================================
-// Future Types
-// ==========================================================
+/* ==========================================================
+   Future Types
+========================================================== */
 
 export interface MatchStatistic {
   label: string;
@@ -82,9 +82,9 @@ export interface PlayerRating {
   rating: number;
 }
 
-// ==========================================================
-// Public Response
-// ==========================================================
+/* ==========================================================
+   Public Response
+========================================================== */
 
 export interface MatchAnalysisResponse {
   match: MatchViewModel;
@@ -112,9 +112,9 @@ export interface MatchAnalysisResponse {
   generatedAt: string;
 }
 
-// ==========================================================
-// Service
-// ==========================================================
+/* ==========================================================
+   Service
+========================================================== */
 
 export async function getMatchAnalysis(
   matchId: string
@@ -134,14 +134,14 @@ export async function getMatchAnalysis(
     mapMatchToViewModel(rawMatch);
 
   //----------------------------------------------------------
-  // Football Intelligence
+  // Match Intelligence
   //----------------------------------------------------------
 
   const intelligence =
     buildMatchIntelligence(rawMatch);
 
   //----------------------------------------------------------
-  // Momentum Engine
+  // Momentum
   //----------------------------------------------------------
 
   const momentumEvents =
@@ -164,7 +164,7 @@ export async function getMatchAnalysis(
     );
 
   //----------------------------------------------------------
-  // Formation Engine
+  // Formation Shifts
   //----------------------------------------------------------
 
   const formationShifts =
@@ -183,18 +183,17 @@ export async function getMatchAnalysis(
     ]);
 
   //----------------------------------------------------------
-  // Editorial Analysis
+  // Editorial Match Analysis
   //----------------------------------------------------------
 
-  const report =
-    buildMatchAnalysis({
-      match,
-      intelligence,
-      tacticalInsights,
-      momentum,
-      formationShifts,
-      playerRankings,
-    });
+  const report = await generateMatchReport({
+    match,
+    intelligence,
+    momentum,
+    formationShifts,
+    tacticalInsights,
+    playerRankings,
+  });
 
   //----------------------------------------------------------
   // Timeline
@@ -209,17 +208,21 @@ export async function getMatchAnalysis(
   // Player Ratings
   //----------------------------------------------------------
 
-  const playerRatings: PlayerRating[] = [
-    ...intelligence.home.players,
-    ...intelligence.away.players,
-  ]
-    .filter(player => player.rating !== undefined)
-    .map(player => ({
-      playerId: String(player.playerId),
-      playerName: player.playerName,
-      team: player.team,
-      rating: player.rating as number,
-    }));
+  const playerRatings: PlayerRating[] =
+    [
+      ...intelligence.home.players,
+      ...intelligence.away.players,
+    ]
+      .filter(
+        (player) =>
+          player.rating !== undefined
+      )
+      .map((player) => ({
+        playerId: String(player.playerId),
+        playerName: player.playerName,
+        team: player.team,
+        rating: player.rating as number,
+      }));
 
   //----------------------------------------------------------
   // Statistics
@@ -243,6 +246,8 @@ export async function getMatchAnalysis(
     timeline,
     statistics,
     playerRatings,
-    generatedAt: new Date().toISOString(),
+    generatedAt:
+      new Date().toISOString(),
   };
+
 }

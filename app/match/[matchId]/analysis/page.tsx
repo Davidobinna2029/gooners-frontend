@@ -21,14 +21,12 @@ interface Props {
 export default async function MatchAnalysisPage({
   params,
 }: Props) {
-
   const { id } = await params;
 
   const analysis = await getMatchAnalysis(id);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 space-y-8">
-
+    <main>
       <MatchHeader match={analysis.match} />
 
       <MatchAnalysisCard
@@ -52,7 +50,6 @@ export default async function MatchAnalysisPage({
       />
 
       <AnalysisFooter />
-
     </main>
   );
 }

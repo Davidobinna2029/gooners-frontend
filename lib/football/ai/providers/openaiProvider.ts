@@ -1,3 +1,5 @@
+// lib/football/ai/providers/openaiProvider.ts
+
 import OpenAI from "openai";
 
 import { AI_CONFIG } from "../aiConfig";
@@ -18,54 +20,75 @@ export class OpenAIProvider implements AIProvider {
     request: AIRequest
   ): Promise<AIResult> {
 
-    const response =
-      await client.responses.create({
+    try {
+
+      const response =
+        await client.responses.create({
+
+          model: AI_CONFIG.model,
+
+          input: [
+
+            {
+              role: "system",
+              content: request.system,
+            },
+
+            {
+              role: "user",
+              content: request.user,
+            },
+
+          ],
+
+          temperature: AI_CONFIG.temperature,
+
+          max_output_tokens:
+            AI_CONFIG.maxOutputTokens,
+
+        });
+
+      return {
+
+        success: true,
+
+        output: response.output_text,
+
+        model: response.model,
+
+        usage: response.usage
+          ? {
+              inputTokens:
+                response.usage.input_tokens,
+
+              outputTokens:
+                response.usage.output_tokens,
+
+              totalTokens:
+                response.usage.total_tokens,
+            }
+          : undefined,
+
+      };
+
+    } catch (error) {
+
+      return {
+
+        success: false,
+
+        output: "",
 
         model: AI_CONFIG.model,
 
-        input: [
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown OpenAI error",
 
-          {
-            role: "system",
-            content: request.system,
-          },
+      };
 
-          {
-            role: "user",
-            content: request.user,
-          },
-
-        ],
-
-        temperature: AI_CONFIG.temperature,
-
-        max_output_tokens:
-          AI_CONFIG.maxOutputTokens,
-
-      });
-
-    return {
-
-      success: true,
-
-      output: response.output_text,
-
-      model: response.model,
-
-      usage: response.usage
-        ? {
-            inputTokens:
-              response.usage.input_tokens,
-
-            outputTokens:
-              response.usage.output_tokens,
-
-            totalTokens:
-              response.usage.total_tokens,
-          }
-        : undefined,
-
-    };
+    }
 
   }
 

@@ -53,9 +53,9 @@ export default function MatchCentreContent({
 }: Props) {
   return (
     <div className="space-y-6">
+
       <MatchCentreSection title="Match Summary">
         <MatchSummaryCard
-          match={match}
           facts={facts}
         />
       </MatchCentreSection>
@@ -107,6 +107,7 @@ export default function MatchCentreContent({
           Coming soon...
         </p>
       </MatchCentreSection>
+
     </div>
   );
 }

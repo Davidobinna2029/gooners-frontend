@@ -6,11 +6,14 @@ interface Props {
   momentum: MomentumViewModel;
 }
 
-const winnerStyle = {
+const winnerStyle: Record<
+  MomentumViewModel["overallWinner"],
+  string
+> = {
   home: "bg-red-100 text-red-700",
   away: "bg-blue-100 text-blue-700",
   balanced: "bg-gray-100 text-gray-700",
-} as const;
+};
 
 export default function MomentumOverview({
   momentum,

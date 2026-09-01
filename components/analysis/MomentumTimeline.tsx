@@ -1,4 +1,4 @@
-import type { MatchMomentum } from "@/lib/football/intelligence/momentumEngine";
+import type { MatchMomentum } from "@/lib/football/types/matchEvents";
 
 interface MomentumTimelineProps {
   momentum: MatchMomentum;

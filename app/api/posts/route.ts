@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       ) || 1;
 
     const response = await fetch(
-      `${WP_API}/posts?page=${page}&per_page=20&_embed=1`,
+      `${WP_API}/posts?page=${page}&per_page=5&_embed=1`,
       {
         next: {
           revalidate: 30,

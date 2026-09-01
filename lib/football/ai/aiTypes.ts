@@ -11,26 +11,51 @@ export interface AIRequest {
 }
 
 /* ==========================================================
+   TOKEN USAGE
+========================================================== */
+
+export interface AIUsage {
+
+  inputTokens: number;
+
+  outputTokens: number;
+
+  totalTokens: number;
+
+}
+
+/* ==========================================================
    RESULT
 ========================================================== */
 
 export interface AIResult {
 
+  /**
+   * True when the provider successfully generated a response.
+   */
   success: boolean;
 
+  /**
+   * Raw text returned by the model.
+   * Empty string when generation fails.
+   */
   output: string;
 
+  /**
+   * Model that produced (or attempted to produce) the response.
+   */
   model: string;
 
-  usage?: {
+  /**
+   * Token usage returned by the provider.
+   */
+  usage?: AIUsage;
 
-    inputTokens: number;
-
-    outputTokens: number;
-
-    totalTokens: number;
-
-  };
+  /**
+   * Provider error message.
+   * Present only when success === false.
+   */
+  error?: string;
 
 }
 

@@ -13,7 +13,7 @@ export async function ssrFetch<T>(
           Accept: "application/json",
         },
       },
-      20000
+      30000
     );
 
     if (!res.ok) {

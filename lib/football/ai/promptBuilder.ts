@@ -7,7 +7,7 @@ import type {
   TacticalInsight,
 } from "../intelligence/tacticalInsights";
 
-import type { MatchMomentum } from "../intelligence/momentumEngine";
+import type { MatchMomentum } from "../types/matchEvents";
 import type { MatchFormations } from "../intelligence/formationShiftEngine";
 
 /* ==========================================================

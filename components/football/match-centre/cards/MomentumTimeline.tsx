@@ -1,6 +1,6 @@
 import type {
   MomentumWindow,
-} from "@/lib/football/intelligence/momentumEngine";
+} from "@/lib/football/types/matchEvents";
 
 interface Props {
   timeline: MomentumWindow[];

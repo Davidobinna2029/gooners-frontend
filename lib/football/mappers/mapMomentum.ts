@@ -4,7 +4,7 @@ import type {
   PressureWave,
   MomentumShift,
   MomentumTeam,
-} from "@/lib/football/intelligence/momentumEngine";
+} from "@/lib/football/types/matchEvents";
 
 export interface MomentumViewModel {
 

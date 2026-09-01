@@ -1,6 +1,7 @@
 // lib/football/intelligence/tacticalInsights/detectMatchControl.ts
 
-import type { MatchMomentum } from "../momentumEngine";
+import type { MatchMomentum } from "@/lib/football/types/matchEvents";
+
 import type { Side, TacticalInsight } from "./types";
 import { createInsight } from "./helpers";
 
