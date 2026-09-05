@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import Hero from "@/components/home/Hero";
 import NewsCard from "@/components/news/NewsCard";
+import HomepageInfiniteScroll from "@/components/home/HomepageInfiniteScroll";
 
 import type { HomepageFeed } from "@/lib/orchestrator/homepage";
 
@@ -19,16 +20,42 @@ export default function HomepageRenderer({
     ...feed.heroSide,
   ];
 
+  /*
+   * All posts already reserved by the homepage.
+   *
+   * These IDs are passed to the infinite-scroll component
+   * so it never intentionally loads a story that has already
+   * appeared in Hero, Breaking, Trending, or Latest.
+   */
+  const excludedIds = feed.all.map(
+    (post) => post.id
+  );
+
   return (
     <main className="sky-homepage">
+
+      {/* =====================================================
+          HERO
+      ===================================================== */}
+
       {hero.length > 0 && (
         <section className="hero-zone">
           <Hero featured={hero} />
         </section>
       )}
 
+      {/* =====================================================
+          HOMEPAGE CONTENT
+      ===================================================== */}
+
       <div className="homepage-shell">
+
         <div className="homepage-main">
+
+          {/* =================================================
+              BREAKING NEWS
+          ================================================= */}
+
           {feed.breaking.length > 0 && (
             <section className="homepage-section">
               <div className="section-header breaking">
@@ -46,6 +73,10 @@ export default function HomepageRenderer({
             </section>
           )}
 
+          {/* =================================================
+              LATEST ARSENAL NEWS
+          ================================================= */}
+
           {feed.latest.length > 0 && (
             <section className="homepage-section">
               <div className="section-header">
@@ -62,12 +93,36 @@ export default function HomepageRenderer({
               )}
             </section>
           )}
+
+          {/* =================================================
+              INFINITE SCROLL
+              
+              Loads additional stories automatically when
+              the visitor approaches the bottom of the page.
+
+              excludedIds contains every post already present
+              in the initial homepage feed.
+          ================================================= */}
+
+          <HomepageInfiniteScroll
+            excludedIds={excludedIds}
+          />
+
         </div>
 
+        {/* ===================================================
+            SIDEBAR
+        =================================================== */}
+
         <aside className="homepage-sidebar">
-          {feed.trending.length >
-            0 && (
+
+          {/* =================================================
+              TRENDING
+          ================================================= */}
+
+          {feed.trending.length > 0 && (
             <section className="sidebar-card">
+
               <h3>
                 Trending Now
               </h3>
@@ -90,10 +145,16 @@ export default function HomepageRenderer({
                   </Link>
                 )
               )}
+
             </section>
           )}
 
+          {/* =================================================
+              TRANSFER HUB
+          ================================================= */}
+
           <section className="sidebar-card transfer-hub">
+
             <h3>
               Transfer Hub
             </h3>
@@ -106,20 +167,34 @@ export default function HomepageRenderer({
             <Link href="/news">
               View Transfer Coverage →
             </Link>
+
           </section>
+
         </aside>
+
       </div>
+
+      {/* =====================================================
+          MORE STORIES
+          
+          Kept as a fallback/navigation option. Infinite
+          scrolling now provides the primary way to continue
+          reading stories.
+      ===================================================== */}
 
       <section className="homepage-more">
         <div className="container">
+
           <Link
             href="/news"
             className="more-stories-btn"
           >
             More Stories →
           </Link>
+
         </div>
       </section>
+
     </main>
   );
 }
