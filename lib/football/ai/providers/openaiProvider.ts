@@ -10,9 +10,35 @@ import type {
   AIResult,
 } from "../aiTypes";
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+/* ==========================================================
+   LAZY OPENAI CLIENT
+
+   The client is created only when an AI request is actually
+   made. This allows the application to build successfully
+   when OPENAI_API_KEY is not configured.
+
+   If the key is missing, OpenAIProvider.generate() returns
+   a normal AIResult failure and generateMatchReport() falls
+   back to the deterministic match-analysis engine.
+========================================================== */
+
+function createOpenAIClient(): OpenAI {
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+
+  if (!apiKey) {
+    throw new Error(
+      "OPENAI_API_KEY is not configured."
+    );
+  }
+
+  return new OpenAI({
+    apiKey,
+  });
+}
+
+/* ==========================================================
+   OPENAI PROVIDER
+========================================================== */
 
 export class OpenAIProvider implements AIProvider {
 
@@ -21,6 +47,9 @@ export class OpenAIProvider implements AIProvider {
   ): Promise<AIResult> {
 
     try {
+
+      const client =
+        createOpenAIClient();
 
       const response =
         await client.responses.create({
@@ -41,7 +70,8 @@ export class OpenAIProvider implements AIProvider {
 
           ],
 
-          temperature: AI_CONFIG.temperature,
+          temperature:
+            AI_CONFIG.temperature,
 
           max_output_tokens:
             AI_CONFIG.maxOutputTokens,
@@ -52,22 +82,25 @@ export class OpenAIProvider implements AIProvider {
 
         success: true,
 
-        output: response.output_text,
+        output:
+          response.output_text,
 
-        model: response.model,
+        model:
+          response.model,
 
-        usage: response.usage
-          ? {
-              inputTokens:
-                response.usage.input_tokens,
+        usage:
+          response.usage
+            ? {
+                inputTokens:
+                  response.usage.input_tokens,
 
-              outputTokens:
-                response.usage.output_tokens,
+                outputTokens:
+                  response.usage.output_tokens,
 
-              totalTokens:
-                response.usage.total_tokens,
-            }
-          : undefined,
+                totalTokens:
+                  response.usage.total_tokens,
+              }
+            : undefined,
 
       };
 
@@ -79,7 +112,8 @@ export class OpenAIProvider implements AIProvider {
 
         output: "",
 
-        model: AI_CONFIG.model,
+        model:
+          AI_CONFIG.model,
 
         error:
           error instanceof Error
