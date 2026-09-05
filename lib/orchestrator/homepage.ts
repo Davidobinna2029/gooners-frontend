@@ -27,47 +27,36 @@ async function safeFetch<T>(
   try {
     return await promise;
   } catch (error) {
-    console.error(
-      "safeFetch error:",
-      error
-    );
+    console.error("safeFetch error:", error);
 
     return fallback;
   }
 }
 
-export type HomepageFeed =
-  HomepageLayout;
+export type HomepageFeed = HomepageLayout;
 
 export async function buildHomepageFeed(): Promise<HomepageFeed> {
-
   // =======================================================
   // 1. FETCH WORDPRESS POSTS
   // =======================================================
 
-  const rawPosts =
-    await safeFetch(
-      getPosts(),
-      []
-    );
+  const rawPosts = await safeFetch(
+    getPosts(),
+    []
+  );
 
   console.log(
     "RAW POSTS:",
-    Array.isArray(rawPosts)
-      ? rawPosts.length
-      : 0
+    Array.isArray(rawPosts) ? rawPosts.length : 0
   );
 
   // =======================================================
   // 2. MAP WORDPRESS → CANONICAL POSTS
   // =======================================================
 
-  const posts =
-    mapWordPressPosts(
-      Array.isArray(rawPosts)
-        ? rawPosts
-        : []
-    );
+  const posts = mapWordPressPosts(
+    Array.isArray(rawPosts) ? rawPosts : []
+  );
 
   console.log(
     "MAPPED POSTS:",
@@ -75,44 +64,42 @@ export async function buildHomepageFeed(): Promise<HomepageFeed> {
   );
 
   // =======================================================
-  // 3. LOAD ACTIVE OVERRIDES
+  // 3. LOAD ACTIVE EDITORIAL OVERRIDES
   // =======================================================
 
-  const overrides =
-    await safeFetch(
-      prisma.override.findMany({
-        where: {
-          OR: [
-            {
-              expiresAt: null,
+  const overrides = await safeFetch(
+    prisma.override.findMany({
+      where: {
+        OR: [
+          {
+            expiresAt: null,
+          },
+          {
+            expiresAt: {
+              gt: new Date(),
             },
-            {
-              expiresAt: {
-                gt: new Date(),
-              },
-            },
-          ],
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      }),
-      []
-    );
-
-  // =======================================================
-  // 4. LOAD WORKFLOWS
-  // =======================================================
-
-  const workflows =
-    await safeFetch(
-      prisma.workflow.findMany(),
-      []
-    );
+          },
+        ],
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+    []
+  );
 
   console.log(
     "OVERRIDES:",
     overrides.length
+  );
+
+  // =======================================================
+  // 4. LOAD EDITORIAL WORKFLOWS
+  // =======================================================
+
+  const workflows = await safeFetch(
+    prisma.workflow.findMany(),
+    []
   );
 
   console.log(
@@ -124,22 +111,20 @@ export async function buildHomepageFeed(): Promise<HomepageFeed> {
   // 5. APPLY EDITORIAL OVERRIDES
   // =======================================================
 
-  const overriddenPosts =
-    applyOverrides(
-      posts,
-      overrides
-    );
+  const overriddenPosts = applyOverrides(
+    posts,
+    overrides
+  );
 
   // =======================================================
   // 6. RANK POSTS
   // =======================================================
 
-  const ranked =
-    rankPosts(
-      overriddenPosts,
-      workflows,
-      overrides
-    );
+  const ranked = rankPosts(
+    overriddenPosts,
+    workflows,
+    overrides
+  );
 
   console.log(
     "RANKED POSTS:",
@@ -149,19 +134,29 @@ export async function buildHomepageFeed(): Promise<HomepageFeed> {
   // =======================================================
   // GLOBAL HOMEPAGE DEDUPLICATION REGISTRY
   //
-  // Once a post enters this Set, it cannot appear in
-  // another homepage section.
+  // A post added to this Set is reserved and cannot appear
+  // in another automatically generated homepage section.
+  //
+  // This prevents:
+  //
+  // HERO → TRENDING
+  // HERO → LATEST
+  // BREAKING → TRENDING
+  // BREAKING → LATEST
+  // TRENDING → LATEST
+  //
+  // duplicates.
   // =======================================================
 
-  const usedPostIds =
-    new Set<number>();
+  const usedPostIds = new Set<number>();
 
   // =======================================================
   // 7. HERO
   // =======================================================
 
-  const hero =
-    buildHero(ranked);
+  const hero = buildHero(
+    ranked
+  );
 
   for (const post of hero) {
     usedPostIds.add(post.id);
@@ -169,82 +164,83 @@ export async function buildHomepageFeed(): Promise<HomepageFeed> {
 
   console.log(
     "HERO:",
-    hero.map(
-      (post) => post.id
-    )
+    hero.map((post) => post.id)
   );
 
   // =======================================================
   // 8. BREAKING
   // =======================================================
 
-  const breaking =
-    buildBreaking(
-      ranked,
-      overrides,
-      usedPostIds
-    );
+  const breaking = buildBreaking(
+    ranked,
+    overrides,
+    usedPostIds
+  );
 
   console.log(
     "BREAKING:",
-    breaking.map(
-      (post) => post.id
-    )
+    breaking.map((post) => post.id)
   );
 
   // =======================================================
-  // 9. LATEST
+  // 9. TRENDING
+  //
+  // IMPORTANT:
+  // Trending is deliberately allocated BEFORE Latest.
+  //
+  // Previously Latest reserved up to 20 posts first.
+  // Because the homepage fetch currently returns only a
+  // relatively small number of posts, Latest could consume
+  // the entire available pool and leave Trending empty.
+  //
+  // Trending now gets first access to posts that are not
+  // already reserved by Hero or Breaking.
   // =======================================================
 
-  const latest =
-    buildLatest(
-      ranked,
-      usedPostIds
-    );
-
-  console.log(
-    "LATEST:",
-    latest.map(
-      (post) => post.id
-    )
+  const trending = buildTrending(
+    ranked,
+    usedPostIds
   );
-
-  // =======================================================
-  // 10. TRENDING
-  // =======================================================
-
-  const trending =
-    buildTrending(
-      ranked,
-      usedPostIds
-    );
 
   console.log(
     "TRENDING:",
-    trending.map(
-      (post) => post.id
-    )
+    trending.map((post) => post.id)
+  );
+
+  // =======================================================
+  // 10. LATEST
+  //
+  // Latest receives only posts that have not already been
+  // used by Hero, Breaking or Trending.
+  // =======================================================
+
+  const latest = buildLatest(
+    ranked,
+    usedPostIds
+  );
+
+  console.log(
+    "LATEST:",
+    latest.map((post) => post.id)
   );
 
   // =======================================================
   // 11. BUILD AUTOMATIC HOMEPAGE
   // =======================================================
 
-  const automatic =
-    buildHomepageLayout({
-      hero,
-      breaking,
-      trending,
-      latest,
-      all: ranked,
-    });
+  const automatic = buildHomepageLayout({
+    hero,
+    breaking,
+    trending,
+    latest,
+    all: ranked,
+  });
 
   // =======================================================
-  // 12. LOAD PUBLISHED EDITORIAL LAYOUT
+  // 12. LOAD PUBLISHED EDITORIAL HOMEPAGE
   // =======================================================
 
-  const published =
-    await getPublishedHomepage();
+  const published = await getPublishedHomepage();
 
   // =======================================================
   // 13. MERGE AUTOMATIC + EDITORIAL HOMEPAGE
