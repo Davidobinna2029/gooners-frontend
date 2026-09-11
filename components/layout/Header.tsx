@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 const links = [
@@ -14,60 +14,111 @@ export default function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  const isActive = (href: string) => {
+    if (href === "/") {
+      return pathname === "/";
+    }
+
+    return (
+      pathname === href ||
+      pathname.startsWith(`${href}/`)
+    );
+  };
+
   return (
     <header className="site-header">
 
-      {/* TOP BAR */}
+      {/* HEADER BAR */}
       <div className="header-inner">
 
-        <Link href="/" className="logo">
+        {/* BRAND */}
+        <Link
+          href="/"
+          className="logo"
+          aria-label="ArsenalTalks"
+        >
           ArsenalTalks
         </Link>
 
-        {/* DESKTOP NAV */}
-        <nav className="nav">
+        {/* MENU BUTTON */}
+        <button
+          type="button"
+          className={`menu-btn ${open ? "open" : ""}`}
+          onClick={() => setOpen((value) => !value)}
+          aria-label={
+            open
+              ? "Close navigation"
+              : "Open navigation"
+          }
+          aria-expanded={open}
+          aria-controls="mobile-navigation"
+        >
+          <span className="menu-icon">
+            <span />
+            <span />
+            <span />
+          </span>
+        </button>
+
+      </div>
+
+      {/* MENU */}
+      <div
+        id="mobile-navigation"
+        className={`mobile-menu ${open ? "open" : ""}`}
+      >
+        <nav
+          className="mobile-nav"
+          aria-label="Main navigation"
+        >
           {links.map((link) => {
-            const active =
-              pathname === link.href ||
-              (link.href !== "/" && pathname.startsWith(link.href));
+            const active = isActive(link.href);
 
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`nav-link ${active ? "active" : ""}`}
+                className={`mobile-link ${
+                  active ? "active" : ""
+                }`}
+                aria-current={
+                  active ? "page" : undefined
+                }
               >
-                {link.label}
+                <span>{link.label}</span>
+
+                <span
+                  className="mobile-arrow"
+                  aria-hidden="true"
+                >
+                  →
+                </span>
               </Link>
             );
           })}
         </nav>
-
-        {/* MOBILE BUTTON */}
-        <button
-          className="menu-btn"
-          onClick={() => setOpen(!open)}
-          aria-label="Menu"
-        >
-          ☰
-        </button>
-
       </div>
 
-      {/* MOBILE MENU */}
+      {/* BACKDROP */}
       {open && (
-        <div className="mobile-menu">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setOpen(false)}
-              className="mobile-link"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </div>
+        <button
+          type="button"
+          className="menu-backdrop"
+          onClick={() => setOpen(false)}
+          aria-label="Close navigation"
+        />
       )}
 
     </header>
