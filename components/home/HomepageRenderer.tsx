@@ -174,27 +174,6 @@ export default function HomepageRenderer({
 
       </div>
 
-      {/* =====================================================
-          MORE STORIES
-          
-          Kept as a fallback/navigation option. Infinite
-          scrolling now provides the primary way to continue
-          reading stories.
-      ===================================================== */}
-
-      <section className="homepage-more">
-        <div className="container">
-
-          <Link
-            href="/news"
-            className="more-stories-btn"
-          >
-            More Stories →
-          </Link>
-
-        </div>
-      </section>
-
     </main>
   );
 }

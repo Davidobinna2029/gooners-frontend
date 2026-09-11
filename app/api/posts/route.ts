@@ -16,9 +16,33 @@ function extractImage(post: any): string | null {
     return null;
   }
 
-  return url.startsWith("//")
-    ? `https:${url}`
-    : url;
+  const normalized =
+    url.startsWith("//")
+      ? `https:${url}`
+      : url;
+
+  try {
+    const parsed = new URL(normalized);
+
+    /*
+     * WordPress may return featured-image URLs
+     * pointing to the main domain.
+     *
+     * Serve those images through the API subdomain
+     * so the frontend consistently uses the API host.
+     */
+    if (
+      parsed.hostname === "arsenaltalks.com" ||
+      parsed.hostname === "www.arsenaltalks.com"
+    ) {
+      parsed.hostname =
+        "api.arsenaltalks.com";
+    }
+
+    return parsed.toString();
+  } catch {
+    return normalized;
+  }
 }
 
 function stripHtml(html?: string): string {
@@ -37,7 +61,8 @@ export async function GET(request: NextRequest) {
     if (!WP_API) {
       return NextResponse.json(
         {
-          error: "WordPress API URL is not configured",
+          error:
+            "WordPress API URL is not configured",
         },
         {
           status: 500,
@@ -68,7 +93,10 @@ export async function GET(request: NextRequest) {
       excludeParam
         .split(",")
         .map((id) => Number(id.trim()))
-        .filter((id) => Number.isInteger(id) && id > 0)
+        .filter(
+          (id) =>
+            Number.isInteger(id) && id > 0
+        )
     );
 
     const wpUrl = new URL(
@@ -122,7 +150,8 @@ export async function GET(request: NextRequest) {
     if (!response.ok) {
       return NextResponse.json(
         {
-          error: "Failed to fetch posts",
+          error:
+            "Failed to fetch posts",
         },
         {
           status: response.status,
@@ -224,7 +253,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: "Internal server error",
+        error:
+          "Internal server error",
+
         details:
           error?.message ??
           "Unknown error",
