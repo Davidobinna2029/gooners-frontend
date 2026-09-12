@@ -39,21 +39,69 @@ export const metadata: Metadata = {
     "Football News",
   ],
 
+  /* ========================================================
+     ARSENALTALKS FAVICON / SITE ICON
+  ======================================================== */
+
+  icons: {
+    icon: [
+      {
+        url: "/images/arsenaltalks-logo.png",
+        type: "image/png",
+      },
+    ],
+
+    shortcut: "/images/arsenaltalks-logo.png",
+
+    apple: [
+      {
+        url: "/images/arsenaltalks-logo.png",
+        type: "image/png",
+      },
+    ],
+  },
+
+  /* ========================================================
+     OPEN GRAPH
+  ======================================================== */
+
   openGraph: {
     title: "ArsenalTalks",
+
     description:
       "Latest Arsenal news, fixtures, transfer updates and match analysis.",
+
     url: "https://arsenaltalks.com",
+
     siteName: "ArsenalTalks",
+
     locale: "en_GB",
+
     type: "website",
+
+    images: [
+      {
+        url: "/images/arsenaltalks-logo.png",
+        width: 512,
+        height: 512,
+        alt: "ArsenalTalks",
+      },
+    ],
   },
+
+  /* ========================================================
+     X / TWITTER
+  ======================================================== */
 
   twitter: {
     card: "summary_large_image",
+
     title: "ArsenalTalks",
+
     description:
       "Latest Arsenal news, fixtures, transfer updates and match analysis.",
+
+    images: ["/images/arsenaltalks-logo.png"],
   },
 };
 
