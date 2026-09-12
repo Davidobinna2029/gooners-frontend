@@ -9,12 +9,29 @@
 
 @import "../styles/newsroom.css";
 
-/* ========================
+/* =========================================================
    DESIGN TOKENS
-======================== */
+========================================================= */
 
 :root {
+  --arsenal-red: #d10000;
+
+  --text-primary: #111111;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+
+  --border-light: #e5e7eb;
+  --border-soft: #f1f5f9;
+
+  --background: #ffffff;
+  --background-soft: #f8fafc;
+  --background-muted: #f3f4f6;
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
   --radius-lg: 12px;
+  --radius-xl: 14px;
+  --radius-2xl: 16px;
 
   --shadow-soft:
     0 4px 6px -1px rgb(0 0 0 / 0.06),
@@ -23,16 +40,11 @@
   --shadow-hover:
     0 10px 15px -3px rgb(0 0 0 / 0.08),
     0 4px 6px -4px rgb(0 0 0 / 0.06);
-
-  --arsenal-red: #d10000;
-  --text-primary: #111111;
-  --text-secondary: #6b7280;
-  --border-light: #e5e7eb;
 }
 
-/* ========================
+/* =========================================================
    BASE RESET & TYPOGRAPHY
-======================== */
+========================================================= */
 
 * {
   box-sizing: border-box;
@@ -52,14 +64,37 @@ body {
     Roboto,
     sans-serif;
   line-height: 1.6;
-  color: #111827;
-  background-color: #ffffff;
+  color: var(--text-primary);
+  background-color: var(--background);
   font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* ========================
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* =========================================================
    CONTAINER
-======================== */
+========================================================= */
 
 .container {
   width: 100%;
@@ -81,20 +116,10 @@ body {
   }
 }
 
-/* ========================
-   IMAGE SAFETY
-======================== */
-
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-/* =============================================
+/* =========================================================
    ARSENALTALKS NEWSROOM HEADER
    ESPN / SKY SPORTS INSPIRED
-============================================= */
+========================================================= */
 
 .site-header {
   position: sticky;
@@ -105,12 +130,12 @@ img {
 
   background: #ffffff;
 
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-light);
 }
 
-/* ========================
+/* =========================================================
    HEADER BAR
-======================== */
+========================================================= */
 
 .header-inner {
   width: 100%;
@@ -126,15 +151,15 @@ img {
   justify-content: space-between;
 }
 
-/* ========================
+/* =========================================================
    ARSENALTALKS LOGO
-======================== */
+========================================================= */
 
 .logo {
   display: inline-flex;
   align-items: center;
 
-  color: #111111;
+  color: var(--text-primary);
   text-decoration: none;
 
   font-size: 25px;
@@ -154,18 +179,18 @@ img {
   color: var(--arsenal-red);
 }
 
-/* ========================
+/* =========================================================
    DESKTOP NAVIGATION
    INTENTIONALLY HIDDEN
-======================== */
+========================================================= */
 
 .nav {
   display: none;
 }
 
-/* ========================
+/* =========================================================
    MENU BUTTON
-======================== */
+========================================================= */
 
 .menu-btn {
   width: 44px;
@@ -190,7 +215,7 @@ img {
 
 .menu-btn:hover {
   background: #f8f8f8;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
 .menu-btn:focus-visible {
@@ -198,9 +223,9 @@ img {
   outline-offset: 3px;
 }
 
-/* ========================
+/* =========================================================
    HAMBURGER ICON
-======================== */
+========================================================= */
 
 .menu-icon {
   width: 24px;
@@ -219,7 +244,7 @@ img {
   width: 24px;
   height: 2px;
 
-  background: #111111;
+  background: var(--text-primary);
 
   border-radius: 2px;
 
@@ -236,9 +261,9 @@ img {
   background: var(--arsenal-red);
 }
 
-/* ========================
+/* =========================================================
    HAMBURGER → X
-======================== */
+========================================================= */
 
 .menu-btn.open .menu-icon span:nth-child(1) {
   transform: translateY(8px) rotate(45deg);
@@ -252,9 +277,9 @@ img {
   transform: translateY(-8px) rotate(-45deg);
 }
 
-/* =============================================
+/* =========================================================
    MOBILE / HIDDEN NAVIGATION MENU
-============================================= */
+========================================================= */
 
 .mobile-menu {
   position: fixed;
@@ -269,7 +294,7 @@ img {
 
   background: #ffffff;
 
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--border-soft);
 
   box-shadow:
     0 12px 30px rgb(0 0 0 / 8%);
@@ -296,9 +321,9 @@ img {
   pointer-events: auto;
 }
 
-/* ========================
+/* =========================================================
    MOBILE NAVIGATION
-======================== */
+========================================================= */
 
 .mobile-nav {
   width: 100%;
@@ -310,9 +335,9 @@ img {
   padding: 8px 24px 18px;
 }
 
-/* ========================
+/* =========================================================
    MOBILE NAV LINKS
-======================== */
+========================================================= */
 
 .mobile-link {
   min-height: 58px;
@@ -323,9 +348,9 @@ img {
 
   padding: 0 4px;
 
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-light);
 
-  color: #111111;
+  color: var(--text-primary);
 
   text-decoration: none;
 
@@ -346,7 +371,6 @@ img {
 
 .mobile-link:hover {
   color: var(--arsenal-red);
-
   padding-left: 8px;
 }
 
@@ -354,12 +378,12 @@ img {
   color: var(--arsenal-red);
 }
 
-/* ========================
+/* =========================================================
    MOBILE ARROW
-======================== */
+========================================================= */
 
 .mobile-arrow {
-  color: #9ca3af;
+  color: var(--text-muted);
 
   font-size: 20px;
 
@@ -379,9 +403,9 @@ img {
   transform: translateX(4px);
 }
 
-/* ========================
+/* =========================================================
    MENU BACKDROP
-======================== */
+========================================================= */
 
 .menu-backdrop {
   position: fixed;
@@ -422,9 +446,9 @@ img {
   pointer-events: auto;
 }
 
-/* =============================================
+/* =========================================================
    SKY SPORTS HERO SYSTEM
-============================================= */
+========================================================= */
 
 .sky-hero {
   margin-top: 20px;
@@ -442,7 +466,7 @@ img {
 
   overflow: hidden;
 
-  border-radius: 14px;
+  border-radius: var(--radius-xl);
 }
 
 .sky-hero-image {
@@ -487,7 +511,7 @@ img {
 
   width: fit-content;
 
-  background: #dc2626;
+  background: var(--arsenal-red);
 
   color: #ffffff;
 
@@ -511,7 +535,7 @@ img {
 
   font-weight: 800;
 
-  margin-bottom: 10px;
+  margin: 0 0 10px;
 }
 
 .sky-hero-overlay p {
@@ -533,7 +557,7 @@ img {
 
   background: #ffffff;
 
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
 
   overflow: hidden;
 
@@ -567,7 +591,7 @@ img {
 }
 
 .sky-side-content h3 {
-  margin-top: 6px;
+  margin: 6px 0 0;
 
   font-size: 14px;
 
@@ -578,9 +602,9 @@ img {
   color: #111827;
 }
 
-/* =============================================
+/* =========================================================
    SKY SPORTS NEWS CARDS
-============================================= */
+========================================================= */
 
 .sky-news-card {
   display: flex;
@@ -589,7 +613,7 @@ img {
 
   padding: 14px 0;
 
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-light);
 
   text-decoration: none;
 }
@@ -605,7 +629,7 @@ img {
 
   overflow: hidden;
 
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
 .sky-news-image img {
@@ -659,12 +683,12 @@ img {
 
   font-size: 12px;
 
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
-/* ========================
+/* =========================================================
    ARTICLE STYLES
-======================== */
+========================================================= */
 
 .article-image {
   width: 100%;
@@ -673,7 +697,7 @@ img {
 
   object-fit: cover;
 
-  border-radius: 16px;
+  border-radius: var(--radius-2xl);
 }
 
 .article-body {
@@ -689,14 +713,14 @@ img {
 
   height: auto;
 
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
 
   margin: 2rem 0;
 }
 
-/* =============================================
+/* =========================================================
    SKY SPORTS HOMEPAGE LAYOUT
-============================================= */
+========================================================= */
 
 .sky-homepage {
   width: 100%;
@@ -739,17 +763,17 @@ img {
 
   letter-spacing: 0.08em;
 
-  margin-bottom: 12px;
+  margin: 0 0 12px;
 }
 
 .section-header.breaking {
-  color: #dc2626;
+  color: var(--arsenal-red);
 }
 
 .sidebar-card {
   background: #ffffff;
 
-  border-radius: 14px;
+  border-radius: var(--radius-xl);
 
   padding: 16px;
 
@@ -761,7 +785,7 @@ img {
 
   font-weight: 800;
 
-  margin-bottom: 14px;
+  margin: 0 0 14px;
 }
 
 .sidebar-link,
@@ -774,11 +798,11 @@ img {
 
   text-decoration: none;
 
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .trending-link span {
-  color: #dc2626;
+  color: var(--arsenal-red);
 
   font-weight: 800;
 
@@ -789,14 +813,14 @@ img {
   background:
     linear-gradient(
       180deg,
-      rgba(229, 9, 20, 0.05),
-      rgba(229, 9, 20, 0.12)
+      rgba(209, 0, 0, 0.05),
+      rgba(209, 0, 0, 0.12)
     );
 }
 
-/* =============================================
+/* =========================================================
    LOGIN PAGE
-============================================= */
+========================================================= */
 
 .login-page {
   min-height: 100vh;
@@ -809,7 +833,7 @@ img {
 
   padding: 24px;
 
-  background: #f8fafc;
+  background: var(--background-soft);
 }
 
 .login-card {
@@ -819,7 +843,7 @@ img {
 
   background: #ffffff;
 
-  border-radius: 16px;
+  border-radius: var(--radius-2xl);
 
   padding: 32px;
 
@@ -834,13 +858,13 @@ img {
 
   color: #111827;
 
-  margin-bottom: 8px;
+  margin: 0 0 8px;
 }
 
 .login-card p {
-  color: #6b7280;
+  color: var(--text-secondary);
 
-  margin-bottom: 24px;
+  margin: 0 0 24px;
 }
 
 .login-card form {
@@ -858,7 +882,7 @@ img {
 
   border: 1px solid #d1d5db;
 
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 
   font-size: 15px;
 
@@ -870,10 +894,10 @@ img {
 .login-card input:focus {
   outline: none;
 
-  border-color: #dc2626;
+  border-color: var(--arsenal-red);
 
   box-shadow:
-    0 0 0 3px rgb(220 38 38 / 12%);
+    0 0 0 3px rgb(209 0 0 / 12%);
 }
 
 .login-card button {
@@ -883,9 +907,9 @@ img {
 
   border: none;
 
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 
-  background: #dc2626;
+  background: var(--arsenal-red);
 
   color: #ffffff;
 
@@ -899,7 +923,7 @@ img {
 }
 
 .login-card button:hover {
-  background: #b91c1c;
+  background: #b80000;
 }
 
 .login-card button:disabled {
@@ -911,7 +935,7 @@ img {
 .login-error {
   padding: 12px;
 
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 
   background: #fef2f2;
 
@@ -925,7 +949,7 @@ img {
 .login-success {
   padding: 12px;
 
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 
   background: #ecfdf5;
 
@@ -936,9 +960,9 @@ img {
   font-size: 14px;
 }
 
-/* =============================================
+/* =========================================================
    ADMIN USER MENU
-============================================= */
+========================================================= */
 
 .admin-user-menu {
   display: flex;
@@ -955,9 +979,9 @@ img {
 
   background: #ffffff;
 
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-light);
 
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
 }
 
 .admin-user-info {
@@ -969,7 +993,7 @@ img {
 .admin-role {
   font-size: 12px;
 
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .admin-user-links {
@@ -993,19 +1017,19 @@ img {
 }
 
 .admin-user-links a:hover {
-  color: #dc2626;
+  color: var(--arsenal-red);
 }
 
 .admin-user-links button {
   border: none;
 
-  background: #dc2626;
+  background: var(--arsenal-red);
 
   color: #ffffff;
 
   padding: 8px 14px;
 
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 
   cursor: pointer;
 
@@ -1013,12 +1037,12 @@ img {
 }
 
 .admin-user-links button:hover {
-  opacity: 0.9;
+  background: #b80000;
 }
 
-/* =============================================
+/* =========================================================
    NEWSROOM HOMEPAGE SIMULATOR
-============================================= */
+========================================================= */
 
 .sim-hero-layout {
   display: grid;
@@ -1041,7 +1065,7 @@ img {
 
   letter-spacing: 0.06em;
 
-  margin-bottom: 14px;
+  margin: 0 0 14px;
 
   color: #111827;
 }
@@ -1053,9 +1077,9 @@ img {
 
   background: #ffffff;
 
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-light);
 
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
 
   overflow: hidden;
 
@@ -1083,7 +1107,7 @@ img {
 
   flex-shrink: 0;
 
-  background: #f3f4f6;
+  background: var(--background-muted);
 }
 
 .sim-story-placeholder {
@@ -1095,7 +1119,7 @@ img {
 
   place-items: center;
 
-  color: #6b7280;
+  color: var(--text-secondary);
 
   font-size: 13px;
 }
@@ -1111,7 +1135,7 @@ img {
 
   font-weight: 700;
 
-  color: #dc2626;
+  color: var(--arsenal-red);
 
   text-transform: uppercase;
 }
@@ -1137,7 +1161,7 @@ img {
 
   font-size: 12px;
 
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .sim-empty {
@@ -1145,16 +1169,16 @@ img {
 
   border: 2px dashed #d1d5db;
 
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 
   text-align: center;
 
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
-/* =============================================
+/* =========================================================
    NEWSROOM STORY CARD SYSTEM
-============================================= */
+========================================================= */
 
 .story-card {
   display: flex;
@@ -1165,9 +1189,9 @@ img {
 
   background: #ffffff;
 
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-light);
 
-  border-radius: 14px;
+  border-radius: var(--radius-xl);
 
   box-shadow: var(--shadow-soft);
 
@@ -1202,9 +1226,9 @@ img {
 
   overflow: hidden;
 
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 
-  background: #f3f4f6;
+  background: var(--background-muted);
 }
 
 .story-card-image.compact {
@@ -1222,9 +1246,9 @@ img {
 
   place-items: center;
 
-  background: #f3f4f6;
+  background: var(--background-muted);
 
-  color: #9ca3af;
+  color: var(--text-muted);
 
   font-size: 13px;
 
@@ -1264,7 +1288,7 @@ img {
 
   font-size: 13px;
 
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .story-card-badges {
@@ -1334,9 +1358,9 @@ img {
 
   border: none;
 
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 
-  background: #dc2626;
+  background: var(--arsenal-red);
 
   color: #ffffff;
 
@@ -1348,7 +1372,7 @@ img {
 }
 
 .story-card-actions button:hover {
-  background: #b91c1c;
+  background: #b80000;
 }
 
 .story-card-actions select {
@@ -1356,14 +1380,199 @@ img {
 
   border: 1px solid #d1d5db;
 
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 
   background: #ffffff;
 }
 
-/* =============================================
+/* =========================================================
+   ARSENALTALKS MINIMAL FOOTER
+   WHITE NEWSROOM / ESPN-STYLE
+========================================================= */
+
+.site-footer {
+  width: 100%;
+
+  margin-top: 48px;
+
+  background: #ffffff;
+
+  border-top: 1px solid var(--border-light);
+
+  color: var(--text-primary);
+}
+
+.site-footer__inner {
+  width: 100%;
+
+  max-width: 1200px;
+
+  margin: 0 auto;
+
+  padding: 34px 24px 30px;
+
+  text-align: center;
+}
+
+/* =========================================================
+   FOOTER COPYRIGHT
+========================================================= */
+
+.site-footer__copyright {
+  margin: 0;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+
+  font-weight: 600;
+
+  color: var(--text-primary);
+}
+
+/* =========================================================
+   FOOTER LEGAL LINKS
+========================================================= */
+
+.site-footer__legal {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  flex-wrap: wrap;
+
+  gap: 0;
+
+  margin-top: 16px;
+}
+
+.site-footer__legal a {
+  position: relative;
+
+  padding: 0 15px;
+
+  color: #555555;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+
+  text-decoration: none;
+
+  transition: color 0.2s ease;
+}
+
+.site-footer__legal a:not(:last-child)::after {
+  content: "";
+
+  position: absolute;
+
+  right: 0;
+
+  top: 50%;
+
+  width: 1px;
+
+  height: 12px;
+
+  background: #d9d9d9;
+
+  transform: translateY(-50%);
+}
+
+.site-footer__legal a:hover {
+  color: var(--arsenal-red);
+}
+
+/* =========================================================
+   FOOTER SOCIAL ICONS
+========================================================= */
+
+.site-footer__social {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 18px;
+
+  margin-top: 20px;
+}
+
+.site-footer__social a {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  width: 28px;
+
+  height: 28px;
+
+  color: #555555;
+
+  text-decoration: none;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.site-footer__social a:hover {
+  color: var(--arsenal-red);
+
+  transform: translateY(-1px);
+}
+
+.site-footer__social svg {
+  width: 17px;
+
+  height: 17px;
+
+  display: block;
+
+  fill: currentColor;
+}
+
+/* =========================================================
+   FOOTER DISCLAIMER
+========================================================= */
+
+.site-footer__disclaimer {
+  margin: 20px auto 0;
+
+  max-width: 620px;
+
+  color: #777777;
+
+  font-size: 12px;
+
+  line-height: 1.7;
+
+  font-weight: 400;
+}
+
+/* =========================================================
+   FOOTER BOTTOM DIVIDER
+========================================================= */
+
+.site-footer__inner::after {
+  content: "";
+
+  display: block;
+
+  margin-top: 30px;
+
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* =========================================================
    TABLET
-============================================= */
+========================================================= */
 
 @media (min-width: 768px) {
   .header-inner {
@@ -1397,9 +1606,9 @@ img {
   }
 }
 
-/* =============================================
+/* =========================================================
    DESKTOP
-============================================= */
+========================================================= */
 
 @media (min-width: 1024px) {
   .header-inner {
@@ -1420,7 +1629,7 @@ img {
 
     width: 360px;
 
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border-light);
 
     border-top: 0;
 
@@ -1487,9 +1696,9 @@ img {
   }
 }
 
-/* =============================================
+/* =========================================================
    LARGE DESKTOP
-============================================= */
+========================================================= */
 
 @media (min-width: 1280px) {
   .header-inner {
@@ -1499,9 +1708,9 @@ img {
   }
 }
 
-/* =============================================
+/* =========================================================
    MOBILE
-============================================= */
+========================================================= */
 
 @media (max-width: 640px) {
   .header-inner {
@@ -1574,5 +1783,49 @@ img {
   .story-card-actions button,
   .story-card-actions select {
     width: 100%;
+  }
+
+  /* =======================================================
+     MOBILE FOOTER
+  ======================================================= */
+
+  .site-footer {
+    margin-top: 36px;
+  }
+
+  .site-footer__inner {
+    padding: 28px 18px 24px;
+  }
+
+  .site-footer__legal {
+    margin-top: 14px;
+  }
+
+  .site-footer__legal a {
+    padding: 0 10px;
+
+    font-size: 12px;
+  }
+
+  .site-footer__social {
+    gap: 16px;
+
+    margin-top: 18px;
+  }
+
+  .site-footer__disclaimer {
+    margin-top: 18px;
+
+    font-size: 11px;
+
+    line-height: 1.65;
+  }
+
+  .site-footer__break {
+    display: none;
+  }
+
+  .site-footer__inner::after {
+    margin-top: 26px;
   }
 }
