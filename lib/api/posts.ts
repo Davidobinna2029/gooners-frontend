@@ -27,7 +27,7 @@ export async function getPostBySlug(slug: string) {
 
 export async function getPostById(id: number) {
   return wpFetch<any>(
-    `/posts/${id}?_embed=1`,
+    `/posts/${id}?_embed=author,wp:featuredmedia,wp:term`,
     {
       revalidate: 300,
     }

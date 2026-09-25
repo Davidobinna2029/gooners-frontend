@@ -1,18 +1,30 @@
+export type WorkflowStatus =
+  | "DRAFT"
+  | "IN_REVIEW"
+  | "APPROVED"
+  | "PUBLISHED"
+  | "REJECTED";
+
 export interface Workflow {
   id: string;
   postId: number;
-  status:
-    | "DRAFT"
-    | "IN_REVIEW"
-    | "APPROVED"
-    | "PUBLISHED"
-    | "REJECTED";
+  status: WorkflowStatus;
   updatedBy: string;
   updatedAt: string;
+
+  // WordPress article data
+  title: string;
+  slug: string | null;
+  author: string;
+  category: string;
+  image: string | null;
+  articleUrl: string | null;
 }
 
 export async function getWorkflows(): Promise<Workflow[]> {
-  const res = await fetch("/api/workflows");
+  const res = await fetch("/api/workflows", {
+    cache: "no-store",
+  });
 
   if (!res.ok) {
     throw new Error("Failed to fetch workflows");
@@ -23,7 +35,7 @@ export async function getWorkflows(): Promise<Workflow[]> {
 
 export async function updateWorkflow(
   id: string,
-  status: Workflow["status"]
+  status: WorkflowStatus
 ) {
   const res = await fetch(`/api/workflows/${id}`, {
     method: "PATCH",

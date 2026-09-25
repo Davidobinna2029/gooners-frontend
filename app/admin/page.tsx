@@ -9,7 +9,7 @@ import NewsroomStats from "@/components/admin/NewsroomStats";
 import NewsroomQuickActions from "@/components/admin/NewsroomQuickActions";
 import NeedsReviewPanel from "@/components/admin/NeedsReviewPanel";
 
-import WorkflowBoard from "@/components/admin/WorkflowBoard";
+import WorkflowBoard from "@/components/admin/workflow/WorkflowBoard";
 import OverridePanel from "@/components/admin/OverridePanel";
 import HeroBoard from "@/components/admin/hero-board/HeroBoard";
 import NotificationCenter from "@/components/admin/NotificationCenter";

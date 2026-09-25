@@ -56,6 +56,7 @@ html {
 
 body {
   margin: 0;
+
   font-family:
     system-ui,
     -apple-system,
@@ -63,11 +64,17 @@ body {
     "Segoe UI",
     Roboto,
     sans-serif;
+
   line-height: 1.6;
+
   color: var(--text-primary);
+
   background-color: var(--background);
+
   font-size: 16px;
+
   -webkit-font-smoothing: antialiased;
+
   text-rendering: optimizeLegibility;
 }
 
@@ -99,7 +106,9 @@ img {
 .container {
   width: 100%;
   max-width: 480px;
+
   margin: 0 auto;
+
   padding: 0 16px;
 }
 
@@ -160,12 +169,14 @@ img {
   align-items: center;
 
   color: var(--text-primary);
+
   text-decoration: none;
 
   font-size: 25px;
   line-height: 1;
 
   font-weight: 900;
+
   letter-spacing: -0.8px;
 
   white-space: nowrap;
@@ -215,6 +226,7 @@ img {
 
 .menu-btn:hover {
   background: #f8f8f8;
+
   border-radius: var(--radius-sm);
 }
 
@@ -232,7 +244,9 @@ img {
   height: 18px;
 
   display: flex;
+
   flex-direction: column;
+
   justify-content: space-between;
 
   position: relative;
@@ -302,7 +316,9 @@ img {
   transform: translateY(-12px);
 
   opacity: 0;
+
   visibility: hidden;
+
   pointer-events: none;
 
   transition:
@@ -343,7 +359,9 @@ img {
   min-height: 58px;
 
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
 
   padding: 0 4px;
@@ -371,6 +389,7 @@ img {
 
 .mobile-link:hover {
   color: var(--arsenal-red);
+
   padding-left: 8px;
 }
 
@@ -418,6 +437,7 @@ img {
   z-index: 999;
 
   width: 100%;
+
   height: calc(100vh - 72px);
 
   padding: 0;
@@ -456,6 +476,7 @@ img {
 
 .sky-hero-grid {
   display: grid;
+
   gap: 20px;
 }
 
@@ -1386,6 +1407,228 @@ img {
 }
 
 /* =========================================================
+   CREATE POST / EDITORIAL CONTROL
+========================================================= */
+
+.create-post-page {
+  width: 100%;
+
+  max-width: 1100px;
+
+  margin: 0 auto;
+
+  padding: 40px 24px 80px;
+}
+
+/* =========================================================
+   CREATE POST HEADER
+========================================================= */
+
+.create-post-header {
+  margin-bottom: 28px;
+}
+
+.create-post-eyebrow {
+  margin: 0 0 8px;
+
+  color: var(--arsenal-red);
+
+  font-size: 12px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+.create-post-header h1 {
+  margin: 0;
+
+  color: var(--text-primary);
+
+  font-size: 36px;
+
+  line-height: 1.1;
+
+  font-weight: 900;
+
+  letter-spacing: -0.8px;
+}
+
+.create-post-header p:last-child {
+  margin: 10px 0 0;
+
+  color: var(--text-secondary);
+
+  font-size: 15px;
+}
+
+/* =========================================================
+   CREATE POST FORM
+========================================================= */
+
+.create-post-form {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 18px;
+}
+
+/* =========================================================
+   EDITOR CARD
+========================================================= */
+
+.editor-card {
+  padding: 22px;
+
+  background: #ffffff;
+
+  border: 1px solid var(--border-light);
+
+  border-radius: var(--radius-xl);
+
+  box-shadow: var(--shadow-soft);
+}
+
+.editor-card label {
+  display: block;
+
+  margin-bottom: 9px;
+
+  color: var(--text-primary);
+
+  font-size: 14px;
+
+  font-weight: 800;
+}
+
+.editor-card input,
+.editor-card textarea {
+  width: 100%;
+
+  border: 1px solid #d1d5db;
+
+  border-radius: var(--radius-md);
+
+  background: #ffffff;
+
+  color: var(--text-primary);
+
+  font-size: 15px;
+
+  padding: 13px 14px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.editor-card textarea {
+  resize: vertical;
+
+  line-height: 1.65;
+}
+
+.editor-card input::placeholder,
+.editor-card textarea::placeholder {
+  color: #9ca3af;
+}
+
+.editor-card input:focus,
+.editor-card textarea:focus {
+  border-color: var(--arsenal-red);
+
+  box-shadow:
+    0 0 0 3px rgb(209 0 0 / 10%);
+}
+
+.field-help {
+  display: block;
+
+  margin-top: 8px;
+
+  color: var(--text-muted);
+
+  font-size: 12px;
+
+  line-height: 1.5;
+
+  word-break: break-word;
+}
+
+/* =========================================================
+   CREATE POST ACTIONS
+========================================================= */
+
+.create-post-actions {
+  display: flex;
+
+  justify-content: flex-end;
+
+  align-items: center;
+
+  gap: 12px;
+
+  padding-top: 8px;
+}
+
+.primary-button,
+.secondary-button {
+  border: 0;
+
+  border-radius: var(--radius-md);
+
+  padding: 12px 20px;
+
+  font-size: 14px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.primary-button {
+  background: var(--arsenal-red);
+
+  color: #ffffff;
+}
+
+.primary-button:hover {
+  background: #b80000;
+}
+
+.primary-button:active,
+.secondary-button:active {
+  transform: translateY(1px);
+}
+
+.secondary-button {
+  background: #f3f4f6;
+
+  color: #111827;
+}
+
+.secondary-button:hover {
+  background: #e5e7eb;
+}
+
+.primary-button:focus-visible,
+.secondary-button:focus-visible {
+  outline: 2px solid var(--arsenal-red);
+
+  outline-offset: 3px;
+}
+
+/* =========================================================
    ARSENALTALKS MINIMAL FOOTER
    WHITE NEWSROOM / ESPN-STYLE
 ========================================================= */
@@ -1625,6 +1868,7 @@ img {
     top: 80px;
 
     left: auto;
+
     right: 40px;
 
     width: 360px;
@@ -1786,6 +2030,51 @@ img {
   }
 
   /* =======================================================
+     MOBILE CREATE POST
+  ======================================================= */
+
+  .create-post-page {
+    padding:
+      28px 16px 60px;
+  }
+
+  .create-post-header {
+    margin-bottom: 22px;
+  }
+
+  .create-post-header h1 {
+    font-size: 30px;
+
+    letter-spacing: -0.5px;
+  }
+
+  .create-post-header p:last-child {
+    font-size: 14px;
+  }
+
+  .editor-card {
+    padding: 18px;
+  }
+
+  .editor-card input,
+  .editor-card textarea {
+    font-size: 16px;
+  }
+
+  .create-post-actions {
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .primary-button,
+  .secondary-button {
+    width: 100%;
+
+    min-height: 46px;
+  }
+
+  /* =======================================================
      MOBILE FOOTER
   ======================================================= */
 
@@ -1794,7 +2083,8 @@ img {
   }
 
   .site-footer__inner {
-    padding: 28px 18px 24px;
+    padding:
+      28px 18px 24px;
   }
 
   .site-footer__legal {
@@ -1827,5 +2117,211 @@ img {
 
   .site-footer__inner::after {
     margin-top: 26px;
+  }
+}
+
+/* =========================================================
+   ARSENALTALKS CREATE POST EDITOR
+   ========================================================= */
+
+.create-post-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+.create-post-main {
+  min-width: 0;
+}
+
+.create-post-sidebar {
+  min-width: 0;
+  position: sticky;
+  top: 24px;
+}
+
+.create-post-user {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  font-size: 13px;
+}
+
+.create-post-user span {
+  color: #777;
+}
+
+.create-post-user strong {
+  color: #111;
+}
+
+.create-post-user small {
+  color: #d10000;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.editor-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.article-editor-card textarea {
+  min-height: 620px;
+  resize: vertical;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px 8px 0 0;
+  background: #f8f8f8;
+}
+
+.editor-toolbar button {
+  min-width: 40px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #d6d6d6;
+  background: #fff;
+  color: #111;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.editor-toolbar button:hover {
+  border-color: #d10000;
+  color: #d10000;
+}
+
+.article-editor-card .editor-toolbar + textarea {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.editor-footnote {
+  margin-top: 8px;
+  color: #777;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.sidebar-card-title {
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #111;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.category-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  color: #222;
+  cursor: pointer;
+}
+
+.category-option input {
+  width: 16px;
+  height: 16px;
+  accent-color: #d10000;
+}
+
+.create-post-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.create-post-actions button {
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.create-post-actions button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.create-post-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .create-post-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .create-post-sidebar {
+    position: static;
+  }
+
+  .create-post-user {
+    align-items: flex-start;
+    margin-top: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .create-post-layout {
+    gap: 16px;
+  }
+
+  .editor-toolbar {
+    gap: 5px;
+  }
+
+  .editor-toolbar button {
+    min-width: 36px;
+    padding: 0 8px;
+  }
+
+  .create-post-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .create-post-actions button {
+    width: 100%;
   }
 }
