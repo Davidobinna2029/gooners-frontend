@@ -80,13 +80,20 @@ function getSeoDescription(
     cleanText(yoastDescription);
 
   if (cleanedYoastDescription) {
-    return limitText(cleanedYoastDescription, 160);
+    return limitText(
+      cleanedYoastDescription,
+      160
+    );
   }
 
-  const cleanedExcerpt = cleanText(fallbackExcerpt);
+  const cleanedExcerpt =
+    cleanText(fallbackExcerpt);
 
   if (cleanedExcerpt) {
-    return limitText(cleanedExcerpt, 160);
+    return limitText(
+      cleanedExcerpt,
+      160
+    );
   }
 
   return DEFAULT_DESCRIPTION;
@@ -100,25 +107,17 @@ function getFocusKeyphrase(rawPost: any): string {
   );
 }
 
+/*
+ * Always use the public ArsenalTalks article URL.
+ *
+ * WordPress is the headless backend, so its API/domain
+ * URL must never become the canonical URL for public
+ * Next.js articles.
+ */
 function getCanonicalUrl(
-  rawPost: any,
+  _rawPost: any,
   slug: string
 ): string {
-  const yoastCanonical =
-    rawPost?.yoast_head_json?.canonical ||
-    rawPost?.link ||
-    "";
-
-  if (
-    typeof yoastCanonical === "string" &&
-    yoastCanonical.includes("arsenaltalks.com")
-  ) {
-    return yoastCanonical.replace(
-      /^https?:\/\/(www\.)?arsenaltalks\.com/,
-      SITE_URL
-    );
-  }
-
   return `${SITE_URL}/news/${slug}`;
 }
 
@@ -196,7 +195,8 @@ export async function generateMetadata({
     post.slug
   );
 
-  const imageUrl = post.image?.url || null;
+  const imageUrl =
+    post.image?.url || null;
 
   const publishedTime =
     post.date || undefined;
@@ -234,6 +234,12 @@ export async function generateMetadata({
 
     metadataBase: new URL(SITE_URL),
 
+    /*
+     * Public canonical URL.
+     *
+     * This prevents the WordPress API URL from
+     * appearing as the canonical URL.
+     */
     alternates: {
       canonical: canonicalUrl,
     },
@@ -256,6 +262,9 @@ export async function generateMetadata({
 
       locale: "en_GB",
 
+      /*
+       * Always use the public ArsenalTalks URL.
+       */
       url: canonicalUrl,
 
       siteName: SITE_NAME,
@@ -330,20 +339,29 @@ export default async function ArticlePage({
 
   const post = mapWordPressPost(rawPost);
 
-  // Keep this for now even though RelatedPosts is disabled.
+  /*
+   * Keep this for now even though RelatedPosts
+   * is currently disabled.
+   */
   mapWordPressPosts(rawLatest || []);
 
-  const imageUrl = post.image?.url;
+  const imageUrl =
+    post.image?.url;
 
-  const seoDescription = getSeoDescription(
-    rawPost,
-    post.excerpt || ""
-  );
+  const seoDescription =
+    getSeoDescription(
+      rawPost,
+      post.excerpt || ""
+    );
 
-  const canonicalUrl = getCanonicalUrl(
-    rawPost,
-    post.slug
-  );
+  /*
+   * Always generate the public article URL.
+   */
+  const canonicalUrl =
+    getCanonicalUrl(
+      rawPost,
+      post.slug
+    );
 
   const authorName =
     getAuthorName(rawPost);
@@ -366,27 +384,33 @@ export default async function ArticlePage({
    * when it is already displayed as the main image.
    */
   if (imageUrl) {
-    const escapedUrl = imageUrl.replace(
-      /[.*+?^${}()|[\]\\]/g,
-      "\\$&"
-    );
-
-    articleContent = articleContent
-      .replace(
-        new RegExp(
-          `<img[^>]*src=["']${escapedUrl}["'][^>]*>`,
-          "gi"
-        ),
-        ""
-      )
-      .replace(
-        /<figure[^>]*>[\s\S]*?<\/figure>/gi,
-        ""
+    const escapedUrl =
+      imageUrl.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
       );
+
+    articleContent =
+      articleContent
+        .replace(
+          new RegExp(
+            `<img[^>]*src=["']${escapedUrl}["'][^>]*>`,
+            "gi"
+          ),
+          ""
+        )
+        .replace(
+          /<figure[^>]*>[\s\S]*?<\/figure>/gi,
+          ""
+        );
   }
 
   /*
    * NewsArticle structured data.
+   *
+   * The URL and mainEntityOfPage now use the
+   * public ArsenalTalks /news/ URL rather than
+   * the WordPress API URL.
    */
   const structuredData = {
     "@context": "https://schema.org",
