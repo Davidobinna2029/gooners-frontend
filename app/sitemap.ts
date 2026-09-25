@@ -12,6 +12,9 @@ type WordPressSitemapPost = {
   modified: string;
 };
 
+/**
+ * Fetch all published WordPress posts for the sitemap.
+ */
 async function getAllPublishedPosts(): Promise<
   WordPressSitemapPost[]
 > {
@@ -21,15 +24,25 @@ async function getAllPublishedPosts(): Promise<
   let page = 1;
 
   while (true) {
-    const response = await fetch(
-      `${WP_API}/posts?per_page=${perPage}&page=${page}&status=publish&_fields=slug,date,modified`,
-      {
-        next: {
-          revalidate: 3600,
-        },
-      }
-    );
+    const url =
+      `${WP_API}/posts` +
+      `?per_page=${perPage}` +
+      `&page=${page}` +
+      `&status=publish` +
+      `&orderby=date` +
+      `&order=desc` +
+      `&_fields=slug,date,modified`;
 
+    const response = await fetch(url, {
+      next: {
+        revalidate: 3600,
+      },
+    });
+
+    /**
+     * WordPress returns 400 when the requested page
+     * is beyond the available pagination range.
+     */
     if (response.status === 400) {
       break;
     }
@@ -43,12 +56,16 @@ async function getAllPublishedPosts(): Promise<
     const batch =
       (await response.json()) as WordPressSitemapPost[];
 
-    if (!batch.length) {
+    if (!Array.isArray(batch) || batch.length === 0) {
       break;
     }
 
     posts.push(...batch);
 
+    /**
+     * If fewer than 100 posts are returned,
+     * we have reached the final page.
+     */
     if (batch.length < perPage) {
       break;
     }
@@ -59,11 +76,20 @@ async function getAllPublishedPosts(): Promise<
   return posts;
 }
 
+/**
+ * ArsenalTalks sitemap.
+ */
 export default async function sitemap(): Promise<
   MetadataRoute.Sitemap
 > {
   const posts = await getAllPublishedPosts();
 
+  /**
+   * Public pages and real WordPress categories.
+   *
+   * Categories verified against the ArsenalTalks
+   * WordPress taxonomy.
+   */
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: SITE_URL,
@@ -72,60 +98,62 @@ export default async function sitemap(): Promise<
       priority: 1,
     },
 
+    /**
+     * Main Arsenal categories
+     */
     {
       url: `${SITE_URL}/category/arsenal`,
       changeFrequency: "hourly",
       priority: 0.9,
     },
-
     {
       url: `${SITE_URL}/category/transfer-news`,
       changeFrequency: "hourly",
       priority: 0.9,
     },
-
     {
       url: `${SITE_URL}/category/injury-news`,
       changeFrequency: "hourly",
       priority: 0.8,
     },
 
-    {
-      url: `${SITE_URL}/category/match-reports`,
-      changeFrequency: "daily",
-      priority: 0.8,
-    },
-
+    /**
+     * Additional verified categories
+     */
     {
       url: `${SITE_URL}/category/women`,
       changeFrequency: "daily",
       priority: 0.7,
     },
-
     {
-      url: `${SITE_URL}/category/opinion`,
+      url: `${SITE_URL}/category/academy`,
       changeFrequency: "daily",
       priority: 0.7,
     },
+    {
+      url: `${SITE_URL}/category/loan-watch`,
+      changeFrequency: "daily",
+      priority: 0.6,
+    },
 
+    /**
+     * Important site pages
+     */
     {
       url: `${SITE_URL}/contact`,
       changeFrequency: "monthly",
       priority: 0.5,
     },
-
     {
       url: `${SITE_URL}/legal/about`,
       changeFrequency: "monthly",
       priority: 0.5,
     },
-
     {
       url: `${SITE_URL}/legal/privacy-policy`,
       changeFrequency: "yearly",
       priority: 0.3,
     },
-
     {
       url: `${SITE_URL}/legal/terms`,
       changeFrequency: "yearly",
@@ -133,16 +161,22 @@ export default async function sitemap(): Promise<
     },
   ];
 
-  const articleUrls: MetadataRoute.Sitemap =
-    posts
-      .filter((post) => post.slug)
-      .map((post) => ({
-        url: `${SITE_URL}/news/${post.slug}`,
-        lastModified:
-          post.modified || post.date,
-        changeFrequency: "weekly" as const,
-        priority: 0.7,
-      }));
+  /**
+   * Published WordPress articles.
+   */
+  const articleUrls: MetadataRoute.Sitemap = posts
+    .filter(
+      (post) =>
+        typeof post.slug === "string" &&
+        post.slug.trim().length > 0
+    )
+    .map((post) => ({
+      url: `${SITE_URL}/news/${post.slug}`,
+      lastModified:
+        post.modified || post.date,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }));
 
   return [
     ...staticPages,
