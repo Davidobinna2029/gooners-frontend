@@ -7,18 +7,21 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import AuthProvider from "@/components/providers/SessionProvider";
 
+const SITE_URL = "https://arsenaltalks.com";
+const SITE_NAME = "ArsenalTalks";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://arsenaltalks.com"),
+  metadataBase: new URL(SITE_URL),
 
   title: {
-    default: "ArsenalTalks",
-    template: "%s | ArsenalTalks",
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
   },
 
   description:
     "Latest Arsenal news, transfer updates, fixtures, match analysis and breaking stories.",
 
-  applicationName: "ArsenalTalks",
+  applicationName: SITE_NAME,
 
   authors: [
     {
@@ -26,8 +29,8 @@ export const metadata: Metadata = {
     },
   ],
 
-  creator: "ArsenalTalks",
-  publisher: "ArsenalTalks",
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
 
   keywords: [
     "Arsenal",
@@ -38,10 +41,6 @@ export const metadata: Metadata = {
     "ArsenalTalks",
     "Football News",
   ],
-
-  /* ========================================================
-     ARSENALTALKS FAVICON / SITE ICON
-  ======================================================== */
 
   icons: {
     icon: [
@@ -61,55 +60,44 @@ export const metadata: Metadata = {
     ],
   },
 
-  /* ========================================================
-     OPEN GRAPH
-  ======================================================== */
-
   openGraph: {
-    title: "ArsenalTalks",
+    type: "website",
+    locale: "en_GB",
+    siteName: SITE_NAME,
+    url: SITE_URL,
+
+    title: SITE_NAME,
 
     description:
       "Latest Arsenal news, fixtures, transfer updates and match analysis.",
 
-    url: "https://arsenaltalks.com",
-
-    siteName: "ArsenalTalks",
-
-    locale: "en_GB",
-
-    type: "website",
-
     images: [
       {
-        url: "/images/arsenaltalks-logo.png",
+        url: `${SITE_URL}/images/arsenaltalks-logo.png`,
         width: 512,
         height: 512,
-        alt: "ArsenalTalks",
+        alt: SITE_NAME,
       },
     ],
   },
 
-  /* ========================================================
-     X / TWITTER
-  ======================================================== */
-
   twitter: {
     card: "summary_large_image",
 
-    title: "ArsenalTalks",
+    title: SITE_NAME,
 
     description:
       "Latest Arsenal news, fixtures, transfer updates and match analysis.",
 
-    images: ["/images/arsenaltalks-logo.png"],
+    images: [`${SITE_URL}/images/arsenaltalks-logo.png`],
   },
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="en">
       <body>

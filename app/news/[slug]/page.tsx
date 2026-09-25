@@ -22,8 +22,22 @@ interface Props {
   }>;
 }
 
-const SITE_NAME = "ArsenalTalks";
+/*
+ * IMPORTANT:
+ * WordPress is the headless backend.
+ *
+ * Public article URLs MUST always use:
+ * https://arsenaltalks.com/news/[slug]
+ *
+ * Never use the WordPress API domain for:
+ * - canonical URLs
+ * - Open Graph URLs
+ * - Twitter URLs
+ * - JSON-LD article URLs
+ * - public article links
+ */
 const SITE_URL = "https://arsenaltalks.com";
+const SITE_NAME = "ArsenalTalks";
 
 const DEFAULT_DESCRIPTION =
   "Latest Arsenal news, transfer updates, match reports, injury news and more from ArsenalTalks.";
@@ -47,6 +61,25 @@ function limitText(value: string, maxLength: number): string {
   return `${value.slice(0, maxLength - 1).trim()}…`;
 }
 
+/*
+ * Remove an existing ArsenalTalks suffix because
+ * app/layout.tsx already applies:
+ *
+ * %s | ArsenalTalks
+ *
+ * This prevents:
+ *
+ * Article Title - ArsenalTalks | ArsenalTalks
+ */
+function removeSiteNameSuffix(value: string): string {
+  return value
+    .replace(
+      /\s*[-|]\s*ArsenalTalks\s*$/i,
+      ""
+    )
+    .trim();
+}
+
 function getSeoTitle(
   rawPost: any,
   fallbackTitle: string
@@ -60,10 +93,10 @@ function getSeoTitle(
   const cleaned = cleanText(yoastTitle);
 
   if (cleaned) {
-    return cleaned;
+    return removeSiteNameSuffix(cleaned);
   }
 
-  return `${fallbackTitle} | ${SITE_NAME}`;
+  return fallbackTitle.trim();
 }
 
 function getSeoDescription(
@@ -80,20 +113,14 @@ function getSeoDescription(
     cleanText(yoastDescription);
 
   if (cleanedYoastDescription) {
-    return limitText(
-      cleanedYoastDescription,
-      160
-    );
+    return limitText(cleanedYoastDescription, 160);
   }
 
   const cleanedExcerpt =
     cleanText(fallbackExcerpt);
 
   if (cleanedExcerpt) {
-    return limitText(
-      cleanedExcerpt,
-      160
-    );
+    return limitText(cleanedExcerpt, 160);
   }
 
   return DEFAULT_DESCRIPTION;
@@ -108,16 +135,15 @@ function getFocusKeyphrase(rawPost: any): string {
 }
 
 /*
- * Always use the public ArsenalTalks article URL.
+ * PUBLIC ARTICLE URL
  *
- * WordPress is the headless backend, so its API/domain
- * URL must never become the canonical URL for public
- * Next.js articles.
+ * This function intentionally does NOT use:
+ * - NEXT_PUBLIC_WORDPRESS_API_URL
+ * - WordPress post.link
+ * - rawPost.link
+ * - API hostnames
  */
-function getCanonicalUrl(
-  _rawPost: any,
-  slug: string
-): string {
+function getArticleUrl(slug: string): string {
   return `${SITE_URL}/news/${slug}`;
 }
 
@@ -132,7 +158,7 @@ function getAuthorName(rawPost: any): string {
     return embeddedAuthor.trim();
   }
 
-  return "ArsenalTalks";
+  return SITE_NAME;
 }
 
 function getCategoryName(rawPost: any): string {
@@ -157,6 +183,10 @@ function getCategoryName(rawPost: any): string {
   return "Arsenal";
 }
 
+/* ============================================================
+   METADATA
+============================================================ */
+
 export async function generateMetadata({
   params,
 }: Props): Promise<Metadata> {
@@ -166,8 +196,7 @@ export async function generateMetadata({
 
   if (!rawPost) {
     return {
-      title: "Article Not Found | ArsenalTalks",
-
+      title: "Article Not Found",
       description:
         "The requested article could not be found.",
 
@@ -180,20 +209,23 @@ export async function generateMetadata({
 
   const post = mapWordPressPost(rawPost);
 
-  const seoTitle = getSeoTitle(
-    rawPost,
-    post.title
-  );
+  const articleSlug =
+    post.slug || slug;
 
-  const seoDescription = getSeoDescription(
-    rawPost,
-    post.excerpt || ""
-  );
+  const articleUrl =
+    getArticleUrl(articleSlug);
 
-  const canonicalUrl = getCanonicalUrl(
-    rawPost,
-    post.slug
-  );
+  const seoTitle =
+    getSeoTitle(
+      rawPost,
+      post.title
+    );
+
+  const seoDescription =
+    getSeoDescription(
+      rawPost,
+      post.excerpt || ""
+    );
 
   const imageUrl =
     post.image?.url || null;
@@ -202,7 +234,7 @@ export async function generateMetadata({
     post.date || undefined;
 
   const modifiedTime =
-    publishedTime;
+    rawPost?.modified || publishedTime;
 
   const authorName =
     getAuthorName(rawPost);
@@ -214,6 +246,14 @@ export async function generateMetadata({
     getFocusKeyphrase(rawPost);
 
   return {
+    /*
+     * app/layout.tsx adds:
+     *
+     * %s | ArsenalTalks
+     *
+     * Therefore seoTitle must NOT already contain
+     * "- ArsenalTalks".
+     */
     title: seoTitle,
 
     description: seoDescription,
@@ -234,14 +274,8 @@ export async function generateMetadata({
 
     metadataBase: new URL(SITE_URL),
 
-    /*
-     * Public canonical URL.
-     *
-     * This prevents the WordPress API URL from
-     * appearing as the canonical URL.
-     */
     alternates: {
-      canonical: canonicalUrl,
+      canonical: articleUrl,
     },
 
     robots: {
@@ -263,9 +297,10 @@ export async function generateMetadata({
       locale: "en_GB",
 
       /*
-       * Always use the public ArsenalTalks URL.
+       * CRITICAL:
+       * This is the public article URL.
        */
-      url: canonicalUrl,
+      url: articleUrl,
 
       siteName: SITE_NAME,
 
@@ -313,12 +348,17 @@ export async function generateMetadata({
   };
 }
 
+/* ============================================================
+   ARTICLE PAGE
+============================================================ */
+
 export default async function ArticlePage({
   params,
 }: Props) {
   const { slug } = await params;
 
-  const rawPost = await getPostBySlug(slug);
+  const rawPost =
+    await getPostBySlug(slug);
 
   if (!rawPost) {
     return (
@@ -328,39 +368,41 @@ export default async function ArticlePage({
         </h1>
 
         <p className="mt-4 text-gray-400">
-          This article may have been removed or the
-          URL is incorrect.
+          This article may have been removed or
+          the URL is incorrect.
         </p>
       </div>
     );
   }
 
-  const rawLatest = await getPosts();
+  const rawLatest =
+    await getPosts();
 
-  const post = mapWordPressPost(rawPost);
+  const post =
+    mapWordPressPost(rawPost);
+
+  mapWordPressPosts(
+    rawLatest || []
+  );
 
   /*
-   * Keep this for now even though RelatedPosts
-   * is currently disabled.
+   * PUBLIC ARTICLE URL
+   *
+   * Never use rawPost.link here.
    */
-  mapWordPressPosts(rawLatest || []);
+  const articleSlug =
+    post.slug || slug;
+
+  const articleUrl =
+    getArticleUrl(articleSlug);
 
   const imageUrl =
-    post.image?.url;
+    post.image?.url || null;
 
   const seoDescription =
     getSeoDescription(
       rawPost,
       post.excerpt || ""
-    );
-
-  /*
-   * Always generate the public article URL.
-   */
-  const canonicalUrl =
-    getCanonicalUrl(
-      rawPost,
-      post.slug
     );
 
   const authorName =
@@ -373,7 +415,11 @@ export default async function ArticlePage({
     post.date || undefined;
 
   const modifiedTime =
-    publishedTime;
+    rawPost?.modified || publishedTime;
+
+  /* ==========================================================
+     ARTICLE CONTENT
+  ========================================================== */
 
   let articleContent =
     rawPost.content?.rendered ||
@@ -381,7 +427,8 @@ export default async function ArticlePage({
 
   /*
    * Remove the featured image from the article body
-   * when it is already displayed as the main image.
+   * because it is already displayed separately above
+   * the article content.
    */
   if (imageUrl) {
     const escapedUrl =
@@ -405,13 +452,10 @@ export default async function ArticlePage({
         );
   }
 
-  /*
-   * NewsArticle structured data.
-   *
-   * The URL and mainEntityOfPage now use the
-   * public ArsenalTalks /news/ URL rather than
-   * the WordPress API URL.
-   */
+  /* ==========================================================
+     JSON-LD
+  ========================================================== */
+
   const structuredData = {
     "@context": "https://schema.org",
 
@@ -421,11 +465,20 @@ export default async function ArticlePage({
 
     description: seoDescription,
 
-    url: canonicalUrl,
+    /*
+     * CRITICAL:
+     * Public ArsenalTalks article URL.
+     */
+    url: articleUrl,
 
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": canonicalUrl,
+
+      /*
+       * CRITICAL:
+       * Public ArsenalTalks article URL.
+       */
+      "@id": articleUrl,
     },
 
     datePublished: publishedTime,
@@ -434,12 +487,15 @@ export default async function ArticlePage({
 
     author: {
       "@type": "Person",
+
       name: authorName,
     },
 
     publisher: {
       "@type": "Organization",
+
       name: SITE_NAME,
+
       url: SITE_URL,
     },
 
@@ -447,7 +503,9 @@ export default async function ArticlePage({
 
     isPartOf: {
       "@type": "NewsMediaOrganization",
+
       name: SITE_NAME,
+
       url: SITE_URL,
     },
 
@@ -456,8 +514,15 @@ export default async function ArticlePage({
           image: [
             {
               "@type": "ImageObject",
+
+              /*
+               * Image URL can correctly remain
+               * on the WordPress media domain.
+               */
               url: imageUrl,
+
               width: 1200,
+
               height: 675,
             },
           ],
@@ -467,22 +532,18 @@ export default async function ArticlePage({
 
   return (
     <article className="article-page py-8">
-
-      {/* STRUCTURED DATA */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
-            structuredData
-          ),
+          __html:
+            JSON.stringify(
+              structuredData
+            ),
         }}
       />
 
       <div className="container max-w-[480px] md:max-w-[800px] mx-auto px-4">
-
-        {/* HEADER */}
         <header className="article-header mb-8">
-
           <span className="article-category uppercase tracking-widest text-red-500 text-sm font-medium">
             {categoryName}
           </span>
@@ -494,13 +555,10 @@ export default async function ArticlePage({
           <ArticleMeta
             date={post.date}
           />
-
         </header>
 
-        {/* FEATURED IMAGE */}
         {imageUrl && (
           <div className="article-featured-image mb-10 -mx-4 md:mx-0">
-
             <Image
               src={imageUrl}
               alt={post.title}
@@ -509,36 +567,28 @@ export default async function ArticlePage({
               priority
               className="article-image w-full h-auto rounded-2xl object-cover"
             />
-
           </div>
         )}
 
-        {/* ARTICLE CONTENT */}
         <div className="article-layout flex flex-col lg:flex-row gap-10">
-
           <main className="article-main flex-1 min-w-0">
-
             <div className="article-body prose prose-base md:prose-lg max-w-none">
               {parse(articleContent)}
             </div>
 
             <ShareBar
-              slug={post.slug}
+              slug={articleSlug}
               title={post.title}
             />
 
             <AuthorBox />
-
           </main>
 
           <aside className="article-sidebar w-full lg:w-80 hidden lg:block">
             {/* Sidebar content */}
           </aside>
-
         </div>
-
       </div>
-
     </article>
   );
 }
