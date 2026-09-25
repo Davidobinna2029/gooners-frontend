@@ -3,6 +3,7 @@ import Link from "next/link";
 import Hero from "@/components/home/Hero";
 import NewsCard from "@/components/news/NewsCard";
 import HomepageInfiniteScroll from "@/components/home/HomepageInfiniteScroll";
+import TransferHub from "@/components/home/TransferHub";
 
 import type { HomepageFeed } from "@/lib/orchestrator/homepage";
 
@@ -23,9 +24,9 @@ export default function HomepageRenderer({
   /*
    * All posts already reserved by the homepage.
    *
-   * These IDs are passed to the infinite-scroll component
-   * so it never intentionally loads a story that has already
-   * appeared in Hero, Breaking, Trending, or Latest.
+   * These IDs are passed to both infinite-scroll systems
+   * so they do not intentionally load stories that have
+   * already appeared elsewhere on the homepage.
    */
   const excludedIds = feed.all.map(
     (post) => post.id
@@ -95,13 +96,7 @@ export default function HomepageRenderer({
           )}
 
           {/* =================================================
-              INFINITE SCROLL
-              
-              Loads additional stories automatically when
-              the visitor approaches the bottom of the page.
-
-              excludedIds contains every post already present
-              in the initial homepage feed.
+              MAIN INFINITE SCROLL
           ================================================= */}
 
           <HomepageInfiniteScroll
@@ -153,22 +148,9 @@ export default function HomepageRenderer({
               TRANSFER HUB
           ================================================= */}
 
-          <section className="sidebar-card transfer-hub">
-
-            <h3>
-              Transfer Hub
-            </h3>
-
-            <p>
-              Follow the latest Arsenal transfer rumours,
-              negotiations and confirmed deals.
-            </p>
-
-            <Link href="/news">
-              View Transfer Coverage →
-            </Link>
-
-          </section>
+          <TransferHub
+            excludedIds={excludedIds}
+          />
 
         </aside>
 
