@@ -1,19 +1,32 @@
 import type { WordPressPostWithMedia } from "@/types/wordpress-media";
 import type { CanonicalPost } from "@/types/content";
 import { getFeaturedImage } from "@/lib/media/getFeaturedImage";
+import { decode } from "html-entities";
 
 const FALLBACK_IMAGE =
   "https://via.placeholder.com/800x450?text=ArsenalTalks";
 
+/**
+ * Strip HTML markup and decode HTML entities
+ * returned by WordPress.
+ *
+ * Examples:
+ * Monaco&#8217;s     -> Monaco’s
+ * Arsenal &amp; Chelsea -> Arsenal & Chelsea
+ * &ldquo;Arsenal&rdquo; -> “Arsenal”
+ * Arsenal&nbsp;News -> Arsenal News
+ */
 function strip(html?: string): string {
   if (typeof html !== "string") return "";
 
-  return html
+  const stripped = html
     .replace(/<script[^>]*>.*?<\/script>/gi, "")
     .replace(/<style[^>]*>.*?<\/style>/gi, "")
     .replace(/<[^>]*>/g, "")
     .replace(/\s+/g, " ")
     .trim();
+
+  return decode(stripped);
 }
 
 function safeArray(input: unknown): number[] {
@@ -41,7 +54,6 @@ export function mapWordPressPost(
     content: post.content?.rendered ?? "",
 
     /**
-     * 🔥 IMPORTANT CHANGE:
      * NEVER NULL AGAIN — ALWAYS IMAGE EXISTS
      */
     image: {
@@ -58,7 +70,10 @@ export function mapWordPressPost(
   };
 }
 
-export function mapWordPressPosts(posts: WordPressPostWithMedia[]) {
+export function mapWordPressPosts(
+  posts: WordPressPostWithMedia[]
+) {
   if (!Array.isArray(posts)) return [];
+
   return posts.map(mapWordPressPost);
 }
