@@ -7,8 +7,6 @@ import {
   useState,
 } from "react";
 
-import Link from "next/link";
-
 interface TransferPost {
   id: number;
   slug: string;
@@ -66,10 +64,6 @@ export default function TransferHub({
     setError(null);
 
     try {
-      const exclude = Array.from(
-        displayedIdsRef.current
-      ).join(",");
-
       const params = new URLSearchParams();
 
       params.set("page", String(page));
@@ -81,6 +75,10 @@ export default function TransferHub({
         "category",
         String(TRANSFER_CATEGORY_ID)
       );
+
+      const exclude = Array.from(
+        displayedIdsRef.current
+      ).join(",");
 
       if (exclude) {
         params.set("exclude", exclude);
@@ -153,7 +151,10 @@ export default function TransferHub({
   }, [loadMore]);
 
   /*
-   * Infinite scroll inside the Transfer Hub.
+   * Infinite scroll.
+   *
+   * Loads the next batch automatically when the
+   * visitor gets close to the bottom of the hub.
    */
   useEffect(() => {
     const sentinel =
@@ -173,7 +174,7 @@ export default function TransferHub({
           }
         },
         {
-          rootMargin: "300px 0px",
+          rootMargin: "350px 0px",
         }
       );
 
@@ -185,45 +186,115 @@ export default function TransferHub({
   }, [loadMore]);
 
   return (
-    <section className="sidebar-card transfer-hub">
-      <div className="transfer-hub-header">
-        <div>
-          <h3>Transfer Hub</h3>
+    <section
+      className="sidebar-card transfer-hub"
+      aria-labelledby="transfer-hub-title"
+    >
 
-          <p>
-            Latest Arsenal transfer news,
-            rumours and confirmed deals.
-          </p>
+      {/* =================================================
+          HEADER
+      ================================================= */}
+
+      <div className="transfer-hub-heading">
+
+        <div className="transfer-hub-heading-main">
+
+          <span
+            className="transfer-hub-accent"
+            aria-hidden="true"
+          />
+
+          <div>
+
+            <h3 id="transfer-hub-title">
+              Transfer Hub
+            </h3>
+
+            <p>
+              Arsenal transfer news,
+              rumours &amp; deals
+            </p>
+
+          </div>
+
         </div>
+
+        <span
+          className="transfer-hub-live"
+          aria-label="Live transfer coverage"
+        >
+          LIVE
+        </span>
+
       </div>
+
+      {/* =================================================
+          STORIES
+      ================================================= */}
 
       <div className="transfer-hub-feed">
-        {posts.map((post) => (
-          <Link
-            key={post.id}
-            href={`/news/${post.slug}`}
-            className="transfer-hub-story"
-          >
-            <div className="transfer-hub-image">
-              {post.image ? (
-                <img
-                  src={post.image}
-                  alt=""
-                  loading="lazy"
-                />
-              ) : (
-                <div className="transfer-hub-image-placeholder">
-                  Arsenal
-                </div>
-              )}
-            </div>
 
-            <div className="transfer-hub-story-content">
-              <h4>{post.title}</h4>
-            </div>
-          </Link>
-        ))}
+        {posts.map(
+          (post, index) => (
+            <a
+              key={post.id}
+              href={`/news/${post.slug}`}
+              className="transfer-hub-story"
+            >
+
+              {/* Story number */}
+
+              <span
+                className="transfer-hub-number"
+                aria-hidden="true"
+              >
+                {String(index + 1).padStart(
+                  2,
+                  "0"
+                )}
+              </span>
+
+              {/* Featured image */}
+
+              <div className="transfer-hub-image">
+
+                {post.image ? (
+                  <img
+                    src={post.image}
+                    alt=""
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="transfer-hub-image-placeholder">
+                    AFC
+                  </div>
+                )}
+
+              </div>
+
+              {/* Story content */}
+
+              <div className="transfer-hub-story-content">
+
+                <span className="transfer-hub-label">
+                  TRANSFER
+                </span>
+
+                <h4>
+                  {post.title}
+                </h4>
+
+              </div>
+
+            </a>
+          )
+        )}
+
       </div>
+
+      {/* =================================================
+          INFINITE SCROLL SENTINEL
+      ================================================= */}
 
       <div
         ref={sentinelRef}
@@ -231,21 +302,39 @@ export default function TransferHub({
         aria-hidden="true"
       />
 
+      {/* =================================================
+          LOADING
+      ================================================= */}
+
       {loading && (
         <div
-          className="transfer-hub-status"
+          className="transfer-hub-loading"
           aria-live="polite"
         >
-          Loading transfer news…
+          <span
+            className="transfer-hub-spinner"
+            aria-hidden="true"
+          />
+
+          <span>
+            Loading transfer news…
+          </span>
         </div>
       )}
+
+      {/* =================================================
+          ERROR
+      ================================================= */}
 
       {!loading && error && (
         <div
           className="transfer-hub-status"
           role="alert"
         >
-          <p>{error}</p>
+
+          <p>
+            {error}
+          </p>
 
           <button
             type="button"
@@ -253,8 +342,13 @@ export default function TransferHub({
           >
             Try Again
           </button>
+
         </div>
       )}
+
+      {/* =================================================
+          EMPTY STATE
+      ================================================= */}
 
       {!loading &&
         !error &&
@@ -264,25 +358,22 @@ export default function TransferHub({
           </div>
         )}
 
+      {/* =================================================
+          END OF FEED
+      ================================================= */}
+
       {!loading &&
         !error &&
         !hasMore &&
         posts.length > 0 && (
           <div
-            className="transfer-hub-status"
+            className="transfer-hub-end"
             aria-live="polite"
           >
-            You’ve reached the end of the transfer
-            stories.
+            End of transfer coverage
           </div>
         )}
 
-      <Link
-        href="/category/transfer-news"
-        className="transfer-hub-link"
-      >
-        View All Transfer News →
-      </Link>
     </section>
   );
 }
