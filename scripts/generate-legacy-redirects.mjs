@@ -21,15 +21,51 @@ const SITEMAP_FILE = path.join(
 // Sitemap policy
 // ---------------------------------------------------------
 //
+// Redirect policy:
 // Keep redirects for ALL published WordPress posts.
 //
+// Sitemap policy:
 // Only posts published on or after this date are eligible
 // for the public XML sitemap.
 //
-// This removes the known 2015/2020 legacy imports without
-// breaking their redirects.
+// Additional quality filtering removes obvious placeholder,
+// test, malformed, and low-value legacy slugs while leaving
+// legitimate Arsenal article URLs untouched.
 //
 const SITEMAP_CUTOFF = "2024-01-01T00:00:00.000Z";
+
+// ---------------------------------------------------------
+// Obvious placeholder / malformed slug patterns
+// ---------------------------------------------------------
+//
+// These patterns are intentionally conservative.
+//
+// DO NOT use broad keyword/category filtering here because
+// some older Arsenal posts may have inconsistent taxonomy.
+//
+// The purpose is only to remove URLs that clearly look like
+// placeholders, tests, IDs, or malformed imports.
+//
+// Redirects are NEVER affected by this filter.
+// ---------------------------------------------------------
+
+const SITEMAP_EXCLUDED_SLUG_PATTERNS = [
+  // Very short alphabetic placeholder slugs.
+  /^[a-z]{1,4}$/i,
+
+  // Pure numeric slugs.
+  /^\d+$/,
+
+  // Numeric-only IDs with a simple separator.
+  /^\d+[-_]\d+$/,
+
+  // Common placeholder/test slugs.
+  /^(test|testing|test-post|test-post-\d+)$/i,
+  /^(draft|draft-post|sample|sample-post|placeholder)$/i,
+
+  // Obvious generic list placeholders.
+  /^(classic-list|open-list)$/i,
+];
 
 // ---------------------------------------------------------
 // Helpers
@@ -62,9 +98,14 @@ async function fetchAllPosts() {
     url.searchParams.set("status", "publish");
     url.searchParams.set("per_page", "100");
     url.searchParams.set("page", String(page));
-    url.searchParams.set("_fields", "id,slug,date,modified");
+    url.searchParams.set(
+      "_fields",
+      "id,slug,date,modified"
+    );
 
-    console.log(`Fetching WordPress posts page ${page}...`);
+    console.log(
+      `Fetching WordPress posts page ${page}...`
+    );
 
     const response = await fetch(url.toString(), {
       headers: {
@@ -109,6 +150,30 @@ async function fetchAllPosts() {
 }
 
 // ---------------------------------------------------------
+// Sitemap slug quality check
+// ---------------------------------------------------------
+
+function getSitemapSlugExclusionReason(slug) {
+  if (!slug || typeof slug !== "string") {
+    return "missing-slug";
+  }
+
+  const normalizedSlug = slug.trim().toLowerCase();
+
+  if (!normalizedSlug) {
+    return "empty-slug";
+  }
+
+  for (const pattern of SITEMAP_EXCLUDED_SLUG_PATTERNS) {
+    if (pattern.test(normalizedSlug)) {
+      return "placeholder-or-malformed-slug";
+    }
+  }
+
+  return null;
+}
+
+// ---------------------------------------------------------
 // Main
 // ---------------------------------------------------------
 
@@ -121,13 +186,24 @@ async function main() {
 
   const posts = await fetchAllPosts();
 
-  console.log(`WordPress posts scanned: ${posts.length}`);
+  console.log(
+    `WordPress posts scanned: ${posts.length}`
+  );
 
   const redirects = {};
   const sitemapMap = new Map();
 
   let sitemapExcluded = 0;
   let invalidPosts = 0;
+
+  const exclusionReasons = {
+    "missing-date": 0,
+    "invalid-date": 0,
+    "before-cutoff": 0,
+    "placeholder-or-malformed-slug": 0,
+  };
+
+  const excludedSlugs = [];
 
   for (const post of posts) {
     if (!post || typeof post !== "object") {
@@ -156,36 +232,89 @@ async function main() {
     }
 
     // -----------------------------------------------------
-    // Keep redirects for every published post.
+    // Keep redirects for EVERY published post.
     // -----------------------------------------------------
 
     redirects[slug] = `/news/${slug}/`;
 
     // -----------------------------------------------------
-    // Sitemap eligibility.
-    //
-    // Only posts published from 2024-01-01 onward.
+    // Sitemap: require a publication date.
     // -----------------------------------------------------
 
     if (!date) {
       sitemapExcluded += 1;
+      exclusionReasons["missing-date"] += 1;
+
+      excludedSlugs.push({
+        slug,
+        reason: "missing-date",
+      });
+
       continue;
     }
+
+    // -----------------------------------------------------
+    // Sitemap: validate publication date.
+    // -----------------------------------------------------
 
     const publishedTime = new Date(date);
 
     if (Number.isNaN(publishedTime.getTime())) {
       sitemapExcluded += 1;
+      exclusionReasons["invalid-date"] += 1;
+
+      excludedSlugs.push({
+        slug,
+        reason: "invalid-date",
+      });
+
       continue;
     }
+
+    // -----------------------------------------------------
+    // Sitemap: enforce publication cutoff.
+    // -----------------------------------------------------
 
     if (
       publishedTime.getTime() <
       new Date(SITEMAP_CUTOFF).getTime()
     ) {
       sitemapExcluded += 1;
+      exclusionReasons["before-cutoff"] += 1;
+
       continue;
     }
+
+    // -----------------------------------------------------
+    // Sitemap: remove obvious placeholder/malformed URLs.
+    // -----------------------------------------------------
+
+    const slugExclusionReason =
+      getSitemapSlugExclusionReason(slug);
+
+    if (slugExclusionReason) {
+      sitemapExcluded += 1;
+
+      if (
+        slugExclusionReason ===
+        "placeholder-or-malformed-slug"
+      ) {
+        exclusionReasons[
+          "placeholder-or-malformed-slug"
+        ] += 1;
+      }
+
+      excludedSlugs.push({
+        slug,
+        reason: slugExclusionReason,
+      });
+
+      continue;
+    }
+
+    // -----------------------------------------------------
+    // Accept sitemap post.
+    // -----------------------------------------------------
 
     sitemapMap.set(slug, {
       slug,
@@ -197,8 +326,8 @@ async function main() {
   // ---------------------------------------------------------
   // Sort sitemap posts newest first.
   //
-  // Prefer modified date because updated articles should remain
-  // near the top of the generated dataset.
+  // Prefer modified date because updated articles should
+  // remain near the top of the generated dataset.
   // ---------------------------------------------------------
 
   const sitemapPosts = Array.from(
@@ -278,6 +407,58 @@ async function main() {
   console.log(
     `Sitemap cutoff: ${SITEMAP_CUTOFF}`
   );
+
+  console.log("");
+
+  console.log("Sitemap exclusion breakdown:");
+
+  console.log(
+    `  Missing date: ${
+      exclusionReasons["missing-date"]
+    }`
+  );
+
+  console.log(
+    `  Invalid date: ${
+      exclusionReasons["invalid-date"]
+    }`
+  );
+
+  console.log(
+    `  Before cutoff: ${
+      exclusionReasons["before-cutoff"]
+    }`
+  );
+
+  console.log(
+    `  Placeholder/malformed slug: ${
+      exclusionReasons[
+        "placeholder-or-malformed-slug"
+      ]
+    }`
+  );
+
+  // ---------------------------------------------------------
+  // Print excluded placeholder URLs so they can be reviewed.
+  // ---------------------------------------------------------
+
+  const placeholderExclusions =
+    excludedSlugs.filter(
+      (item) =>
+        item.reason ===
+        "placeholder-or-malformed-slug"
+    );
+
+  if (placeholderExclusions.length > 0) {
+    console.log("");
+    console.log(
+      "Placeholder/malformed slugs excluded from sitemap:"
+    );
+
+    for (const item of placeholderExclusions) {
+      console.log(`  - ${item.slug}`);
+    }
+  }
 
   console.log("");
 
