@@ -7,6 +7,8 @@ import {
   useState,
 } from "react";
 
+import { usePathname, useRouter } from "next/navigation";
+
 import NewsCard from "@/components/news/NewsCard";
 
 import type {
@@ -154,15 +156,12 @@ function normalizePost(
     /*
      * The current /api/posts response does not return
      * WordPress tag IDs yet.
-     *
-     * Keep this empty until the API exposes them.
      */
     tags: [],
 
     /*
      * Infinite-scroll posts have not gone through the
-     * homepage ranking engine, so they receive a neutral
-     * client-side score.
+     * homepage ranking engine.
      */
     score: 0,
 
@@ -172,12 +171,43 @@ function normalizePost(
       ),
 
     link: post.link,
-
-    /*
-     * Content is intentionally omitted because the
-     * homepage NewsCard does not need the full article body.
-     */
   };
+}
+
+/* ==========================================================
+   URL PAGE HELPERS
+========================================================== */
+
+/**
+ * The homepage has already rendered the initial batch.
+ *
+ * Therefore:
+ *
+ * /
+ * ↓
+ * page 2
+ * ↓
+ * page 3
+ * ↓
+ * page 4
+ *
+ * The URL uses the homepage query parameter:
+ *
+ * /?page=2
+ * /?page=3
+ *
+ * We deliberately use replace(), not push(), so every
+ * infinite-scroll boundary does not create another browser
+ * history entry.
+ */
+function buildHomepagePageUrl(
+  page: number
+): string {
+  if (page <= 1) {
+    return "/";
+  }
+
+  return `/?page=${page}`;
 }
 
 /* ==========================================================
@@ -187,6 +217,11 @@ function normalizePost(
 export default function HomepageInfiniteScroll({
   excludedIds,
 }: Props) {
+  const router = useRouter();
+
+  const pathname =
+    usePathname();
+
   /* ========================================================
      LOADED POSTS
   ======================================================== */
@@ -197,9 +232,9 @@ export default function HomepageInfiniteScroll({
   /* ========================================================
      CURRENT WORDPRESS PAGE
 
-     Initial homepage already consumes page 1.
+     The homepage server-rendered content represents page 1.
 
-     Infinite scroll therefore starts at page 2.
+     Infinite scrolling therefore starts at page 2.
   ======================================================== */
 
   const [page, setPage] =
@@ -252,14 +287,30 @@ export default function HomepageInfiniteScroll({
 
   /* ========================================================
      SENTINEL
-
-     IntersectionObserver watches this element.
   ======================================================== */
 
   const sentinelRef =
     useRef<HTMLDivElement | null>(
       null
     );
+
+  /* ========================================================
+     KEEP DEDUPLICATION REGISTRY IN SYNC
+
+     If the server-rendered homepage changes its initial
+     excluded posts, update the registry without wiping
+     posts that have already been loaded client-side.
+  ======================================================== */
+
+  useEffect(() => {
+    for (
+      const id of excludedIds
+    ) {
+      displayedIdsRef.current.add(
+        id
+      );
+    }
+  }, [excludedIds]);
 
   /* ========================================================
      LOAD MORE
@@ -303,9 +354,18 @@ export default function HomepageInfiniteScroll({
               displayedIdsRef.current
             ).join(",");
 
+          /*
+           * Capture the page being requested.
+           *
+           * This prevents the URL from accidentally being
+           * updated with the NEXT page number.
+           */
+          const requestedPage =
+            page;
+
           const response =
             await fetch(
-              `/api/posts?page=${page}&per_page=10&exclude=${exclude}`,
+              `/api/posts?page=${requestedPage}&per_page=10&exclude=${exclude}`,
               {
                 method: "GET",
 
@@ -324,9 +384,6 @@ export default function HomepageInfiniteScroll({
 
           /*
            * Defensive client-side deduplication.
-           *
-           * The server already receives the exclusion list,
-           * but we enforce the rule again on the client.
            */
           const uniquePosts =
             data.posts.filter(
@@ -378,9 +435,49 @@ export default function HomepageInfiniteScroll({
            * Move to the next WordPress page.
            */
           setPage(
-            (currentPage) =>
-              currentPage + 1
+            requestedPage + 1
           );
+
+          /*
+           * ==================================================
+           * SEO / CRAWLABLE URL STATE
+           *
+           * The user still experiences seamless infinite
+           * scrolling.
+           *
+           * The browser URL reflects the latest loaded
+           * pagination state.
+           *
+           * replace() is intentional:
+           *
+           * /
+           * /?page=2
+           * /?page=3
+           *
+           * without creating one browser-history entry for
+           * every scroll boundary.
+           * ==================================================
+           */
+
+          /*
+           * Only update the URL when this component is being
+           * used on the homepage.
+           *
+           * This protects the component if it is ever reused
+           * elsewhere.
+           */
+          if (
+            pathname === "/"
+          ) {
+            router.replace(
+              buildHomepagePageUrl(
+                requestedPage
+              ),
+              {
+                scroll: false,
+              }
+            );
+          }
         } catch (err) {
           console.error(
             "Infinite scroll error:",
@@ -397,7 +494,12 @@ export default function HomepageInfiniteScroll({
           setLoading(false);
         }
       },
-      [page, hasMore]
+      [
+        page,
+        hasMore,
+        pathname,
+        router,
+      ]
     );
 
   /* ========================================================
@@ -421,7 +523,7 @@ export default function HomepageInfiniteScroll({
           if (
             entry?.isIntersecting
           ) {
-            loadMore();
+            void loadMore();
           }
         },
         {
@@ -465,9 +567,6 @@ export default function HomepageInfiniteScroll({
 
       {/* ====================================================
           INFINITE SCROLL SENTINEL
-
-          When this enters the viewport, the next page is
-          requested automatically.
       ==================================================== */}
 
       <div

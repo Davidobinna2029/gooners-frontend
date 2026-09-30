@@ -12,11 +12,16 @@ const WP_API =
   process.env.NEXT_PUBLIC_WORDPRESS_API_URL ||
   "https://api.arsenaltalks.com/wp-json/wp/v2";
 
-const WP_USERNAME = process.env.WORDPRESS_USERNAME;
-const WP_APP_PASSWORD = process.env.WORDPRESS_APP_PASSWORD;
+const WP_USERNAME =
+  process.env.WORDPRESS_USERNAME;
+
+const WP_APP_PASSWORD =
+  process.env.WORDPRESS_APP_PASSWORD;
 
 const DEFAULT_PER_PAGE = 20;
 const MAX_PER_PAGE = 100;
+
+const WP_GET_TIMEOUT = 30_000;
 
 const VALID_WORKFLOW_STATUSES = [
   "DRAFT",
@@ -35,8 +40,15 @@ const PUBLISH_ROLES = [
   "EDITOR",
 ] as const;
 
+/* -------------------------------------------------------------------------- */
+/* WordPress authentication                                                   */
+/* -------------------------------------------------------------------------- */
+
 function getWordPressAuth(): string | null {
-  if (!WP_USERNAME || !WP_APP_PASSWORD) {
+  if (
+    !WP_USERNAME ||
+    !WP_APP_PASSWORD
+  ) {
     return null;
   }
 
@@ -44,6 +56,10 @@ function getWordPressAuth(): string | null {
     `${WP_USERNAME}:${WP_APP_PASSWORD}`
   ).toString("base64");
 }
+
+/* -------------------------------------------------------------------------- */
+/* Text helpers                                                               */
+/* -------------------------------------------------------------------------- */
 
 /**
  * Strip HTML from values that should be displayed
@@ -56,32 +72,41 @@ function getWordPressAuth(): string | null {
  * Do NOT use this function on article content.
  * Article content must remain HTML.
  */
-function stripHtml(value: unknown): string {
-  if (typeof value !== "string") {
+function stripHtml(
+  value: unknown
+): string {
+  if (
+    typeof value !== "string"
+  ) {
     return "";
   }
 
-  const stripped = value
-    .replace(
-      /<script[^>]*>[\s\S]*?<\/script>/gi,
-      ""
-    )
-    .replace(
-      /<style[^>]*>[\s\S]*?<\/style>/gi,
-      ""
-    )
-    .replace(
-      /<[^>]*>/g,
-      ""
-    )
-    .replace(
-      /\s+/g,
-      " "
-    )
-    .trim();
+  const stripped =
+    value
+      .replace(
+        /<script[^>]*>[\s\S]*?<\/script>/gi,
+        ""
+      )
+      .replace(
+        /<style[^>]*>[\s\S]*?<\/style>/gi,
+        ""
+      )
+      .replace(
+        /<[^>]*>/g,
+        ""
+      )
+      .replace(
+        /\s+/g,
+        " "
+      )
+      .trim();
 
   return decode(stripped);
 }
+
+/* -------------------------------------------------------------------------- */
+/* Image helpers                                                              */
+/* -------------------------------------------------------------------------- */
 
 /**
  * Normalize WordPress image URLs so the frontend
@@ -90,11 +115,14 @@ function stripHtml(value: unknown): string {
 function normalizeImageUrl(
   value: unknown
 ): string | null {
-  if (typeof value !== "string") {
+  if (
+    typeof value !== "string"
+  ) {
     return null;
   }
 
-  const trimmed = value.trim();
+  const trimmed =
+    value.trim();
 
   if (!trimmed) {
     return null;
@@ -107,21 +135,30 @@ function normalizeImageUrl(
 }
 
 /**
- * Extract the featured image from a WordPress REST response.
+ * Extract the featured image from
+ * a WordPress REST response.
  */
 function extractImage(
   post: any
 ): string | null {
   const media =
-    post?._embedded?.["wp:featuredmedia"]?.[0];
+    post?._embedded?.[
+      "wp:featuredmedia"
+    ]?.[0];
 
   const sourceUrl =
     media?.source_url ||
     media?.guid?.rendered ||
     null;
 
-  return normalizeImageUrl(sourceUrl);
+  return normalizeImageUrl(
+    sourceUrl
+  );
 }
+
+/* -------------------------------------------------------------------------- */
+/* WordPress request helpers                                                  */
+/* -------------------------------------------------------------------------- */
 
 /**
  * Build WordPress request headers.
@@ -130,13 +167,16 @@ function getWpHeaders(
   includeJson = false
 ): HeadersInit {
   const headers: HeadersInit = {
-    Accept: "application/json",
+    Accept:
+      "application/json",
   };
 
-  const auth = getWordPressAuth();
+  const auth =
+    getWordPressAuth();
 
   if (auth) {
-    headers.Authorization = `Basic ${auth}`;
+    headers.Authorization =
+      `Basic ${auth}`;
   }
 
   if (includeJson) {
@@ -153,7 +193,8 @@ function getWpHeaders(
 async function safeJson(
   response: Response
 ): Promise<any> {
-  const text = await response.text();
+  const text =
+    await response.text();
 
   if (!text) {
     return null;
@@ -167,6 +208,10 @@ async function safeJson(
     };
   }
 }
+
+/* ========================================================================== */
+/* GET /api/posts                                                             */
+/* ========================================================================== */
 
 /**
  * GET /api/posts
@@ -183,152 +228,257 @@ async function safeJson(
 export async function GET(
   request: NextRequest
 ) {
-  try {
-    const { searchParams } =
-      new URL(request.url);
+  const {
+    searchParams,
+  } = new URL(
+    request.url
+  );
 
-    const pageParam =
-      Number(
-        searchParams.get("page") || "1"
-      );
+  const pageParam =
+    Number(
+      searchParams.get(
+        "page"
+      ) || "1"
+    );
 
-    const perPageParam =
-      Number(
-        searchParams.get("per_page") ||
-          DEFAULT_PER_PAGE
-      );
+  const perPageParam =
+    Number(
+      searchParams.get(
+        "per_page"
+      ) ||
+        DEFAULT_PER_PAGE
+    );
 
-    const page =
-      Number.isFinite(pageParam) &&
-      pageParam > 0
-        ? Math.floor(pageParam)
-        : 1;
-
-    const perPage =
-      Number.isFinite(perPageParam) &&
-      perPageParam > 0
-        ? Math.min(
-            Math.floor(perPageParam),
-            MAX_PER_PAGE
-          )
-        : DEFAULT_PER_PAGE;
-
-    const excludeParam =
-      searchParams.get("exclude") || "";
-
-    const categoryParam =
-      searchParams.get("category");
-
-    const excludeIds =
-      excludeParam
-        .split(",")
-        .map((id) =>
-          Number(id.trim())
+  const page =
+    Number.isFinite(
+      pageParam
+    ) &&
+    pageParam > 0
+      ? Math.floor(
+          pageParam
         )
-        .filter(
-          (id) =>
-            Number.isFinite(id) &&
-            id > 0
-        );
+      : 1;
 
-    const wpParams =
-      new URLSearchParams();
+  const perPage =
+    Number.isFinite(
+      perPageParam
+    ) &&
+    perPageParam > 0
+      ? Math.min(
+          Math.floor(
+            perPageParam
+          ),
+          MAX_PER_PAGE
+        )
+      : DEFAULT_PER_PAGE;
 
-    wpParams.set(
-      "page",
-      String(page)
+  const excludeParam =
+    searchParams.get(
+      "exclude"
+    ) || "";
+
+  const categoryParam =
+    searchParams.get(
+      "category"
     );
 
-    wpParams.set(
-      "per_page",
-      String(perPage)
-    );
-
-    wpParams.set(
-      "_embed",
-      "1"
-    );
-
-    wpParams.set(
-      "orderby",
-      "date"
-    );
-
-    wpParams.set(
-      "order",
-      "desc"
-    );
-
-    if (
-      categoryParam &&
-      Number.isFinite(
-        Number(categoryParam)
+  const excludeIds =
+    excludeParam
+      .split(",")
+      .map((id) =>
+        Number(
+          id.trim()
+        )
       )
-    ) {
-      wpParams.set(
-        "categories",
-        String(
-          Number(categoryParam)
+      .filter(
+        (id) =>
+          Number.isFinite(
+            id
+          ) &&
+          id > 0
+      );
+
+  const wpParams =
+    new URLSearchParams();
+
+  wpParams.set(
+    "page",
+    String(page)
+  );
+
+  wpParams.set(
+    "per_page",
+    String(perPage)
+  );
+
+  /*
+   * Keep _embed enabled because the frontend
+   * needs the featured image from WordPress.
+   */
+  wpParams.set(
+    "_embed",
+    "1"
+  );
+
+  wpParams.set(
+    "orderby",
+    "date"
+  );
+
+  wpParams.set(
+    "order",
+    "desc"
+  );
+
+  if (
+    categoryParam &&
+    Number.isFinite(
+      Number(
+        categoryParam
+      )
+    )
+  ) {
+    wpParams.set(
+      "categories",
+      String(
+        Number(
+          categoryParam
         )
-      );
-    }
+      )
+    );
+  }
 
-    if (excludeIds.length > 0) {
-      wpParams.set(
-        "exclude",
-        excludeIds.join(",")
-      );
-    }
+  if (
+    excludeIds.length >
+    0
+  ) {
+    wpParams.set(
+      "exclude",
+      excludeIds.join(",")
+    );
+  }
 
+  const wpUrl =
+    `${WP_API}/posts?${wpParams.toString()}`;
+
+  const controller =
+    new AbortController();
+
+  const timeout =
+    setTimeout(
+      () => {
+        controller.abort();
+      },
+      WP_GET_TIMEOUT
+    );
+
+  try {
+    console.log(
+      `[API POSTS] GET page=${page} per_page=${perPage}`
+    );
+
+    console.log(
+      `[API POSTS] WordPress URL: ${wpUrl}`
+    );
+
+    /**
+     * The direct WordPress request has been
+     * verified to work from PowerShell.
+     *
+     * "Connection: close" helps avoid stale
+     * keep-alive sockets being reused between
+     * Next.js/Undici and LiteSpeed.
+     */
     const response =
       await fetch(
-        `${WP_API}/posts?${wpParams.toString()}`,
+        wpUrl,
         {
           method: "GET",
-          headers: getWpHeaders(),
+
+          headers: {
+            ...getWpHeaders(),
+
+            Connection:
+              "close",
+          },
+
           cache: "no-store",
+
+          signal:
+            controller.signal,
         }
       );
 
-    if (!response.ok) {
+    if (
+      !response.ok
+    ) {
       const errorBody =
         await response.text();
 
       console.error(
-        "WordPress posts request failed:",
-        response.status,
-        errorBody
+        "[API POSTS] WordPress posts request failed:",
+        {
+          status:
+            response.status,
+
+          statusText:
+            response.statusText,
+
+          body:
+            errorBody.slice(
+              0,
+              2000
+            ),
+        }
       );
 
       return NextResponse.json(
         {
           error:
             "Failed to fetch WordPress posts",
+
           status:
             response.status,
+
           details:
             errorBody,
         },
         {
-          status:
-            response.status,
+          status: 502,
         }
       );
     }
 
     const posts =
-      await safeJson(response);
+      await safeJson(
+        response
+      );
 
-    if (!Array.isArray(posts)) {
+    if (
+      !Array.isArray(
+        posts
+      )
+    ) {
+      console.error(
+        "[API POSTS] Invalid WordPress response:",
+        posts
+      );
+
       return NextResponse.json(
         {
           error:
             "Invalid WordPress posts response",
+
           posts: [],
+
           page,
+
           perPage,
+
           totalPosts: 0,
+
           totalPages: 0,
+
           hasMore: false,
         },
         {
@@ -348,15 +498,30 @@ export async function GET(
       );
 
     const totalPosts =
-      totalHeader
-        ? Number(totalHeader)
+      totalHeader &&
+      Number.isFinite(
+        Number(
+          totalHeader
+        )
+      )
+        ? Number(
+            totalHeader
+          )
         : posts.length;
 
     const totalPages =
-      totalPagesHeader
-        ? Number(totalPagesHeader)
+      totalPagesHeader &&
+      Number.isFinite(
+        Number(
+          totalPagesHeader
+        )
+      )
+        ? Number(
+            totalPagesHeader
+          )
         : Math.ceil(
-            totalPosts / perPage
+            totalPosts /
+              perPage
           );
 
     const frontendPosts =
@@ -364,29 +529,35 @@ export async function GET(
         (post: any) => {
           const title =
             stripHtml(
-              post?.title?.rendered ||
+              post?.title
+                ?.rendered ||
                 post?.title ||
                 ""
             );
 
           const excerpt =
             stripHtml(
-              post?.excerpt?.rendered ||
+              post?.excerpt
+                ?.rendered ||
                 post?.excerpt ||
                 ""
             );
 
           const image =
-            extractImage(post);
+            extractImage(
+              post
+            );
 
           return {
-            id: post?.id,
+            id:
+              post?.id,
 
             date:
               post?.date,
 
             slug:
-              post?.slug || "",
+              post?.slug ||
+              "",
 
             title,
 
@@ -397,7 +568,8 @@ export async function GET(
              * Do not strip or decode it here.
              */
             content:
-              post?.content?.rendered ||
+              post?.content
+                ?.rendered ||
               "",
 
             image: image
@@ -421,7 +593,8 @@ export async function GET(
                 : [],
 
             link:
-              post?.link || null,
+              post?.link ||
+              null,
 
             featured_media:
               post?.featured_media ||
@@ -430,24 +603,68 @@ export async function GET(
         }
       );
 
-    return NextResponse.json({
-      posts:
-        frontendPosts,
+    const hasMore =
+      page <
+      totalPages;
 
-      page,
+    console.log(
+      `[API POSTS] Success: ${frontendPosts.length} posts, page ${page}/${totalPages}`
+    );
 
-      perPage,
+    return NextResponse.json(
+      {
+        posts:
+          frontendPosts,
 
-      totalPosts,
+        page,
 
-      totalPages,
+        perPage,
 
-      hasMore:
-        page < totalPages,
-    });
+        totalPosts,
+
+        totalPages,
+
+        hasMore,
+      },
+      {
+        status: 200,
+
+        headers: {
+          "Cache-Control":
+            "private, no-store",
+        },
+      }
+    );
   } catch (error) {
+    const isAbortError =
+      error instanceof Error &&
+      error.name ===
+        "AbortError";
+
+    if (
+      isAbortError
+    ) {
+      console.error(
+        `[API POSTS] WordPress request timed out after ${WP_GET_TIMEOUT}ms`
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            "WordPress API request timed out",
+
+          page,
+
+          perPage,
+        },
+        {
+          status: 504,
+        }
+      );
+    }
+
     console.error(
-      "GET /api/posts error:",
+      "[API POSTS] GET /api/posts error:",
       error
     );
 
@@ -455,17 +672,28 @@ export async function GET(
       {
         error:
           "Failed to fetch posts",
+
         details:
           error instanceof Error
             ? error.message
-            : String(error),
+            : String(
+                error
+              ),
       },
       {
         status: 500,
       }
     );
+  } finally {
+    clearTimeout(
+      timeout
+    );
   }
 }
+
+/* ========================================================================== */
+/* POST /api/posts                                                            */
+/* ========================================================================== */
 
 /**
  * POST /api/posts
@@ -477,18 +705,18 @@ export async function POST(
   request: NextRequest
 ) {
   try {
-    /**
-     * -------------------------------------------------------
-     * AUTHENTICATION
-     * -------------------------------------------------------
-     */
+    /* ---------------------------------------------------------------------- */
+    /* AUTHENTICATION                                                         */
+    /* ---------------------------------------------------------------------- */
 
     const session =
       await getServerSession(
         authOptions
       );
 
-    if (!session?.user) {
+    if (
+      !session?.user
+    ) {
       return NextResponse.json(
         {
           error:
@@ -513,37 +741,50 @@ export async function POST(
       "";
 
     const userRole =
-      user.role || "WRITER";
+      user.role ||
+      "WRITER";
 
-    /**
-     * -------------------------------------------------------
-     * FORM DATA
-     * -------------------------------------------------------
-     */
+    /* ---------------------------------------------------------------------- */
+    /* FORM DATA                                                              */
+    /* ---------------------------------------------------------------------- */
 
     const formData =
       await request.formData();
 
     const titleValue =
-      formData.get("title");
+      formData.get(
+        "title"
+      );
 
     const contentValue =
-      formData.get("content");
+      formData.get(
+        "content"
+      );
 
     const excerptValue =
-      formData.get("excerpt");
+      formData.get(
+        "excerpt"
+      );
 
     const slugValue =
-      formData.get("slug");
+      formData.get(
+        "slug"
+      );
 
     const statusValue =
-      formData.get("status");
+      formData.get(
+        "status"
+      );
 
     const categoryValue =
-      formData.get("categories");
+      formData.get(
+        "categories"
+      );
 
     const tagsValue =
-      formData.get("tags");
+      formData.get(
+        "tags"
+      );
 
     const seoTitleValue =
       formData.get(
@@ -566,27 +807,32 @@ export async function POST(
       );
 
     const title =
-      typeof titleValue === "string"
+      typeof titleValue ===
+      "string"
         ? titleValue.trim()
         : "";
 
     const content =
-      typeof contentValue === "string"
+      typeof contentValue ===
+      "string"
         ? contentValue
         : "";
 
     const excerpt =
-      typeof excerptValue === "string"
+      typeof excerptValue ===
+      "string"
         ? excerptValue
         : "";
 
     const slug =
-      typeof slugValue === "string"
+      typeof slugValue ===
+      "string"
         ? slugValue.trim()
         : "";
 
     const requestedStatus =
-      typeof statusValue === "string" &&
+      typeof statusValue ===
+        "string" &&
       statusValue.trim()
         ? statusValue
             .trim()
@@ -594,17 +840,20 @@ export async function POST(
         : "DRAFT";
 
     const categoriesRaw =
-      typeof categoryValue === "string"
+      typeof categoryValue ===
+      "string"
         ? categoryValue
         : "";
 
     const tagsRaw =
-      typeof tagsValue === "string"
+      typeof tagsValue ===
+      "string"
         ? tagsValue
         : "";
 
     const seoTitle =
-      typeof seoTitleValue === "string"
+      typeof seoTitleValue ===
+      "string"
         ? seoTitleValue
         : "";
 
@@ -620,11 +869,9 @@ export async function POST(
         ? seoFocusKeywordValue
         : "";
 
-    /**
-     * -------------------------------------------------------
-     * VALIDATION
-     * -------------------------------------------------------
-     */
+    /* ---------------------------------------------------------------------- */
+    /* VALIDATION                                                             */
+    /* ---------------------------------------------------------------------- */
 
     if (!title) {
       return NextResponse.json(
@@ -659,6 +906,7 @@ export async function POST(
         {
           error:
             "Invalid workflow status",
+
           validStatuses:
             VALID_WORKFLOW_STATUSES,
         },
@@ -671,10 +919,6 @@ export async function POST(
     const workflowStatus =
       requestedStatus as WorkflowStatus;
 
-    /**
-     * Writers can create drafts but cannot
-     * directly publish content.
-     */
     if (
       workflowStatus ===
         "PUBLISHED" &&
@@ -689,6 +933,7 @@ export async function POST(
         {
           error:
             "You do not have permission to publish posts.",
+
           requiredRoles:
             PUBLISH_ROLES,
         },
@@ -698,15 +943,16 @@ export async function POST(
       );
     }
 
-    /**
-     * -------------------------------------------------------
-     * PARSE CATEGORIES
-     * -------------------------------------------------------
-     */
+    /* ---------------------------------------------------------------------- */
+    /* PARSE CATEGORIES                                                       */
+    /* ---------------------------------------------------------------------- */
 
-    let categories: number[] = [];
+    let categories:
+      number[] = [];
 
-    if (categoriesRaw) {
+    if (
+      categoriesRaw
+    ) {
       try {
         const parsed =
           JSON.parse(
@@ -714,12 +960,17 @@ export async function POST(
           );
 
         if (
-          Array.isArray(parsed)
+          Array.isArray(
+            parsed
+          )
         ) {
           categories =
             parsed
-              .map((value) =>
-                Number(value)
+              .map(
+                (value) =>
+                  Number(
+                    value
+                  )
               )
               .filter(
                 (value) =>
@@ -733,10 +984,11 @@ export async function POST(
         categories =
           categoriesRaw
             .split(",")
-            .map((value) =>
-              Number(
-                value.trim()
-              )
+            .map(
+              (value) =>
+                Number(
+                  value.trim()
+                )
             )
             .filter(
               (value) =>
@@ -748,13 +1000,12 @@ export async function POST(
       }
     }
 
-    /**
-     * -------------------------------------------------------
-     * PARSE TAGS
-     * -------------------------------------------------------
-     */
+    /* ---------------------------------------------------------------------- */
+    /* PARSE TAGS                                                             */
+    /* ---------------------------------------------------------------------- */
 
-    let tags: number[] = [];
+    let tags:
+      number[] = [];
 
     if (tagsRaw) {
       try {
@@ -764,12 +1015,17 @@ export async function POST(
           );
 
         if (
-          Array.isArray(parsed)
+          Array.isArray(
+            parsed
+          )
         ) {
           tags =
             parsed
-              .map((value) =>
-                Number(value)
+              .map(
+                (value) =>
+                  Number(
+                    value
+                  )
               )
               .filter(
                 (value) =>
@@ -783,10 +1039,11 @@ export async function POST(
         tags =
           tagsRaw
             .split(",")
-            .map((value) =>
-              Number(
-                value.trim()
-              )
+            .map(
+              (value) =>
+                Number(
+                  value.trim()
+                )
             )
             .filter(
               (value) =>
@@ -798,11 +1055,9 @@ export async function POST(
       }
     }
 
-    /**
-     * -------------------------------------------------------
-     * WORDPRESS AUTH
-     * -------------------------------------------------------
-     */
+    /* ---------------------------------------------------------------------- */
+    /* WORDPRESS AUTH                                                         */
+    /* ---------------------------------------------------------------------- */
 
     const wpAuth =
       getWordPressAuth();
@@ -819,11 +1074,9 @@ export async function POST(
       );
     }
 
-    /**
-     * -------------------------------------------------------
-     * DUPLICATE CHECK
-     * -------------------------------------------------------
-     */
+    /* ---------------------------------------------------------------------- */
+    /* DUPLICATE CHECK                                                        */
+    /* ---------------------------------------------------------------------- */
 
     if (slug) {
       const duplicateUrl =
@@ -836,9 +1089,12 @@ export async function POST(
           duplicateUrl,
           {
             method: "GET",
+
             headers:
               getWpHeaders(),
-            cache: "no-store",
+
+            cache:
+              "no-store",
           }
         );
 
@@ -861,6 +1117,7 @@ export async function POST(
             {
               error:
                 "A post with this slug already exists.",
+
               post:
                 duplicatePosts[0],
             },
@@ -872,18 +1129,17 @@ export async function POST(
       }
     }
 
-    /**
-     * -------------------------------------------------------
-     * FEATURED IMAGE
-     * -------------------------------------------------------
-     */
+    /* ---------------------------------------------------------------------- */
+    /* FEATURED IMAGE                                                         */
+    /* ---------------------------------------------------------------------- */
 
     let featuredMediaId:
       number | undefined;
 
     if (
       featuredImage &&
-      featuredImage instanceof File &&
+      featuredImage instanceof
+        File &&
       featuredImage.size > 0
     ) {
       const imageBuffer =
@@ -910,6 +1166,7 @@ export async function POST(
           mediaApi,
           {
             method: "POST",
+
             headers: {
               Authorization:
                 `Basic ${wpAuth}`,
@@ -920,7 +1177,9 @@ export async function POST(
               "Content-Type":
                 contentType,
             },
-            body: imageBuffer,
+
+            body:
+              imageBuffer,
           }
         );
 
@@ -939,6 +1198,7 @@ export async function POST(
           {
             error:
               "Failed to upload featured image.",
+
             details:
               uploadError,
           },
@@ -963,11 +1223,9 @@ export async function POST(
       }
     }
 
-    /**
-     * -------------------------------------------------------
-     * CREATE WORDPRESS POST
-     * -------------------------------------------------------
-     */
+    /* ---------------------------------------------------------------------- */
+    /* CREATE WORDPRESS POST                                                  */
+    /* ---------------------------------------------------------------------- */
 
     const wpPostPayload: Record<
       string,
@@ -1019,11 +1277,16 @@ export async function POST(
         `${WP_API}/posts`,
         {
           method: "POST",
+
           headers:
-            getWpHeaders(true),
-          body: JSON.stringify(
-            wpPostPayload
-          ),
+            getWpHeaders(
+              true
+            ),
+
+          body:
+            JSON.stringify(
+              wpPostPayload
+            ),
         }
       );
 
@@ -1044,6 +1307,7 @@ export async function POST(
         {
           error:
             "Failed to create WordPress post.",
+
           details:
             createdPost,
         },
@@ -1070,6 +1334,7 @@ export async function POST(
         {
           error:
             "WordPress created the post but returned an invalid post ID.",
+
           post:
             createdPost,
         },
@@ -1079,11 +1344,9 @@ export async function POST(
       );
     }
 
-    /**
-     * -------------------------------------------------------
-     * YOAST SEO META
-     * -------------------------------------------------------
-     */
+    /* ---------------------------------------------------------------------- */
+    /* YOAST SEO META                                                         */
+    /* ---------------------------------------------------------------------- */
 
     const seoMeta: Record<
       string,
@@ -1127,13 +1390,19 @@ export async function POST(
           `${WP_API}/posts/${postId}`,
           {
             method: "POST",
+
             headers:
-              getWpHeaders(true),
-            body: JSON.stringify(
-              {
-                meta: seoMeta,
-              }
-            ),
+              getWpHeaders(
+                true
+              ),
+
+            body:
+              JSON.stringify(
+                {
+                  meta:
+                    seoMeta,
+                }
+              ),
           }
         );
 
@@ -1150,11 +1419,9 @@ export async function POST(
       }
     }
 
-    /**
-     * -------------------------------------------------------
-     * EDITORIAL WORKFLOW
-     * -------------------------------------------------------
-     */
+    /* ---------------------------------------------------------------------- */
+    /* EDITORIAL WORKFLOW                                                     */
+    /* ---------------------------------------------------------------------- */
 
     let workflowResult:
       any = null;
@@ -1166,7 +1433,9 @@ export async function POST(
           workflowStatus,
           userId
         );
-    } catch (workflowError) {
+    } catch (
+      workflowError
+    ) {
       console.error(
         "Workflow update failed after WordPress post creation:",
         workflowError
@@ -1194,56 +1463,60 @@ export async function POST(
       );
     }
 
-    /**
-     * -------------------------------------------------------
-     * AUDIT LOG
-     * -------------------------------------------------------
-     *
-     * IMPORTANT:
-     * Prisma AuditLog.targetId is a NUMBER.
-     * Therefore postId must NOT be converted to String().
-     */
+    /* ---------------------------------------------------------------------- */
+    /* AUDIT LOG                                                              */
+    /* ---------------------------------------------------------------------- */
 
     try {
-      await prisma.auditLog.create({
-        data: {
-          userId,
+      await prisma.auditLog.create(
+        {
+          data: {
+            userId,
 
-          action:
-            "CREATE_POST",
+            action:
+              "CREATE_POST",
 
-          targetId:
-            postId,
-
-          metadata:
-            JSON.stringify({
+            /*
+             * IMPORTANT:
+             * Prisma AuditLog.targetId is NUMBER.
+             * Do not convert postId to String().
+             */
+            targetId:
               postId,
 
-              title,
+            metadata:
+              JSON.stringify({
+                postId,
 
-              slug:
-                createdPost?.slug ||
-                slug ||
-                null,
+                title,
 
-              workflowStatus,
+                slug:
+                  createdPost?.slug ||
+                  slug ||
+                  null,
 
-              categories,
+                workflowStatus,
 
-              tags,
+                categories,
 
-              featuredMediaId:
-                featuredMediaId ||
-                null,
+                tags,
 
-              seo:
-                Object.keys(
-                  seoMeta
-                ).length > 0,
-            }),
-        },
-      });
-    } catch (auditError) {
+                featuredMediaId:
+                  featuredMediaId ||
+                  null,
+
+                seo:
+                  Object.keys(
+                    seoMeta
+                  ).length >
+                  0,
+              }),
+          },
+        }
+      );
+    } catch (
+      auditError
+    ) {
       /**
        * Audit logging must not invalidate
        * an otherwise successful post creation.
@@ -1254,18 +1527,17 @@ export async function POST(
       );
     }
 
-    /**
-     * -------------------------------------------------------
-     * RESPONSE
-     * -------------------------------------------------------
-     */
+    /* ---------------------------------------------------------------------- */
+    /* RESPONSE                                                               */
+    /* ---------------------------------------------------------------------- */
 
     return NextResponse.json(
       {
         success: true,
 
         post: {
-          id: postId,
+          id:
+            postId,
 
           slug:
             createdPost?.slug ||
@@ -1315,9 +1587,12 @@ export async function POST(
           "Failed to create post.",
 
         details:
-          error instanceof Error
+          error instanceof
+          Error
             ? error.message
-            : String(error),
+            : String(
+                error
+              ),
       },
       {
         status: 500,

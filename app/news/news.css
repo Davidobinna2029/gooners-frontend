@@ -1,0 +1,677 @@
+.news-page {
+  width: 100%;
+  min-height: 100vh;
+  background: #f7f7f8;
+  color: #111111;
+}
+
+/* ==========================================================
+   HERO
+========================================================== */
+
+.news-hero {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.news-hero-inner {
+  width: min(1240px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0 38px;
+}
+
+.news-kicker {
+  margin: 0 0 10px;
+
+  color: #d10000;
+
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.news-title {
+  margin: 0;
+
+  color: #111111;
+
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+}
+
+.news-intro {
+  max-width: 700px;
+
+  margin: 16px 0 0;
+
+  color: #6b7280;
+
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+/* ==========================================================
+   NEWS TOPIC NAVIGATION
+========================================================== */
+
+.news-topic-nav {
+  position: sticky;
+  top: 72px;
+  z-index: 30;
+
+  width: 100%;
+
+  display: flex;
+  align-items: stretch;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  background: rgba(255, 255, 255, 0.97);
+  border-bottom: 1px solid #dfe3e8;
+
+  scrollbar-width: none;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+.news-topic-nav::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+  Inner spacing is created directly on the links rather than
+  using rounded pills. This gives the bar a newsroom/editorial
+  appearance.
+*/
+
+.news-topic-nav a {
+  position: relative;
+
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: center;
+
+  min-height: 48px;
+
+  padding: 0 17px;
+
+  color: #5f6368;
+
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.045em;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: uppercase;
+
+  white-space: nowrap;
+
+  transition:
+    color 0.18s ease,
+    background 0.18s ease;
+}
+
+/* subtle hover */
+.news-topic-nav a:hover {
+  color: #111111;
+  background: #f8f8f8;
+}
+
+/* active underline */
+.news-topic-nav a.news-topic-active {
+  color: #d10000;
+}
+
+/*
+  Use a pseudo-element rather than a border so the active
+  indicator stays perfectly aligned at the bottom.
+*/
+.news-topic-nav a.news-topic-active::after {
+  content: "";
+
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: -1px;
+
+  height: 3px;
+
+  background: #d10000;
+}
+
+/* keyboard accessibility */
+.news-topic-nav a:focus-visible {
+  outline: 2px solid #d10000;
+  outline-offset: -2px;
+}
+
+/* ==========================================================
+   LAYOUT
+========================================================== */
+
+.news-layout {
+  width: min(1240px, calc(100% - 32px));
+
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 32px;
+
+  padding: 32px 0 60px;
+}
+
+.news-feed-column {
+  min-width: 0;
+}
+
+/* ==========================================================
+   FEED
+========================================================== */
+
+.news-feed {
+  display: flex;
+  flex-direction: column;
+
+  border-top: 1px solid #e5e7eb;
+}
+
+/* ==========================================================
+   NEWS CARD
+========================================================== */
+
+.news-feed-card {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 22px;
+
+  padding: 22px 0;
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.news-feed-image-link {
+  display: block;
+
+  overflow: hidden;
+
+  text-decoration: none;
+}
+
+.news-feed-image {
+  position: relative;
+
+  width: 100%;
+  aspect-ratio: 16 / 10;
+
+  overflow: hidden;
+
+  background: #e5e7eb;
+}
+
+.news-feed-image-img {
+  object-fit: cover;
+
+  transition: transform 0.35s ease;
+}
+
+.news-feed-card:hover .news-feed-image-img {
+  transform: scale(1.04);
+}
+
+.news-feed-image-empty {
+  width: 100%;
+  height: 100%;
+
+  display: grid;
+  place-items: center;
+
+  background: #ececec;
+
+  color: #777777;
+
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.news-feed-content {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.news-feed-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-bottom: 9px;
+
+  color: #9ca3af;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.news-feed-category {
+  color: #d10000;
+}
+
+.news-feed-dot {
+  color: #d1d5db;
+}
+
+.news-feed-title {
+  margin: 0;
+
+  color: #111111;
+
+  font-size: clamp(20px, 2.3vw, 28px);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.16;
+}
+
+.news-feed-title a {
+  color: #111111;
+  text-decoration: none;
+}
+
+.news-feed-title a:hover {
+  color: #d10000;
+}
+
+.news-feed-excerpt {
+  max-width: 720px;
+
+  margin: 10px 0 0;
+
+  color: #6b7280;
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.news-read-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-top: 14px;
+
+  color: #111111;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  text-decoration: none;
+}
+
+.news-read-more span {
+  color: #d10000;
+
+  transition: transform 0.18s ease;
+}
+
+.news-read-more:hover span {
+  transform: translateX(3px);
+}
+
+/* ==========================================================
+   SIDEBAR
+========================================================== */
+
+.news-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.news-sidebar-block {
+  padding: 22px;
+
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+}
+
+.news-sidebar-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  margin-bottom: 12px;
+
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.news-sidebar-heading span {
+  width: 4px;
+  height: 18px;
+
+  display: block;
+
+  background: #d10000;
+}
+
+.news-sidebar-block p {
+  margin: 0 0 18px;
+
+  color: #6b7280;
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.news-sidebar-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding-top: 14px;
+
+  border-top: 1px solid #e5e7eb;
+
+  color: #111111;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  text-decoration: none;
+}
+
+.news-sidebar-link span {
+  color: #d10000;
+}
+
+.news-sidebar-link:hover {
+  color: #d10000;
+}
+
+/* ==========================================================
+   LOADING
+========================================================== */
+
+.news-feed-sentinel {
+  width: 100%;
+  height: 1px;
+}
+
+.news-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  padding: 28px 0;
+
+  color: #6b7280;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.news-loading-dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #d10000;
+
+  animation: newsPulse 1s infinite ease-in-out;
+}
+
+@keyframes newsPulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ==========================================================
+   ERROR
+========================================================== */
+
+.news-load-error {
+  margin: 20px 0;
+  padding: 18px;
+
+  border: 1px solid #fecaca;
+  background: #fff7f7;
+}
+
+.news-load-error p {
+  margin: 0 0 12px;
+
+  color: #991b1b;
+
+  font-size: 13px;
+}
+
+.news-load-error button {
+  padding: 9px 14px;
+
+  border: 0;
+  border-radius: 6px;
+
+  background: #d10000;
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.news-load-error button:hover {
+  background: #b50000;
+}
+
+/* ==========================================================
+   END
+========================================================== */
+
+.news-end {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 32px 0;
+
+  color: #9ca3af;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  text-align: center;
+}
+
+.news-end span {
+  flex: 1;
+
+  height: 1px;
+
+  background: #e5e7eb;
+}
+
+/* ==========================================================
+   EMPTY
+========================================================== */
+
+.news-empty {
+  padding: 60px 24px;
+
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+
+  text-align: center;
+}
+
+.news-empty h2 {
+  margin: 0 0 8px;
+
+  font-size: 22px;
+}
+
+.news-empty p {
+  margin: 0;
+
+  color: #6b7280;
+}
+
+/* ==========================================================
+   PAGINATION
+========================================================== */
+
+.news-pagination {
+  width: min(1240px, calc(100% - 32px));
+
+  margin: 0 auto;
+  padding: 20px 0 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+
+  border-top: 1px solid #e5e7eb;
+}
+
+.news-pagination a {
+  color: #111111;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  text-decoration: none;
+}
+
+.news-pagination a:hover {
+  color: #d10000;
+}
+
+.news-pagination span {
+  color: #9ca3af;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ==========================================================
+   TABLET
+========================================================== */
+
+@media (max-width: 900px) {
+  .news-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .news-sidebar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ==========================================================
+   MOBILE
+========================================================== */
+
+@media (max-width: 700px) {
+  .news-hero-inner {
+    padding: 34px 0 28px;
+  }
+
+  .news-topic-nav {
+    top: 64px;
+  }
+
+  .news-topic-nav a {
+    min-height: 46px;
+
+    padding: 0 15px;
+
+    font-size: 11px;
+  }
+
+  .news-topic-nav a.news-topic-active::after {
+    left: 12px;
+    right: 12px;
+  }
+
+  .news-layout {
+    width: min(100%, calc(100% - 24px));
+
+    padding-top: 20px;
+  }
+
+  .news-feed-card {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .news-feed-image {
+    aspect-ratio: 16 / 9;
+  }
+
+  .news-feed-title {
+    font-size: 21px;
+  }
+
+  .news-feed-excerpt {
+    font-size: 13px;
+  }
+
+  .news-sidebar {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================
+   SMALL MOBILE
+========================================================== */
+
+@media (max-width: 480px) {
+  .news-hero-inner {
+    width: min(100%, calc(100% - 24px));
+  }
+
+  .news-title {
+    font-size: 32px;
+  }
+
+  .news-intro {
+    font-size: 14px;
+  }
+
+  .news-topic-nav {
+    top: 64px;
+  }
+
+  .news-topic-nav a {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .news-feed-card {
+    padding: 18px 0;
+  }
+}

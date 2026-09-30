@@ -1,17 +1,11 @@
-import fs from "node:fs";
-import path from "node:path";
-import dns from "node:dns";
-
-dns.setDefaultResultOrder("ipv4first");
+import fs from "fs";
+import path from "path";
 
 const WP_API =
   process.env.NEXT_PUBLIC_WORDPRESS_API_URL ||
   "https://api.arsenaltalks.com/wp-json/wp/v2";
 
-const OUTPUT_DIR = path.join(
-  process.cwd(),
-  "generated"
-);
+const OUTPUT_DIR = path.join(process.cwd(), "generated");
 
 const REDIRECTS_FILE = path.join(
   OUTPUT_DIR,
@@ -23,315 +17,287 @@ const SITEMAP_FILE = path.join(
   "sitemap-posts.json"
 );
 
-const RESERVED_ROUTES = new Set([
-  "admin",
-  "api",
-  "category",
-  "control-room",
-  "fixtures",
-  "live",
-  "login",
-  "news",
-  "opinion",
-  "search",
-  "standings",
-  "transfers",
-  "videos",
-  "_next",
-  "favicon.ico",
-  "robots.txt",
-  "sitemap.xml",
-]);
+// ---------------------------------------------------------
+// Sitemap policy
+// ---------------------------------------------------------
+//
+// Keep redirects for ALL published WordPress posts.
+//
+// Only posts published on or after this date are eligible
+// for the public XML sitemap.
+//
+// This removes the known 2015/2020 legacy imports without
+// breaking their redirects.
+//
+const SITEMAP_CUTOFF = "2024-01-01T00:00:00.000Z";
 
-const MAX_RETRIES = 3;
-const REQUEST_TIMEOUT = 30_000;
-const RETRY_DELAY = 2_000;
+// ---------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------
 
-function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
+async function fetchJson(url) {
+  const response = await fetch(url, {
+    headers: {
+      Accept: "application/json",
+    },
   });
-}
 
-async function fetchPosts(page) {
-  const url = new URL(
-    `${WP_API}/posts`
-  );
-
-  url.searchParams.set(
-    "status",
-    "publish"
-  );
-
-  url.searchParams.set(
-    "per_page",
-    "100"
-  );
-
-  url.searchParams.set(
-    "page",
-    String(page)
-  );
-
-  url.searchParams.set(
-    "_fields",
-    "slug,date,modified"
-  );
-
-  let lastError = null;
-
-  for (
-    let attempt = 1;
-    attempt <= MAX_RETRIES;
-    attempt++
-  ) {
-    const controller =
-      new AbortController();
-
-    const timeout = setTimeout(
-      () => controller.abort(),
-      REQUEST_TIMEOUT
+  if (!response.ok) {
+    throw new Error(
+      `WordPress API request failed: ${response.status} ${response.statusText}\n${url}`
     );
-
-    try {
-      console.log(
-        `Page ${page}: request attempt ${attempt}/${MAX_RETRIES}`
-      );
-
-      const response =
-        await fetch(
-          url.toString(),
-          {
-            headers: {
-              Accept:
-                "application/json",
-            },
-
-            signal:
-              controller.signal,
-          }
-        );
-
-      clearTimeout(timeout);
-
-      if (
-        response.status === 400 &&
-        page > 1
-      ) {
-        return [];
-      }
-
-      if (!response.ok) {
-        throw new Error(
-          `WordPress API returned ${response.status}`
-        );
-      }
-
-      return await response.json();
-    } catch (error) {
-      clearTimeout(timeout);
-
-      lastError = error;
-
-      console.error(
-        `Page ${page}: attempt ${attempt} failed`
-      );
-
-      console.error(error);
-
-      if (
-        attempt <
-        MAX_RETRIES
-      ) {
-        console.log(
-          `Page ${page}: retrying in ${RETRY_DELAY / 1000}s...`
-        );
-
-        await sleep(
-          RETRY_DELAY
-        );
-      }
-    }
   }
 
-  throw new Error(
-    `Failed to fetch WordPress page ${page} after ${MAX_RETRIES} attempts.`,
-    {
-      cause: lastError,
-    }
-  );
+  return response.json();
 }
+
+async function fetchAllPosts() {
+  const posts = [];
+
+  let page = 1;
+
+  while (true) {
+    const url = new URL(`${WP_API}/posts`);
+
+    url.searchParams.set("status", "publish");
+    url.searchParams.set("per_page", "100");
+    url.searchParams.set("page", String(page));
+    url.searchParams.set("_fields", "id,slug,date,modified");
+
+    console.log(`Fetching WordPress posts page ${page}...`);
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    if (response.status === 400 && page > 1) {
+      break;
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `WordPress API request failed: ${response.status} ${response.statusText}\n${url}`
+      );
+    }
+
+    const batch = await response.json();
+
+    if (!Array.isArray(batch) || batch.length === 0) {
+      break;
+    }
+
+    posts.push(...batch);
+
+    const totalPages = Number(
+      response.headers.get("X-WP-TotalPages") || 0
+    );
+
+    if (totalPages && page >= totalPages) {
+      break;
+    }
+
+    if (batch.length < 100) {
+      break;
+    }
+
+    page += 1;
+  }
+
+  return posts;
+}
+
+// ---------------------------------------------------------
+// Main
+// ---------------------------------------------------------
 
 async function main() {
   console.log("");
-  console.log(
-    "ArsenalTalks build data generator"
-  );
-  console.log(
-    "---------------------------------"
-  );
-  console.log(
-    `WordPress API: ${WP_API}`
-  );
-  console.log(
-    `Request timeout: ${REQUEST_TIMEOUT / 1000}s`
-  );
-  console.log(
-    `Maximum retries: ${MAX_RETRIES}`
-  );
+  console.log("==============================================");
+  console.log(" ArsenalTalks build data generation");
+  console.log("==============================================");
   console.log("");
 
+  const posts = await fetchAllPosts();
+
+  console.log(`WordPress posts scanned: ${posts.length}`);
+
   const redirects = {};
-  const sitemapPosts = [];
+  const sitemapMap = new Map();
 
-  let page = 1;
-  let totalPosts = 0;
+  let sitemapExcluded = 0;
+  let invalidPosts = 0;
 
-  while (true) {
-    console.log(
-      `Fetching WordPress posts page ${page}...`
-    );
-
-    const posts =
-      await fetchPosts(page);
-
-    if (!posts.length) {
-      break;
+  for (const post of posts) {
+    if (!post || typeof post !== "object") {
+      invalidPosts += 1;
+      continue;
     }
 
-    totalPosts += posts.length;
+    const slug =
+      typeof post.slug === "string"
+        ? post.slug.trim()
+        : "";
 
-    for (const post of posts) {
-      const slug =
-        post?.slug?.trim();
+    const date =
+      typeof post.date === "string"
+        ? post.date
+        : null;
 
-      if (!slug) {
-        continue;
-      }
+    const modified =
+      typeof post.modified === "string"
+        ? post.modified
+        : null;
 
-      /*
-       * ---------------------------------------------------
-       * LEGACY REDIRECT DATA
-       * ---------------------------------------------------
-       */
-
-      if (
-        !RESERVED_ROUTES.has(
-          slug.toLowerCase()
-        )
-      ) {
-        redirects[slug] =
-          `/news/${slug}/`;
-      }
-
-      /*
-       * ---------------------------------------------------
-       * SITEMAP DATA
-       * ---------------------------------------------------
-       */
-
-      sitemapPosts.push({
-        slug,
-
-        date:
-          typeof post?.date ===
-          "string"
-            ? post.date
-            : null,
-
-        modified:
-          typeof post?.modified ===
-          "string"
-            ? post.modified
-            : null,
-      });
+    if (!slug) {
+      invalidPosts += 1;
+      continue;
     }
 
-    console.log(
-      `Page ${page}: received ${posts.length} posts`
-    );
+    // -----------------------------------------------------
+    // Keep redirects for every published post.
+    // -----------------------------------------------------
+
+    redirects[slug] = `/news/${slug}/`;
+
+    // -----------------------------------------------------
+    // Sitemap eligibility.
+    //
+    // Only posts published from 2024-01-01 onward.
+    // -----------------------------------------------------
+
+    if (!date) {
+      sitemapExcluded += 1;
+      continue;
+    }
+
+    const publishedTime = new Date(date);
+
+    if (Number.isNaN(publishedTime.getTime())) {
+      sitemapExcluded += 1;
+      continue;
+    }
 
     if (
-      posts.length < 100
+      publishedTime.getTime() <
+      new Date(SITEMAP_CUTOFF).getTime()
     ) {
-      break;
+      sitemapExcluded += 1;
+      continue;
     }
 
-    page++;
+    sitemapMap.set(slug, {
+      slug,
+      date,
+      modified,
+    });
   }
 
-  fs.mkdirSync(
-    OUTPUT_DIR,
-    {
-      recursive: true,
-    }
-  );
+  // ---------------------------------------------------------
+  // Sort sitemap posts newest first.
+  //
+  // Prefer modified date because updated articles should remain
+  // near the top of the generated dataset.
+  // ---------------------------------------------------------
 
-  /*
-   * -----------------------------------------------------
-   * WRITE LEGACY REDIRECTS
-   * -----------------------------------------------------
-   */
+  const sitemapPosts = Array.from(
+    sitemapMap.values()
+  ).sort((a, b) => {
+    const aDate = new Date(
+      a.modified || a.date
+    ).getTime();
+
+    const bDate = new Date(
+      b.modified || b.date
+    ).getTime();
+
+    return bDate - aDate;
+  });
+
+  // ---------------------------------------------------------
+  // Ensure generated directory exists.
+  // ---------------------------------------------------------
+
+  fs.mkdirSync(OUTPUT_DIR, {
+    recursive: true,
+  });
+
+  // ---------------------------------------------------------
+  // Write redirect map.
+  // ---------------------------------------------------------
 
   fs.writeFileSync(
     REDIRECTS_FILE,
-    JSON.stringify(
-      redirects,
-      null,
-      2
-    ) + "\n",
+    JSON.stringify(redirects, null, 2),
     "utf8"
   );
 
-  /*
-   * -----------------------------------------------------
-   * WRITE SITEMAP DATA
-   * -----------------------------------------------------
-   */
+  // ---------------------------------------------------------
+  // Write sitemap dataset.
+  // ---------------------------------------------------------
 
   fs.writeFileSync(
     SITEMAP_FILE,
-    JSON.stringify(
-      sitemapPosts,
-      null,
-      2
-    ) + "\n",
+    JSON.stringify(sitemapPosts, null, 2),
     "utf8"
   );
 
+  // ---------------------------------------------------------
+  // Summary
+  // ---------------------------------------------------------
+
   console.log("");
-  console.log(
-    "Build data generation completed successfully."
-  );
+  console.log("==============================================");
+  console.log(" Build data generation completed successfully");
+  console.log("==============================================");
   console.log("");
+
   console.log(
-    `WordPress posts scanned: ${totalPosts}`
+    `WordPress posts scanned: ${posts.length}`
   );
+
   console.log(
     `Legacy redirects generated: ${
       Object.keys(redirects).length
     }`
   );
+
   console.log(
-    `Sitemap posts generated: ${
-      sitemapPosts.length
-    }`
+    `Sitemap posts accepted: ${sitemapPosts.length}`
   );
+
+  console.log(
+    `Sitemap posts excluded: ${sitemapExcluded}`
+  );
+
+  console.log(
+    `Invalid posts skipped: ${invalidPosts}`
+  );
+
+  console.log(
+    `Sitemap cutoff: ${SITEMAP_CUTOFF}`
+  );
+
   console.log("");
+
   console.log(
-    `Redirect output: ${REDIRECTS_FILE}`
+    `Redirect file: ${REDIRECTS_FILE}`
   );
+
   console.log(
-    `Sitemap output: ${SITEMAP_FILE}`
+    `Sitemap data file: ${SITEMAP_FILE}`
   );
+
   console.log("");
 }
 
 main().catch((error) => {
   console.error("");
-  console.error(
-    "ArsenalTalks build data generation FAILED."
-  );
+  console.error("==============================================");
+  console.error(" BUILD DATA GENERATION FAILED");
+  console.error("==============================================");
+  console.error("");
   console.error(error);
   console.error("");
 
