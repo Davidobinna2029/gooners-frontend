@@ -1,3 +1,4 @@
+
 export interface MediaImage {
   url: string;
   width?: number;
@@ -22,7 +23,17 @@ export interface CanonicalPost {
    */
   image: MediaImage | null;
 
+  /**
+   * WordPress category IDs.
+   */
   categories: number[];
+
+  /**
+   * Actual WordPress category names, used for display.
+   */
+  categoryName?: string | null;
+  categoryNames?: string[];
+
   tags: number[];
 
   link?: string;
