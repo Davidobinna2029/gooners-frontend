@@ -39,7 +39,8 @@ interface ApiPostsResponse {
 }
 
 interface HomepageInfiniteScrollProps {
-  initialPosts: CanonicalPost[];
+  initialPosts?: CanonicalPost[];
+  excludedIds?: number[];
 }
 
 function getCategoryNames(post: ApiPost): string[] {
@@ -56,7 +57,6 @@ function getCategoryNames(post: ApiPost): string[] {
     if (typeof candidate !== "string") continue;
 
     const name = candidate.trim();
-
     if (!name) continue;
 
     const key = name.toLowerCase();
@@ -160,10 +160,11 @@ function isValidApiPost(post: unknown): post is ApiPost {
 }
 
 export default function HomepageInfiniteScroll({
-  initialPosts,
+  initialPosts = [],
+  excludedIds = [],
 }: HomepageInfiniteScrollProps) {
-  const [posts, setPosts] = useState<CanonicalPost[]>(
-    Array.isArray(initialPosts)
+  const [posts, setPosts] = useState<CanonicalPost[]>(() => {
+    const validPosts = Array.isArray(initialPosts)
       ? initialPosts.filter(
           (post): post is CanonicalPost =>
             Boolean(
@@ -172,8 +173,12 @@ export default function HomepageInfiniteScroll({
               typeof post.slug === "string"
             )
         )
-      : []
-  );
+      : [];
+
+    const excluded = new Set(excludedIds);
+
+    return validPosts.filter((post) => !excluded.has(post.id));
+  });
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -203,14 +208,17 @@ export default function HomepageInfiniteScroll({
       const nextPage = pageRef.current + 1;
       const currentPosts = postsRef.current;
 
-      const excludedIds = [
-        ...new Set(
-          currentPosts
+      const excludedPostIds = [
+        ...new Set([
+          ...excludedIds.filter(
+            (id) => typeof id === "number" && Number.isFinite(id)
+          ),
+          ...currentPosts
             .map((post) => post.id)
             .filter(
               (id) => typeof id === "number" && Number.isFinite(id)
-            )
-        ),
+            ),
+        ]),
       ];
 
       const params = new URLSearchParams({
@@ -218,8 +226,8 @@ export default function HomepageInfiniteScroll({
         per_page: "10",
       });
 
-      if (excludedIds.length > 0) {
-        params.set("exclude", excludedIds.join(","));
+      if (excludedPostIds.length > 0) {
+        params.set("exclude", excludedPostIds.join(","));
       }
 
       const response = await fetch(
@@ -249,9 +257,10 @@ export default function HomepageInfiniteScroll({
         );
       }
 
-      const existingIds = new Set(
-        currentPosts.map((post) => post.id)
-      );
+      const existingIds = new Set([
+        ...excludedIds,
+        ...currentPosts.map((post) => post.id),
+      ]);
 
       const existingSlugs = new Set(
         currentPosts.map((post) => post.slug)
@@ -259,19 +268,19 @@ export default function HomepageInfiniteScroll({
 
       const incoming = data.posts
         .filter(isValidApiPost)
-        .filter((post) => {
-          return (
+        .filter(
+          (post) =>
             !existingIds.has(post.id) &&
             !existingSlugs.has(post.slug)
-          );
-        })
+        )
         .map(normalizePost);
 
       if (incoming.length > 0) {
         setPosts((previous) => {
-          const knownIds = new Set(
-            previous.map((post) => post.id)
-          );
+          const knownIds = new Set([
+            ...excludedIds,
+            ...previous.map((post) => post.id),
+          ]);
 
           const knownSlugs = new Set(
             previous.map((post) => post.slug)
@@ -311,8 +320,6 @@ export default function HomepageInfiniteScroll({
             ? nextPage < data.totalPages
             : incoming.length > 0;
 
-      // Do not loop through pages forever if the API keeps
-      // returning posts that are already displayed.
       const shouldContinue =
         moreAvailable && incoming.length > 0;
 
@@ -339,7 +346,7 @@ export default function HomepageInfiniteScroll({
       loadingRef.current = false;
       setIsLoading(false);
     }
-  }, []);
+  }, [excludedIds]);
 
   const retryLoadMore = useCallback(() => {
     setError(null);
@@ -365,8 +372,6 @@ export default function HomepageInfiniteScroll({
           return;
         }
 
-        // Load once per entry into the viewport. This prevents
-        // repeated requests while the sentinel remains visible.
         if (
           sentinelInViewRef.current ||
           loadingRef.current ||
