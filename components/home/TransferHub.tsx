@@ -44,17 +44,13 @@ function normalizeImageUrl(
     return null;
   }
 
-  const rawUrl = value.trim();
-
   try {
-    const url = new URL(rawUrl, WORDPRESS_HOST);
+    const url = new URL(value.trim(), WORDPRESS_HOST);
 
     if (!["http:", "https:"].includes(url.protocol)) {
       return null;
     }
 
-    // Normalize older WordPress media URLs to the working
-    // WordPress API/media hostname.
     const hostname = url.hostname.toLowerCase();
 
     if (
@@ -107,9 +103,7 @@ export default function TransferHub({
   const hasMoreRef = useRef(true);
 
   const displayedIdsRef = useRef<Set<number>>(
-    new Set(
-      Array.isArray(excludedIds) ? excludedIds : []
-    )
+    new Set(Array.isArray(excludedIds) ? excludedIds : [])
   );
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -302,14 +296,6 @@ export default function TransferHub({
             </p>
           </div>
         </div>
-
-        <a
-          className="transfer-hub-live"
-          href="/category/transfer-news"
-          aria-label="View all Arsenal transfer news"
-        >
-          VIEW ALL
-        </a>
       </div>
 
       <div className="transfer-hub-feed">
