@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -11,7 +12,11 @@ interface TransferPost {
   id: number;
   slug: string;
   title: string;
-  image: string | null;
+  image: {
+    url: string;
+    width?: number;
+    height?: number;
+  } | null;
   date: string;
 }
 
@@ -30,32 +35,95 @@ interface Props {
 
 const TRANSFER_CATEGORY_ID = 56;
 const POSTS_PER_PAGE = 5;
+const WORDPRESS_HOST = "https://api.arsenaltalks.com";
+
+function normalizeImageUrl(
+  value: string | null | undefined
+): string | null {
+  if (typeof value !== "string" || !value.trim()) {
+    return null;
+  }
+
+  const rawUrl = value.trim();
+
+  try {
+    const url = new URL(rawUrl, WORDPRESS_HOST);
+
+    if (!["http:", "https:"].includes(url.protocol)) {
+      return null;
+    }
+
+    // Normalize older WordPress media URLs to the working
+    // WordPress API/media hostname.
+    const hostname = url.hostname.toLowerCase();
+
+    if (
+      hostname === "arsenaltalks.com" ||
+      hostname === "www.arsenaltalks.com"
+    ) {
+      url.hostname = "api.arsenaltalks.com";
+    }
+
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function formatPublicationDate(
+  value: string | null | undefined
+): string | null {
+  if (typeof value !== "string" || !value.trim()) {
+    return null;
+  }
+
+  const timestamp = Date.parse(value);
+
+  if (Number.isNaN(timestamp)) {
+    return null;
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(timestamp);
+}
 
 export default function TransferHub({
   excludedIds,
 }: Props) {
-  const [posts, setPosts] = useState<TransferPost[]>(
-    []
-  );
-
-  const [page, setPage] = useState(1);
+  const [posts, setPosts] = useState<TransferPost[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(
-    null
+  const [error, setError] = useState<string | null>(null);
+  const [failedImageIds, setFailedImageIds] = useState<Set<number>>(
+    () => new Set()
   );
 
   const loadingRef = useRef(false);
+  const pageRef = useRef(1);
+  const hasMoreRef = useRef(true);
 
   const displayedIdsRef = useRef<Set<number>>(
-    new Set(excludedIds)
+    new Set(
+      Array.isArray(excludedIds) ? excludedIds : []
+    )
   );
 
-  const sentinelRef =
-    useRef<HTMLDivElement | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!Array.isArray(excludedIds)) return;
+
+    for (const id of excludedIds) {
+      displayedIdsRef.current.add(id);
+    }
+  }, [excludedIds]);
 
   const loadMore = useCallback(async () => {
-    if (loadingRef.current || !hasMore) {
+    if (loadingRef.current || !hasMoreRef.current) {
       return;
     }
 
@@ -63,18 +131,14 @@ export default function TransferHub({
     setLoading(true);
     setError(null);
 
-    try {
-      const params = new URLSearchParams();
+    const requestedPage = pageRef.current;
 
-      params.set("page", String(page));
-      params.set(
-        "per_page",
-        String(POSTS_PER_PAGE)
-      );
-      params.set(
-        "category",
-        String(TRANSFER_CATEGORY_ID)
-      );
+    try {
+      const params = new URLSearchParams({
+        page: String(requestedPage),
+        per_page: String(POSTS_PER_PAGE),
+        category: String(TRANSFER_CATEGORY_ID),
+      });
 
       const exclude = Array.from(
         displayedIdsRef.current
@@ -89,31 +153,60 @@ export default function TransferHub({
         {
           method: "GET",
           cache: "no-store",
+          headers: {
+            Accept: "application/json",
+          },
         }
       );
 
       if (!response.ok) {
         throw new Error(
-          "Failed to load transfer news."
+          `Failed to load transfer news (HTTP ${response.status}).`
         );
       }
 
-      const data: TransferPostsResponse =
-        await response.json();
+      const data =
+        (await response.json()) as TransferPostsResponse;
 
-      const uniquePosts = data.posts.filter(
-        (post) => {
-          if (
-            displayedIdsRef.current.has(post.id)
-          ) {
-            return false;
-          }
+      if (
+        !data ||
+        !Array.isArray(data.posts) ||
+        typeof data.hasMore !== "boolean"
+      ) {
+        throw new Error(
+          "The transfer news API returned an invalid response."
+        );
+      }
 
-          displayedIdsRef.current.add(post.id);
+      const uniquePosts: TransferPost[] = [];
 
-          return true;
+      for (const post of data.posts) {
+        if (
+          !post ||
+          typeof post.id !== "number" ||
+          !Number.isFinite(post.id) ||
+          typeof post.slug !== "string" ||
+          typeof post.title !== "string" ||
+          displayedIdsRef.current.has(post.id)
+        ) {
+          continue;
         }
-      );
+
+        const imageUrl = normalizeImageUrl(post.image?.url);
+
+        uniquePosts.push({
+          ...post,
+          image: imageUrl
+            ? {
+                url: imageUrl,
+                width: post.image?.width,
+                height: post.image?.height,
+              }
+            : null,
+        });
+
+        displayedIdsRef.current.add(post.id);
+      }
 
       if (uniquePosts.length > 0) {
         setPosts((currentPosts) => [
@@ -122,90 +215,83 @@ export default function TransferHub({
         ]);
       }
 
-      setHasMore(data.hasMore);
+      const returnedPage = Number(data.page);
 
-      setPage(
-        (currentPage) => currentPage + 1
-      );
+      const nextPage =
+        Number.isFinite(returnedPage) &&
+        returnedPage >= requestedPage
+          ? returnedPage + 1
+          : requestedPage + 1;
+
+      pageRef.current = nextPage;
+
+      const canContinue =
+        data.hasMore && uniquePosts.length > 0;
+
+      hasMoreRef.current = canContinue;
+      setHasMore(canContinue);
     } catch (err) {
-      console.error(
-        "Transfer Hub error:",
-        err
-      );
+      console.error("Transfer Hub error:", err);
 
       setError(
-        "Unable to load transfer news."
+        err instanceof Error
+          ? err.message
+          : "Unable to load transfer news. Please try again."
       );
     } finally {
       loadingRef.current = false;
       setLoading(false);
     }
-  }, [page, hasMore]);
+  }, []);
 
-  /*
-   * Load the first batch when the Transfer Hub
-   * mounts.
-   */
   useEffect(() => {
-    loadMore();
+    void loadMore();
   }, [loadMore]);
 
-  /*
-   * Infinite scroll.
-   *
-   * Loads the next batch automatically when the
-   * visitor gets close to the bottom of the hub.
-   */
   useEffect(() => {
-    const sentinel =
-      sentinelRef.current;
+    const sentinel = sentinelRef.current;
 
-    if (!sentinel) {
+    if (
+      !sentinel ||
+      !hasMore ||
+      error ||
+      typeof IntersectionObserver === "undefined"
+    ) {
       return;
     }
 
-    const observer =
-      new IntersectionObserver(
-        (entries) => {
-          const entry = entries[0];
-
-          if (entry?.isIntersecting) {
-            loadMore();
-          }
-        },
-        {
-          rootMargin: "350px 0px",
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          void loadMore();
         }
-      );
+      },
+      {
+        rootMargin: "350px 0px",
+        threshold: 0,
+      }
+    );
 
     observer.observe(sentinel);
 
     return () => {
       observer.disconnect();
     };
-  }, [loadMore]);
+  }, [loadMore, hasMore, error]);
 
   return (
     <section
       className="sidebar-card transfer-hub"
       aria-labelledby="transfer-hub-title"
     >
-
-      {/* =================================================
-          HEADER
-      ================================================= */}
-
       <div className="transfer-hub-heading">
-
         <div className="transfer-hub-heading-main">
-
           <span
             className="transfer-hub-accent"
             aria-hidden="true"
           />
 
           <div>
-
             <h3 id="transfer-hub-title">
               Transfer Hub
             </h3>
@@ -214,87 +300,82 @@ export default function TransferHub({
               Arsenal transfer news,
               rumours &amp; deals
             </p>
-
           </div>
-
         </div>
 
-        <span
+        <a
           className="transfer-hub-live"
-          aria-label="Live transfer coverage"
+          href="/category/transfer-news"
+          aria-label="View all Arsenal transfer news"
         >
-          LIVE
-        </span>
-
+          VIEW ALL
+        </a>
       </div>
 
-      {/* =================================================
-          STORIES
-      ================================================= */}
-
       <div className="transfer-hub-feed">
+        {posts.map((post) => {
+          const imageUrl = normalizeImageUrl(
+            post.image?.url
+          );
 
-        {posts.map(
-          (post, index) => (
+          const showImage =
+            Boolean(imageUrl) &&
+            !failedImageIds.has(post.id);
+
+          const publicationDate =
+            formatPublicationDate(post.date);
+
+          return (
             <a
               key={post.id}
               href={`/news/${post.slug}`}
               className="transfer-hub-story"
             >
-
-              {/* Story number */}
-
-              <span
-                className="transfer-hub-number"
-                aria-hidden="true"
-              >
-                {String(index + 1).padStart(
-                  2,
-                  "0"
-                )}
-              </span>
-
-              {/* Featured image */}
-
               <div className="transfer-hub-image">
-
-                {post.image ? (
+                {showImage && imageUrl ? (
                   <img
-                    src={post.image}
-                    alt=""
+                    src={imageUrl}
+                    alt={post.title}
                     loading="lazy"
+                    decoding="async"
+                    onError={() => {
+                      setFailedImageIds((previous) => {
+                        const next = new Set(previous);
+                        next.add(post.id);
+                        return next;
+                      });
+                    }}
                   />
                 ) : (
-                  <div className="transfer-hub-image-placeholder">
+                  <div
+                    className="transfer-hub-image-placeholder"
+                    aria-hidden="true"
+                  >
                     AFC
                   </div>
                 )}
-
               </div>
 
-              {/* Story content */}
-
               <div className="transfer-hub-story-content">
-
                 <span className="transfer-hub-label">
                   TRANSFER
                 </span>
 
-                <h4>
-                  {post.title}
-                </h4>
+                <h4>{post.title}</h4>
 
+                {publicationDate && (
+                  <time
+                    className="transfer-hub-date"
+                    dateTime={post.date}
+                  >
+                    {publicationDate}
+                  </time>
+                )}
               </div>
-
             </a>
-          )
-        )}
-
+          );
+        })}
       </div>
-
-      {/* =================================================
-          INFINITE SCROLL SENTINEL
-      ================================================= */}
 
       <div
         ref={sentinelRef}
@@ -302,65 +383,48 @@ export default function TransferHub({
         aria-hidden="true"
       />
 
-      {/* =================================================
-          LOADING
-      ================================================= */}
-
       {loading && (
         <div
           className="transfer-hub-loading"
           aria-live="polite"
+          aria-busy="true"
         >
           <span
             className="transfer-hub-spinner"
             aria-hidden="true"
           />
 
-          <span>
-            Loading transfer news…
-          </span>
+          <span>Loading transfer news...</span>
         </div>
       )}
-
-      {/* =================================================
-          ERROR
-      ================================================= */}
 
       {!loading && error && (
         <div
           className="transfer-hub-status"
           role="alert"
         >
-
-          <p>
-            {error}
-          </p>
+          <p>{error}</p>
 
           <button
             type="button"
-            onClick={loadMore}
+            onClick={() => void loadMore()}
           >
             Try Again
           </button>
-
         </div>
       )}
 
-      {/* =================================================
-          EMPTY STATE
-      ================================================= */}
+      {!loading && !error && posts.length === 0 && (
+        <div className="transfer-hub-status">
+          No transfer stories available.
 
-      {!loading &&
-        !error &&
-        posts.length === 0 && (
-          <div className="transfer-hub-status">
-            No transfer stories available.
-          </div>
-        )}
-
-      {/* =================================================
-          END OF FEED
-      ================================================= */}
+          <p>
+            <a href="/category/transfer-news">
+              Browse the Transfer News archive
+            </a>
+          </p>
+        </div>
+      )}
 
       {!loading &&
         !error &&
@@ -373,7 +437,6 @@ export default function TransferHub({
             End of transfer coverage
           </div>
         )}
-
     </section>
   );
 }
