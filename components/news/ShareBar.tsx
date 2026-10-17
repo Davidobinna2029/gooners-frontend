@@ -21,8 +21,6 @@ export default function ShareBar({ slug, title }: Props) {
   );
 
   const url = `${SITE_URL}/news/${slug}`;
-  const encodedUrl = encodeURIComponent(url);
-  const encodedTitle = encodeURIComponent(title);
 
   useEffect(() => {
     setCanNativeShare(
@@ -40,7 +38,7 @@ export default function ShareBar({ slug, title }: Props) {
   useEffect(() => {
     if (!isOpen) return;
 
-    function handlePointerDown(event: PointerEvent) {
+    function handleOutsideClick(event: PointerEvent) {
       if (
         containerRef.current &&
         !containerRef.current.contains(event.target as Node)
@@ -49,29 +47,28 @@ export default function ShareBar({ slug, title }: Props) {
       }
     }
 
-    function handleKeyDown(event: KeyboardEvent) {
+    function handleEscape(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setIsOpen(false);
       }
     }
 
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("pointerdown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
 
     return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("pointerdown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, [isOpen]);
 
   async function copyLink() {
     try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(url);
-      } else {
-        throw new Error("Clipboard API unavailable");
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard unavailable");
       }
 
+      await navigator.clipboard.writeText(url);
       setCopied(true);
 
       if (copyTimeoutRef.current) {
@@ -80,7 +77,7 @@ export default function ShareBar({ slug, title }: Props) {
 
       copyTimeoutRef.current = setTimeout(() => {
         setCopied(false);
-      }, 2200);
+      }, 2000);
     } catch {
       window.prompt("Copy this article link:", url);
     }
@@ -104,20 +101,23 @@ export default function ShareBar({ slug, title }: Props) {
     }
   }
 
+  const encodedUrl = encodeURIComponent(url);
+  const encodedTitle = encodeURIComponent(title);
+
   return (
     <div className="share-container" ref={containerRef}>
       <button
         type="button"
-        className="share-trigger"
-        onClick={() => setIsOpen((current) => !current)}
+        className={`share-trigger ${isOpen ? "share-trigger-active" : ""}`}
+        onClick={() => setIsOpen((value) => !value)}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
         aria-label="Share this article"
       >
         <svg
           viewBox="0 0 24 24"
-          width="18"
-          height="18"
+          width="17"
+          height="17"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.8"
@@ -130,53 +130,34 @@ export default function ShareBar({ slug, title }: Props) {
           <circle cx="18" cy="19" r="3" />
           <path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4" />
         </svg>
-
         <span>Share</span>
-
-        <svg
-          className={`share-chevron ${isOpen ? "is-open" : ""}`}
-          viewBox="0 0 20 20"
-          width="13"
-          height="13"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="m5 7 5 5 5-5" />
-        </svg>
       </button>
 
       {isOpen && (
         <div
           className="share-popup"
           role="dialog"
-          aria-label="Share article options"
+          aria-label="Share article"
         >
           <div className="share-popup-header">
-            <div className="share-popup-heading">
-              <span className="share-popup-eyebrow">
-                ARSENALTALKS
-              </span>
+            <div>
               <strong>Share this article</strong>
-              <p>Send this story to fellow Gunners.</p>
+              <p>Share this story with others.</p>
             </div>
 
             <button
               type="button"
               className="share-close"
               onClick={() => setIsOpen(false)}
-              aria-label="Close share options"
+              aria-label="Close share menu"
             >
-              &times;
+              ×
             </button>
           </div>
 
           <div className="share-options">
             <a
-              className="share-option whatsapp"
+              className="share-option"
               href={`https://wa.me/?text=${encodeURIComponent(
                 `${title} ${url}`
               )}`}
@@ -184,66 +165,53 @@ export default function ShareBar({ slug, title }: Props) {
               rel="noopener noreferrer"
               onClick={() => setIsOpen(false)}
             >
-              <span className="share-option-icon" aria-hidden="true">
-                WA
-              </span>
+              <span className="share-option-icon whatsapp-icon">WA</span>
               <span>WhatsApp</span>
             </a>
 
             <a
-              className="share-option facebook"
+              className="share-option"
               href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setIsOpen(false)}
             >
-              <span className="share-option-icon" aria-hidden="true">
-                f
-              </span>
+              <span className="share-option-icon facebook-icon">f</span>
               <span>Facebook</span>
             </a>
 
             <a
-              className="share-option x-share"
+              className="share-option"
               href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setIsOpen(false)}
             >
-              <span className="share-option-icon" aria-hidden="true">
-                X
-              </span>
+              <span className="share-option-icon x-icon">X</span>
               <span>Post on X</span>
             </a>
 
             {canNativeShare && (
               <button
                 type="button"
-                className="share-option native-share"
+                className="share-option"
                 onClick={shareNatively}
               >
-                <span className="share-option-icon" aria-hidden="true">
-                  ↗
-                </span>
+                <span className="share-option-icon more-icon">↗</span>
                 <span>More options</span>
               </button>
             )}
           </div>
 
           <div className="share-copy-section">
-            <label
-              className="share-link-label"
-              htmlFor="share-article-url"
-            >
-              Article link
-            </label>
+            <span className="share-link-label">Article link</span>
 
             <div className="share-link-row">
               <input
-                id="share-article-url"
                 type="text"
                 value={url}
                 readOnly
+                aria-label="Article URL"
                 onFocus={(event) => event.currentTarget.select()}
               />
 
@@ -252,12 +220,12 @@ export default function ShareBar({ slug, title }: Props) {
                 className="share-copy-button"
                 onClick={copyLink}
               >
-                {copied ? "Copied!" : "Copy link"}
+                {copied ? "Copied" : "Copy link"}
               </button>
             </div>
 
             <p className="share-feedback" aria-live="polite">
-              {copied ? "Article link copied successfully." : ""}
+              {copied ? "Link copied to clipboard." : ""}
             </p>
           </div>
         </div>
