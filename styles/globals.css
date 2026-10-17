@@ -2917,3 +2917,141 @@ img {
     height: 57px;
   }
 }
+
+
+/* Category page loading skeleton */
+.category-loading {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.category-loading-title {
+  width: 220px;
+  height: 32px;
+  margin-bottom: 24px;
+  border-radius: 5px;
+  background: #eee;
+  animation: category-loading-pulse 1.4s ease-in-out infinite;
+}
+
+.category-loading-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.category-loading-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 6px;
+  background: #eee;
+  animation: category-loading-pulse 1.4s ease-in-out infinite;
+}
+
+.category-loading-line {
+  height: 14px;
+  margin-top: 12px;
+  border-radius: 4px;
+  background: #eee;
+  animation: category-loading-pulse 1.4s ease-in-out infinite;
+}
+
+.category-loading-line.short {
+  width: 65%;
+  margin-top: 8px;
+}
+
+.category-loading-message {
+  margin-top: 24px;
+  color: #666;
+  font-size: 14px;
+}
+
+@keyframes category-loading-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 640px) {
+  .category-loading-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .category-loading {
+    padding: 20px 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .category-loading-title,
+  .category-loading-image,
+  .category-loading-line {
+    animation: none;
+  }
+}
+
+
+.livescores-page {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 16px 40px;
+  color: #171717;
+}
+
+.livescores-header {
+  margin-bottom: 24px;
+  padding-bottom: 18px;
+  border-bottom: 3px solid #d10000;
+}
+
+.livescores-eyebrow {
+  margin: 0 0 8px;
+  color: #d10000;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.livescores-header h1 {
+  margin: 0 0 10px;
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.15;
+  font-weight: 800;
+}
+
+.livescores-header > p:last-child {
+  margin: 0;
+  color: #666;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.livescores-widget {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.livescores-widget iframe {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border: 0;
+  background: #fff;
+}
+
+@media (max-width: 640px) {
+  .livescores-page {
+    padding: 20px 10px 28px;
+  }
+
+  .livescores-header {
+    margin-bottom: 16px;
+  }
+}

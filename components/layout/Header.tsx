@@ -1,13 +1,47 @@
+
 "use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
-const links = [
+type NavigationLink = {
+  label: string;
+  href: string;
+  external?: boolean;
+};
+
+const primaryLinks: NavigationLink[] = [
   { label: "Home", href: "/" },
-  { label: "News", href: "/news" },
-  { label: "Fixtures", href: "/fixtures" },
+];
+
+const categoryLinks: NavigationLink[] = [
+  { label: "Arsenal", href: "/category/arsenal" },
+  {
+    label: "Transfer News",
+    href: "/category/transfer-news",
+  },
+  {
+    label: "Injury News",
+    href: "/category/injury-news",
+  },
+  {
+    label: "Arsenal Women",
+    href: "/category/women",
+  },
+  {
+    label: "Opinion",
+    href: "/category/opinion",
+  },
+  {
+    label: "Livescores",
+    href: "/livescores",
+  },
+  {
+    label: "Shop",
+    href: "https://shop.arsenaltalks.com",
+    external: true,
+  },
 ];
 
 export default function Header() {
@@ -37,17 +71,49 @@ export default function Header() {
     );
   };
 
+  const renderLinks = (links: NavigationLink[]) =>
+    links.map((link) => {
+      const active =
+        !link.external && isActive(link.href);
+
+      return (
+        <Link
+          key={link.href}
+          href={link.href}
+          className={`mobile-link ${
+            active ? "active" : ""
+          }`}
+          aria-current={active ? "page" : undefined}
+          onClick={() => setOpen(false)}
+          target={link.external ? "_blank" : undefined}
+          rel={
+            link.external
+              ? "noopener noreferrer"
+              : undefined
+          }
+        >
+          <span>{link.label}</span>
+
+          <span
+            className="mobile-arrow"
+            aria-hidden="true"
+          >
+            →
+          </span>
+        </Link>
+      );
+    });
+
   return (
     <header className="site-header">
-
       {/* HEADER BAR */}
       <div className="header-inner">
-
         {/* BRAND */}
         <Link
           href="/"
           className="logo"
-          aria-label="ArsenalTalks"
+          aria-label="ArsenalTalks home"
+          onClick={() => setOpen(false)}
         >
           ArsenalTalks
         </Link>
@@ -58,9 +124,7 @@ export default function Header() {
           className={`menu-btn ${open ? "open" : ""}`}
           onClick={() => setOpen((value) => !value)}
           aria-label={
-            open
-              ? "Close navigation"
-              : "Open navigation"
+            open ? "Close navigation" : "Open navigation"
           }
           aria-expanded={open}
           aria-controls="mobile-navigation"
@@ -71,43 +135,29 @@ export default function Header() {
             <span />
           </span>
         </button>
-
       </div>
 
-      {/* MENU */}
+      {/* NAVIGATION MENU */}
       <div
         id="mobile-navigation"
         className={`mobile-menu ${open ? "open" : ""}`}
+        aria-hidden={!open}
+        inert={!open}
       >
         <nav
           className="mobile-nav"
           aria-label="Main navigation"
         >
-          {links.map((link) => {
-            const active = isActive(link.href);
+          {renderLinks(primaryLinks)}
 
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`mobile-link ${
-                  active ? "active" : ""
-                }`}
-                aria-current={
-                  active ? "page" : undefined
-                }
-              >
-                <span>{link.label}</span>
+          <div
+            className="mobile-nav-heading"
+            aria-hidden="true"
+          >
+            Explore Arsenal
+          </div>
 
-                <span
-                  className="mobile-arrow"
-                  aria-hidden="true"
-                >
-                  →
-                </span>
-              </Link>
-            );
-          })}
+          {renderLinks(categoryLinks)}
         </nav>
       </div>
 
@@ -118,9 +168,9 @@ export default function Header() {
           className="menu-backdrop"
           onClick={() => setOpen(false)}
           aria-label="Close navigation"
+          tabIndex={-1}
         />
       )}
-
     </header>
   );
 }

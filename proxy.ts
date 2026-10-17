@@ -76,8 +76,7 @@ export default function proxy(
   const { pathname } = request.nextUrl;
 
   /*
-   * Keep authentication protection for
-   * /admin and /control-room.
+   * Protect only the editorial/admin areas.
    */
   if (
     pathname.startsWith("/admin") ||
@@ -91,20 +90,16 @@ export default function proxy(
 
   /*
    * Redirect old root-level WordPress article URLs
-   * to the new /news/[slug]/ structure.
+   * to the new /news/[slug] structure.
    */
-  const destination =
-    getLegacyRedirect(pathname);
+  const destination = getLegacyRedirect(pathname);
 
   if (destination) {
     const url = request.nextUrl.clone();
 
     url.pathname = destination;
 
-    return NextResponse.redirect(
-      url,
-      301
-    );
+    return NextResponse.redirect(url, 301);
   }
 
   return NextResponse.next();
@@ -112,6 +107,16 @@ export default function proxy(
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    /*
+     * IMPORTANT:
+     * API routes must bypass this proxy completely.
+     *
+     * This prevents the proxy from interfering with:
+     * /api/posts
+     * /api/auth/session
+     * /api/auth/_log
+     * and future API endpoints.
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 };

@@ -1,0 +1,442 @@
+
+"use client";
+
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
+import NewsCard from "@/components/news/NewsCard";
+
+import type { CanonicalPost } from "@/types/content";
+
+/* ==========================================================
+   API TYPES
+========================================================== */
+
+interface ApiPostImage {
+  url: string;
+}
+
+interface ApiPost {
+  id: number;
+  slug: string;
+  title: string;
+  excerpt: string;
+  date: string;
+  modified?: string;
+  status?: string;
+  image: ApiPostImage | string | null;
+  author?: string;
+  category?: string;
+  categories: number[];
+  featuredMedia?: number | null;
+  link: string;
+}
+
+interface PostsResponse {
+  posts: ApiPost[];
+  page: number;
+  perPage: number;
+  totalPosts: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
+/* ==========================================================
+   PROPS
+========================================================== */
+
+interface Props {
+  excludedIds: number[];
+}
+
+/* ==========================================================
+   CATEGORY NORMALIZER
+========================================================== */
+
+function normalizeCluster(
+  category: string
+): CanonicalPost["cluster"] {
+  switch (category.trim().toLowerCase()) {
+    case "arsenal":
+      return "arsenal";
+
+    case "transfer":
+    case "transfers":
+    case "transfer-news":
+      return "transfer";
+
+    case "injury":
+    case "injuries":
+    case "injury-news":
+      return "injury";
+
+    case "match":
+    case "match-analysis":
+    case "matches":
+    case "match-report":
+    case "match-reports":
+      return "match";
+
+    default:
+      return "other";
+  }
+}
+
+/* ==========================================================
+   IMAGE NORMALIZER
+========================================================== */
+
+function normalizeImage(
+  image: ApiPost["image"]
+): CanonicalPost["image"] {
+  if (!image) {
+    return null;
+  }
+
+  if (typeof image === "string") {
+    const url = image.trim();
+
+    return url ? { url } : null;
+  }
+
+  if (
+    typeof image === "object" &&
+    typeof image.url === "string"
+  ) {
+    const url = image.url.trim();
+
+    return url ? { url } : null;
+  }
+
+  return null;
+}
+
+/* ==========================================================
+   API → CANONICAL POST
+========================================================== */
+
+function normalizePost(
+  post: ApiPost
+): CanonicalPost {
+  return {
+    id: post.id,
+    slug: typeof post.slug === "string" ? post.slug : "",
+    date: typeof post.date === "string" ? post.date : "",
+    title: typeof post.title === "string" ? post.title : "",
+    excerpt: typeof post.excerpt === "string" ? post.excerpt : "",
+    image: normalizeImage(post.image),
+    categories: Array.isArray(post.categories)
+      ? post.categories
+      : [],
+    tags: [],
+    score: 0,
+    cluster: normalizeCluster(
+      typeof post.category === "string"
+        ? post.category
+        : ""
+    ),
+    link: typeof post.link === "string" ? post.link : "",
+  };
+}
+
+/* ==========================================================
+   HOMEPAGE URL
+========================================================== */
+
+/**
+ * Update the URL without triggering App Router navigation.
+ *
+ * Page 1 is represented by "/".
+ * Page 2 and later use "/?page=N".
+ */
+function updateHomepageUrl(page: number): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const url =
+    page <= 1
+      ? "/"
+      : `/?page=${page}`;
+
+  window.history.replaceState(null, "", url);
+}
+
+/* ==========================================================
+   COMPONENT
+========================================================== */
+
+export default function HomepageInfiniteScroll({
+  excludedIds,
+}: Props) {
+  const [posts, setPosts] = useState<CanonicalPost[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadingRef = useRef(false);
+  const pageRef = useRef(1);
+  const hasMoreRef = useRef(true);
+
+  const reservedIdsRef = useRef<Set<number>>(
+    new Set(excludedIds)
+  );
+
+  const displayedIdsRef = useRef<Set<number>>(
+    new Set(excludedIds)
+  );
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  /* ========================================================
+     SYNC SERVER-RESERVED IDS
+  ======================================================== */
+
+  useEffect(() => {
+    for (const id of excludedIds) {
+      if (!Number.isFinite(id)) {
+        continue;
+      }
+
+      reservedIdsRef.current.add(id);
+      displayedIdsRef.current.add(id);
+    }
+  }, [excludedIds]);
+
+  /* ========================================================
+     LOAD MORE POSTS
+  ======================================================== */
+
+  const loadMore = useCallback(async () => {
+    if (loadingRef.current || !hasMoreRef.current) {
+      return;
+    }
+
+    loadingRef.current = true;
+    setLoading(true);
+    setError(null);
+
+    const requestedPage = pageRef.current;
+
+    try {
+      const params = new URLSearchParams({
+        page: String(requestedPage),
+        per_page: "10",
+      });
+
+      const exclude = Array.from(
+        reservedIdsRef.current
+      ).join(",");
+
+      if (exclude) {
+        params.set("exclude", exclude);
+      }
+
+      const response = await fetch(
+        `/api/posts?${params.toString()}`,
+        {
+          method: "GET",
+          cache: "no-store",
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to load more stories (${response.status}).`
+        );
+      }
+
+      const data: PostsResponse = await response.json();
+
+      if (!data || !Array.isArray(data.posts)) {
+        throw new Error("Invalid posts response.");
+      }
+
+      /* ================================================
+         FILTER DUPLICATES
+      ================================================ */
+
+      const uniquePosts: ApiPost[] = [];
+
+      for (const post of data.posts) {
+        if (
+          !post ||
+          typeof post.id !== "number" ||
+          !Number.isFinite(post.id) ||
+          displayedIdsRef.current.has(post.id)
+        ) {
+          continue;
+        }
+
+        displayedIdsRef.current.add(post.id);
+        uniquePosts.push(post);
+      }
+
+      /* ================================================
+         APPEND POSTS
+      ================================================ */
+
+      if (uniquePosts.length > 0) {
+        setPosts((currentPosts) => [
+          ...currentPosts,
+          ...uniquePosts.map(normalizePost),
+        ]);
+      }
+
+      /* ================================================
+         PAGINATION
+      ================================================ */
+
+      const returnedPage = Number(data.page);
+
+      const nextPage =
+        Number.isFinite(returnedPage) &&
+        returnedPage >= requestedPage
+          ? returnedPage + 1
+          : requestedPage + 1;
+
+      const responseHasMore =
+        typeof data.hasMore === "boolean"
+          ? data.hasMore
+          : typeof data.totalPages === "number"
+            ? requestedPage < data.totalPages
+            : data.posts.length > 0;
+
+      /*
+       * Advance the requested page after a successful
+       * HTTP response, even if deduplication removed
+       * every returned post.
+       */
+      pageRef.current = nextPage;
+      setPage(nextPage);
+
+      hasMoreRef.current = responseHasMore;
+      setHasMore(responseHasMore);
+
+      /*
+       * Record the page successfully fetched, not the
+       * next page that will be requested.
+       */
+      updateHomepageUrl(requestedPage);
+    } catch (err) {
+      console.error(
+        "Homepage infinite scroll error:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to load more stories. Please try again."
+      );
+    } finally {
+      loadingRef.current = false;
+      setLoading(false);
+    }
+  }, []);
+
+  /* ========================================================
+     INTERSECTION OBSERVER
+  ======================================================== */
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+
+    if (
+      !sentinel ||
+      typeof IntersectionObserver === "undefined"
+    ) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          void loadMore();
+        }
+      },
+      {
+        rootMargin: "800px 0px",
+        threshold: 0,
+      }
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [loadMore]);
+
+  /* ========================================================
+     RENDER
+  ======================================================== */
+
+  return (
+    <section
+      className="homepage-section homepage-infinite-feed"
+      aria-label="More Arsenal news"
+    >
+      {posts.map((post) => (
+        <NewsCard
+          key={post.id}
+          post={post}
+        />
+      ))}
+
+      <div
+        ref={sentinelRef}
+        className="homepage-infinite-sentinel"
+        aria-hidden="true"
+      />
+
+      {loading && (
+        <div
+          className="homepage-infinite-status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          Loading more stories…
+        </div>
+      )}
+
+      {!loading && error && (
+        <div
+          className="homepage-infinite-status"
+          role="alert"
+        >
+          <p>{error}</p>
+
+          <button
+            type="button"
+            onClick={() => {
+              void loadMore();
+            }}
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {!loading &&
+        !error &&
+        !hasMore &&
+        posts.length > 0 && (
+          <div
+            className="homepage-infinite-status"
+            aria-live="polite"
+          >
+            You’ve reached the end of the latest stories.
+          </div>
+        )}
+    </section>
+  );
+}
