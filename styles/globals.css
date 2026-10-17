@@ -3057,293 +3057,108 @@ img {
 }
 
 
-/* ==========================================
-   SKY SPORTS-INSPIRED ARTICLE SHARE
-   ========================================== */
+/* ARTICLE SOCIAL SHARING ICONS */
 
-.share-container {
-  position: relative;
+.article-social-share {
   display: inline-flex;
   align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
   vertical-align: middle;
-  z-index: 30;
 }
 
-.share-trigger {
+.social-share-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  min-height: 34px;
-  padding: 7px 11px;
-  border: 1px solid #d9dce0;
-  border-radius: 4px;
-  background: #ffffff;
-  color: #242a31;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    color 0.15s ease,
-    background-color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.share-trigger:hover,
-.share-trigger-active {
-  border-color: #d10000;
-  background: #fff5f5;
-  color: #d10000;
-}
-
-.share-trigger svg {
-  flex-shrink: 0;
-}
-
-/* POPUP */
-
-.share-popup {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  width: min(310px, calc(100vw - 24px));
-  padding: 16px;
-  border: 1px solid #dfe2e5;
-  border-top: 3px solid #d10000;
-  border-radius: 4px;
-  background: #ffffff;
-  color: #242a31;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 13%);
-  z-index: 100;
-  animation: share-menu-in 0.14s ease-out;
-}
-
-@keyframes share-menu-in {
-  from {
-    opacity: 0;
-    transform: translateY(-3px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.share-popup-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 15px;
-}
-
-.share-popup-header strong {
-  display: block;
-  color: #171b20;
-  font-size: 15px;
-  font-weight: 800;
-  line-height: 1.4;
-}
-
-.share-popup-header p {
-  margin: 4px 0 0;
-  color: #737980;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.share-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 27px;
-  height: 27px;
-  flex-shrink: 0;
-  border: 0;
-  border-radius: 3px;
-  background: #f0f1f2;
-  color: #343a40;
-  font-size: 21px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.share-close:hover {
-  background: #e4e6e8;
-}
-
-/* SOCIAL GRID */
-
-.share-options {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.share-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  min-height: 42px;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
   padding: 8px;
-  border: 1px solid #e1e4e7;
-  border-radius: 4px;
+  border: 1px solid #e2e5e9;
+  border-radius: 50%;
   background: #ffffff;
-  color: #292e34;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  text-align: left;
+  color: #343a40;
   text-decoration: none;
   cursor: pointer;
   transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
 }
 
-.share-option:hover {
-  border-color: #c7cbd0;
-  background: #f5f6f7;
-}
-
-.share-option-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 27px;
-  height: 27px;
-  flex-shrink: 0;
-  border-radius: 4px;
-  background: #f0f1f2;
-  color: #20252a;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.whatsapp-icon {
-  background: #e7f7ec;
-  color: #168443;
-}
-
-.facebook-icon {
-  background: #e8efff;
-  color: #1877f2;
-  font-size: 19px;
-}
-
-.x-icon {
-  background: #ededed;
-  color: #111111;
-}
-
-.more-icon {
-  background: #fff0f0;
-  color: #d10000;
-  font-size: 18px;
-}
-
-/* COPY LINK */
-
-.share-copy-section {
-  margin-top: 14px;
-  padding-top: 13px;
-  border-top: 1px solid #e6e8ea;
-}
-
-.share-link-label {
+.social-share-icon svg {
   display: block;
-  margin-bottom: 7px;
-  color: #555b62;
-  font-size: 12px;
-  font-weight: 700;
+  width: 19px;
+  height: 19px;
 }
 
-.share-link-row {
-  display: flex;
-  align-items: stretch;
-  gap: 6px;
+.social-share-icon:hover {
+  transform: translateY(-2px);
 }
 
-.share-link-row input {
-  width: 0;
-  min-width: 0;
-  flex: 1;
-  padding: 9px;
-  border: 1px solid #dfe2e5;
-  border-radius: 4px;
-  background: #f6f7f8;
-  color: #4a5057;
-  font-family: inherit;
-  font-size: 11px;
+.social-whatsapp:hover {
+  border-color: #25d366;
+  background: #25d366;
+  color: #ffffff;
 }
 
-.share-copy-button {
-  flex-shrink: 0;
-  padding: 8px 10px;
-  border: 1px solid #d10000;
-  border-radius: 4px;
+.social-facebook:hover {
+  border-color: #1877f2;
+  background: #1877f2;
+  color: #ffffff;
+}
+
+.social-x:hover {
+  border-color: #111111;
+  background: #111111;
+  color: #ffffff;
+}
+
+.social-copy:hover,
+.social-copy.is-copied {
+  border-color: #d10000;
   background: #d10000;
   color: #ffffff;
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 800;
-  cursor: pointer;
 }
 
-.share-copy-button:hover {
-  border-color: #ad0000;
-  background: #ad0000;
-}
-
-.share-feedback {
-  min-height: 14px;
-  margin: 5px 0 0;
+.social-copy-feedback {
   color: #16803c;
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
-/* ACCESSIBILITY */
-
-.share-trigger:focus-visible,
-.share-close:focus-visible,
-.share-option:focus-visible,
-.share-copy-button:focus-visible {
+.social-share-icon:focus-visible {
   outline: 2px solid #d10000;
   outline-offset: 3px;
 }
 
-/* MOBILE */
-
 @media (max-width: 480px) {
-  .share-trigger {
-    min-height: 33px;
-    padding: 7px 9px;
-    font-size: 12px;
+  .article-social-share {
+    gap: 7px;
   }
 
-  .share-popup {
-    right: 0;
-    width: min(300px, calc(100vw - 24px));
-    padding: 13px;
-  }
-
-  .share-option {
-    gap: 6px;
+  .social-share-icon {
+    width: 33px;
+    height: 33px;
+    flex-basis: 33px;
     padding: 7px;
-    font-size: 11px;
   }
 
-  .share-copy-button {
-    padding: 8px;
+  .social-share-icon svg {
+    width: 18px;
+    height: 18px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .share-popup {
-    animation: none;
+  .social-share-icon {
+    transition: none;
+  }
+
+  .social-share-icon:hover {
+    transform: none;
   }
 }
+
