@@ -14,7 +14,11 @@ export default function ShareBar({ slug, title }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
-  const popupRef = useRef<HTMLDivElement>(null);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
   const url = `${SITE_URL}/news/${slug}`;
   const encodedUrl = encodeURIComponent(url);
@@ -25,6 +29,12 @@ export default function ShareBar({ slug, title }: Props) {
       typeof navigator !== "undefined" &&
         typeof navigator.share === "function"
     );
+
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -32,8 +42,8 @@ export default function ShareBar({ slug, title }: Props) {
 
     function handlePointerDown(event: PointerEvent) {
       if (
-        popupRef.current &&
-        !popupRef.current.contains(event.target as Node)
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false);
       }
@@ -56,18 +66,27 @@ export default function ShareBar({ slug, title }: Props) {
 
   async function copyLink() {
     try {
-      await navigator.clipboard.writeText(url);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        throw new Error("Clipboard API unavailable");
+      }
+
       setCopied(true);
 
-      window.setTimeout(() => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+
+      copyTimeoutRef.current = setTimeout(() => {
         setCopied(false);
-      }, 2000);
+      }, 2200);
     } catch {
       window.prompt("Copy this article link:", url);
     }
   }
 
-  async function nativeShare() {
+  async function shareNatively() {
     if (!navigator.share) return;
 
     try {
@@ -86,22 +105,22 @@ export default function ShareBar({ slug, title }: Props) {
   }
 
   return (
-    <div className="share-container" ref={popupRef}>
+    <div className="share-container" ref={containerRef}>
       <button
         type="button"
         className="share-trigger"
-        onClick={() => setIsOpen((value) => !value)}
+        onClick={() => setIsOpen((current) => !current)}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
         aria-label="Share this article"
       >
         <svg
           viewBox="0 0 24 24"
-          width="19"
-          height="19"
+          width="18"
+          height="18"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
           aria-hidden="true"
@@ -113,6 +132,21 @@ export default function ShareBar({ slug, title }: Props) {
         </svg>
 
         <span>Share</span>
+
+        <svg
+          className={`share-chevron ${isOpen ? "is-open" : ""}`}
+          viewBox="0 0 20 20"
+          width="13"
+          height="13"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m5 7 5 5 5-5" />
+        </svg>
       </button>
 
       {isOpen && (
@@ -122,9 +156,12 @@ export default function ShareBar({ slug, title }: Props) {
           aria-label="Share article options"
         >
           <div className="share-popup-header">
-            <div>
+            <div className="share-popup-heading">
+              <span className="share-popup-eyebrow">
+                ARSENALTALKS
+              </span>
               <strong>Share this article</strong>
-              <p>Spread the latest Arsenal news.</p>
+              <p>Send this story to fellow Gunners.</p>
             </div>
 
             <button
@@ -183,7 +220,7 @@ export default function ShareBar({ slug, title }: Props) {
               <button
                 type="button"
                 className="share-option native-share"
-                onClick={nativeShare}
+                onClick={shareNatively}
               >
                 <span className="share-option-icon" aria-hidden="true">
                   ↗
@@ -194,14 +231,19 @@ export default function ShareBar({ slug, title }: Props) {
           </div>
 
           <div className="share-copy-section">
-            <span className="share-link-label">Article link</span>
+            <label
+              className="share-link-label"
+              htmlFor="share-article-url"
+            >
+              Article link
+            </label>
 
             <div className="share-link-row">
               <input
+                id="share-article-url"
                 type="text"
                 value={url}
                 readOnly
-                aria-label="Article URL"
                 onFocus={(event) => event.currentTarget.select()}
               />
 
@@ -215,7 +257,7 @@ export default function ShareBar({ slug, title }: Props) {
             </div>
 
             <p className="share-feedback" aria-live="polite">
-              {copied ? "Article link copied to clipboard." : ""}
+              {copied ? "Article link copied successfully." : ""}
             </p>
           </div>
         </div>
