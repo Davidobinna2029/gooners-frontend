@@ -1,3 +1,4 @@
+
 import { prisma } from "@/lib/db/prisma";
 
 import { getPosts } from "@/lib/api/wordpress";
@@ -21,14 +22,14 @@ import {
 import { rankPosts } from "@/lib/engine/ranking";
 
 async function safeFetch<T>(
-  promise: Promise<T>,
+  label: string,
+  operation: () => Promise<T>,
   fallback: T
 ): Promise<T> {
   try {
-    return await promise;
+    return await operation();
   } catch (error) {
-    console.error("safeFetch error:", error);
-
+    console.error(`[HOMEPAGE] ${label} failed. Using fallback.`, error);
     return fallback;
   }
 }
@@ -36,198 +37,88 @@ async function safeFetch<T>(
 export type HomepageFeed = HomepageLayout;
 
 export async function buildHomepageFeed(): Promise<HomepageFeed> {
-  // =======================================================
-  // 1. FETCH WORDPRESS POSTS
-  // =======================================================
-
+  // 1. Fetch WordPress posts.
   const rawPosts = await safeFetch(
-    getPosts(),
+    "WordPress posts",
+    () => getPosts(),
     []
   );
 
-  console.log(
-    "RAW POSTS:",
-    Array.isArray(rawPosts) ? rawPosts.length : 0
-  );
-
-  // =======================================================
-  // 2. MAP WORDPRESS → CANONICAL POSTS
-  // =======================================================
-
+  // 2. Map WordPress posts to the canonical post format.
   const posts = mapWordPressPosts(
     Array.isArray(rawPosts) ? rawPosts : []
   );
 
-  console.log(
-    "MAPPED POSTS:",
-    posts.length
-  );
+  console.log("[HOMEPAGE] WordPress posts:", posts.length);
 
-  // =======================================================
-  // 3. LOAD ACTIVE EDITORIAL OVERRIDES
-  // =======================================================
-
+  // 3. Load active editorial overrides.
+  // If Neon is unavailable, continue without overrides.
   const overrides = await safeFetch(
-    prisma.override.findMany({
-      where: {
-        OR: [
-          {
-            expiresAt: null,
-          },
-          {
-            expiresAt: {
-              gt: new Date(),
-            },
-          },
-        ],
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    }),
+    "Editorial overrides",
+    () =>
+      prisma.override.findMany({
+        where: {
+          OR: [
+            { expiresAt: null },
+            { expiresAt: { gt: new Date() } },
+          ],
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
     []
   );
 
-  console.log(
-    "OVERRIDES:",
-    overrides.length
-  );
-
-  // =======================================================
-  // 4. LOAD EDITORIAL WORKFLOWS
-  // =======================================================
-
+  // 4. Load editorial workflows.
+  // If Neon is unavailable, continue without workflow records.
   const workflows = await safeFetch(
-    prisma.workflow.findMany(),
+    "Editorial workflows",
+    () => prisma.workflow.findMany(),
     []
   );
 
-  console.log(
-    "WORKFLOWS:",
-    workflows.length
-  );
+  // 5. Apply any available editorial overrides.
+  const overriddenPosts = applyOverrides(posts, overrides);
 
-  // =======================================================
-  // 5. APPLY EDITORIAL OVERRIDES
-  // =======================================================
-
-  const overriddenPosts = applyOverrides(
-    posts,
-    overrides
-  );
-
-  // =======================================================
-  // 6. RANK POSTS
-  // =======================================================
-
+  // 6. Rank available posts.
   const ranked = rankPosts(
     overriddenPosts,
     workflows,
     overrides
   );
 
-  console.log(
-    "RANKED POSTS:",
-    ranked.length
-  );
+  console.log("[HOMEPAGE] Ranked posts:", ranked.length);
 
-  // =======================================================
-  // GLOBAL HOMEPAGE DEDUPLICATION REGISTRY
-  //
-  // A post added to this Set is reserved and cannot appear
-  // in another automatically generated homepage section.
-  //
-  // This prevents:
-  //
-  // HERO → TRENDING
-  // HERO → LATEST
-  // BREAKING → TRENDING
-  // BREAKING → LATEST
-  // TRENDING → LATEST
-  //
-  // duplicates.
-  // =======================================================
-
+  // 7. Build Hero.
   const usedPostIds = new Set<number>();
 
-  // =======================================================
-  // 7. HERO
-  // =======================================================
-
-  const hero = buildHero(
-    ranked
-  );
+  const hero = buildHero(ranked);
 
   for (const post of hero) {
     usedPostIds.add(post.id);
   }
 
-  console.log(
-    "HERO:",
-    hero.map((post) => post.id)
-  );
-
-  // =======================================================
-  // 8. BREAKING
-  // =======================================================
-
+  // 8. Build Breaking.
   const breaking = buildBreaking(
     ranked,
     overrides,
     usedPostIds
   );
 
-  console.log(
-    "BREAKING:",
-    breaking.map((post) => post.id)
-  );
-
-  // =======================================================
-  // 9. TRENDING
-  //
-  // IMPORTANT:
-  // Trending is deliberately allocated BEFORE Latest.
-  //
-  // Previously Latest reserved up to 20 posts first.
-  // Because the homepage fetch currently returns only a
-  // relatively small number of posts, Latest could consume
-  // the entire available pool and leave Trending empty.
-  //
-  // Trending now gets first access to posts that are not
-  // already reserved by Hero or Breaking.
-  // =======================================================
-
+  // 9. Build Trending before Latest to preserve section priority.
   const trending = buildTrending(
     ranked,
     usedPostIds
   );
 
-  console.log(
-    "TRENDING:",
-    trending.map((post) => post.id)
-  );
-
-  // =======================================================
-  // 10. LATEST
-  //
-  // Latest receives only posts that have not already been
-  // used by Hero, Breaking or Trending.
-  // =======================================================
-
+  // 10. Build Latest from posts not already allocated.
   const latest = buildLatest(
     ranked,
     usedPostIds
   );
 
-  console.log(
-    "LATEST:",
-    latest.map((post) => post.id)
-  );
-
-  // =======================================================
-  // 11. BUILD AUTOMATIC HOMEPAGE
-  // =======================================================
-
+  // 11. Build the automatically generated homepage.
   const automatic = buildHomepageLayout({
     hero,
     breaking,
@@ -236,16 +127,16 @@ export async function buildHomepageFeed(): Promise<HomepageFeed> {
     all: ranked,
   });
 
-  // =======================================================
-  // 12. LOAD PUBLISHED EDITORIAL HOMEPAGE
-  // =======================================================
+  // 12. Load the published editorial homepage.
+  // If Neon is unavailable, use the automatic homepage.
+  const published = await safeFetch(
+    "Published homepage",
+    () => getPublishedHomepage(),
+    null
+  );
 
-  const published = await getPublishedHomepage();
-
-  // =======================================================
-  // 13. MERGE AUTOMATIC + EDITORIAL HOMEPAGE
-  // =======================================================
-
+  // 13. Merge the editorial publication when available.
+  // A null publication should leave the automatic layout intact.
   return mergePublication(
     automatic,
     published

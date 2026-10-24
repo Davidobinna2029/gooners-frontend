@@ -1,4 +1,4 @@
-/* =============================================
+﻿/* =============================================
    GLOBAL STYLES - MOBILE-FIRST (ArsenalTalks)
    WHITE NEWSROOM THEME
 ============================================= */
@@ -276,7 +276,7 @@ img {
 }
 
 /* =========================================================
-   HAMBURGER → X
+   HAMBURGER â†’ X
 ========================================================= */
 
 .menu-btn.open .menu-icon span:nth-child(1) {
@@ -3162,3 +3162,180 @@ img {
   }
 }
 
+
+/* =========================================================
+   ARSENALTALKS — ARTICLE MEDIA & RESPONSIVE EMBEDS
+   ========================================================= */
+
+/* Article content container */
+.article-content {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+
+/* Responsive article media */
+.article-content img,
+.article-content iframe,
+.article-content video,
+.article-content embed,
+.article-content object {
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* Preserve image proportions */
+.article-content img {
+  display: block;
+  width: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  margin: 8px auto !important;
+}
+
+/* Responsive WordPress media wrappers */
+.article-content figure,
+.article-content picture,
+.article-content .wp-block-image,
+.article-content .wp-block-embed,
+.article-content .wp-block-embed__wrapper,
+.article-content .embedpress-embed,
+.article-content .getty-embed {
+  max-width: 100% !important;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Compact spacing around WordPress media */
+.article-content figure,
+.article-content .wp-block-image,
+.article-content .wp-block-embed,
+.article-content .wp-block-embed__wrapper,
+.article-content .embedpress-embed {
+  margin-top: 8px !important;
+  margin-bottom: 8px !important;
+}
+
+/* Responsive videos */
+.article-content video {
+  display: block;
+  height: auto;
+}
+
+/* =========================================================
+   GETTY IMAGES — EMBEDPRESS
+   Preserve Getty's own dimensions and proportions
+   ========================================================= */
+
+/* Getty wrapper used by EmbedPress */
+.article-body .ose-gettyimages.ose-embedpress-responsive,
+.article-content .getty-embed {
+  display: block !important;
+  position: relative !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 4px auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Keep Getty iframes within the article.
+   Do not force their width or height; Getty controls
+   the embedded image's dimensions and aspect ratio. */
+.article-body .ose-gettyimages.ose-embedpress-responsive iframe,
+.article-content .getty-embed iframe {
+  display: block !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Remove empty paragraphs immediately after Getty embeds */
+.article-body .ose-gettyimages.ose-embedpress-responsive + p:empty,
+.article-content .getty-embed + p:empty {
+  display: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Remove empty paragraphs inside Getty wrappers */
+.article-body .ose-gettyimages.ose-embedpress-responsive p:empty,
+.article-content .getty-embed p:empty {
+  display: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* =========================================================
+   ARTICLE PARAGRAPHS
+   ========================================================= */
+
+.article-content p {
+  display: block;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+/* Hide only empty paragraphs */
+.article-content p:empty {
+  display: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Prevent extra spacing at article boundaries */
+.article-content > :first-child {
+  margin-top: 0 !important;
+}
+
+.article-content > :last-child {
+  margin-bottom: 0 !important;
+}
+
+/* =========================================================
+   RESPONSIVE TABLES
+   ========================================================= */
+
+.article-content table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* =========================================================
+   MOBILE LAYOUT
+   ========================================================= */
+
+@media (max-width: 640px) {
+  .article-content figure,
+  .article-content .wp-block-image,
+  .article-content .wp-block-embed,
+  .article-content .wp-block-embed__wrapper,
+  .article-content .embedpress-embed {
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .article-body .ose-gettyimages.ose-embedpress-responsive,
+  .article-content .getty-embed {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 4px auto !important;
+  }
+
+  .article-body .ose-gettyimages.ose-embedpress-responsive iframe,
+  .article-content .getty-embed iframe {
+    max-width: 100% !important;
+  }
+}

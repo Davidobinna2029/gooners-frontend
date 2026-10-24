@@ -1,28 +1,18 @@
+
 import type { WordPressPostWithMedia } from "@/types/wordpress-media";
 import type { CanonicalPost } from "@/types/content";
 import { getFeaturedImage } from "@/lib/media/getFeaturedImage";
 import { decode } from "html-entities";
 
-const FALLBACK_IMAGE =
-  "https://via.placeholder.com/800x450?text=ArsenalTalks";
-
-/**
- * Strip HTML markup and decode HTML entities
- * returned by WordPress.
- *
- * Examples:
- * Monaco&#8217;s     -> Monaco’s
- * Arsenal &amp; Chelsea -> Arsenal & Chelsea
- * &ldquo;Arsenal&rdquo; -> “Arsenal”
- * Arsenal&nbsp;News -> Arsenal News
- */
 function strip(html?: string): string {
-  if (typeof html !== "string") return "";
+  if (typeof html !== "string") {
+    return "";
+  }
 
   const stripped = html
-    .replace(/<script[^>]*>.*?<\/script>/gi, "")
-    .replace(/<style[^>]*>.*?<\/style>/gi, "")
-    .replace(/<[^>]*>/g, "")
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 
@@ -30,41 +20,30 @@ function strip(html?: string): string {
 }
 
 function safeArray(input: unknown): number[] {
-  return Array.isArray(input) ? input : [];
+  return Array.isArray(input)
+    ? input.filter(
+        (item): item is number =>
+          typeof item === "number" && Number.isFinite(item)
+      )
+    : [];
 }
 
 export function mapWordPressPost(
   post: WordPressPostWithMedia
 ): CanonicalPost {
-  const rawImage = getFeaturedImage(post);
-
-  const imageUrl =
-    typeof rawImage === "string" && rawImage.trim().length > 0
-      ? rawImage
-      : FALLBACK_IMAGE;
+  const imageUrl = getFeaturedImage(post);
 
   return {
     id: post.id,
     slug: post.slug,
     date: post.date,
-
     title: strip(post.title?.rendered),
     excerpt: strip(post.excerpt?.rendered),
-
     content: post.content?.rendered ?? "",
-
-    /**
-     * NEVER NULL AGAIN — ALWAYS IMAGE EXISTS
-     */
-    image: {
-      url: imageUrl,
-    },
-
+    image: imageUrl ? { url: imageUrl } : null,
     categories: safeArray(post.categories),
     tags: safeArray(post.tags),
-
     link: post.link,
-
     score: 0,
     cluster: undefined,
   };
@@ -72,8 +51,10 @@ export function mapWordPressPost(
 
 export function mapWordPressPosts(
   posts: WordPressPostWithMedia[]
-) {
-  if (!Array.isArray(posts)) return [];
+): CanonicalPost[] {
+  if (!Array.isArray(posts)) {
+    return [];
+  }
 
   return posts.map(mapWordPressPost);
 }
