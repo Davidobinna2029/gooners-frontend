@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import parse from "html-react-parser";
 import GettyEmbed from "@/components/news/GettyEmbed";
+import XEmbedEnhancer from "@/components/news/XEmbedEnhancer";
 
 import {
   getPostBySlug,
@@ -991,14 +992,18 @@ export default async function ArticlePage({ params }: Props) {
 
         <div className="article-layout flex flex-col gap-10 lg:flex-row">
           <main className="article-main min-w-0 flex-1">
-            <div className="article-body prose prose-base max-w-none md:prose-lg">
+            <XEmbedEnhancer className="article-body prose prose-base max-w-none md:prose-lg">
               {parse(articleContent, {
                 replace: (domNode: any) => {
-                  if (domNode?.type !== "tag" || domNode?.name !== "getty-embed") {
+                  if (
+                    domNode?.type !== "tag" ||
+                    domNode?.name !== "getty-embed"
+                  ) {
                     return undefined;
                   }
 
                   const attrs = domNode.attribs || {};
+
                   return (
                     <GettyEmbed
                       id={attrs["data-id"] || ""}
@@ -1013,7 +1018,7 @@ export default async function ArticlePage({ params }: Props) {
                   );
                 },
               })}
-            </div>
+            </XEmbedEnhancer>
 
             <ShareBar slug={articleSlug} title={post.title} />
 

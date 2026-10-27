@@ -21,6 +21,26 @@ import {
 
 import { rankPosts } from "@/lib/engine/ranking";
 
+let databaseQuotaWarningLogged = false;
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
+}
+
+function isDatabaseQuotaError(error: unknown): boolean {
+  const message = getErrorMessage(error).toLowerCase();
+
+  return (
+    message.includes("exceeded the quota") ||
+    message.includes("quota exceeded") ||
+    message.includes("usage limit exceeded")
+  );
+}
+
 async function safeFetch<T>(
   label: string,
   operation: () => Promise<T>,
@@ -29,7 +49,25 @@ async function safeFetch<T>(
   try {
     return await operation();
   } catch (error) {
-    console.error(`[HOMEPAGE] ${label} failed. Using fallback.`, error);
+    if (isDatabaseQuotaError(error)) {
+      if (!databaseQuotaWarningLogged) {
+        console.warn(
+          "[HOMEPAGE] Database quota exceeded. " +
+            "Continuing with available fallback data. " +
+            "Restore database access in the Neon Console."
+        );
+
+        databaseQuotaWarningLogged = true;
+      }
+
+      return fallback;
+    }
+
+    console.error(
+      `[HOMEPAGE] ${label} failed. Using fallback.`,
+      error
+    );
+
     return fallback;
   }
 }
@@ -52,7 +90,6 @@ export async function buildHomepageFeed(): Promise<HomepageFeed> {
   console.log("[HOMEPAGE] WordPress posts:", posts.length);
 
   // 3. Load active editorial overrides.
-  // If Neon is unavailable, continue without overrides.
   const overrides = await safeFetch(
     "Editorial overrides",
     () =>
@@ -71,14 +108,13 @@ export async function buildHomepageFeed(): Promise<HomepageFeed> {
   );
 
   // 4. Load editorial workflows.
-  // If Neon is unavailable, continue without workflow records.
   const workflows = await safeFetch(
     "Editorial workflows",
     () => prisma.workflow.findMany(),
     []
   );
 
-  // 5. Apply any available editorial overrides.
+  // 5. Apply available editorial overrides.
   const overriddenPosts = applyOverrides(posts, overrides);
 
   // 6. Rank available posts.
@@ -92,7 +128,6 @@ export async function buildHomepageFeed(): Promise<HomepageFeed> {
 
   // 7. Build Hero.
   const usedPostIds = new Set<number>();
-
   const hero = buildHero(ranked);
 
   for (const post of hero) {
@@ -106,19 +141,19 @@ export async function buildHomepageFeed(): Promise<HomepageFeed> {
     usedPostIds
   );
 
-  // 9. Build Trending before Latest to preserve section priority.
+  // 9. Build Trending before Latest.
   const trending = buildTrending(
     ranked,
     usedPostIds
   );
 
-  // 10. Build Latest from posts not already allocated.
+  // 10. Build Latest.
   const latest = buildLatest(
     ranked,
     usedPostIds
   );
 
-  // 11. Build the automatically generated homepage.
+  // 11. Build the automatic homepage from WordPress posts.
   const automatic = buildHomepageLayout({
     hero,
     breaking,
@@ -127,18 +162,14 @@ export async function buildHomepageFeed(): Promise<HomepageFeed> {
     all: ranked,
   });
 
-  // 12. Load the published editorial homepage.
-  // If Neon is unavailable, use the automatic homepage.
-  const published = await safeFetch(
+  // 12. Load the published homepage.
+  // A database failure falls back to null.
+  const published = await safeFetch<HomepageLayout | null>(
     "Published homepage",
     () => getPublishedHomepage(),
     null
   );
 
-  // 13. Merge the editorial publication when available.
-  // A null publication should leave the automatic layout intact.
-  return mergePublication(
-    automatic,
-    published
-  );
+  // 13. Use the published layout when available.
+  return mergePublication(automatic, published);
 }
