@@ -5,21 +5,16 @@ import parse from "html-react-parser";
 import GettyEmbed from "@/components/news/GettyEmbed";
 import XEmbedEnhancer from "@/components/news/XEmbedEnhancer";
 
-import {
-  getPostBySlug,
-  getPosts,
-} from "@/lib/api/wordpress";
+import { getPostBySlug } from "@/lib/api/wordpress";
 
-import {
-  mapWordPressPost,
-  mapWordPressPosts,
-} from "@/lib/mappers/wordpressMapper";
+import { mapWordPressPost } from "@/lib/mappers/wordpressMapper";
 
 import { getFeaturedImage } from "@/lib/media/getFeaturedImage";
 
 import ArticleMeta from "@/components/news/ArticleMeta";
 import ShareBar from "@/components/news/ShareBar";
 import AuthorBox from "@/components/news/AuthorBox";
+import RelatedStoryGrid from "@/components/news/RelatedStoryGrid";
 
 interface Props {
   params: Promise<{
@@ -170,7 +165,7 @@ function getHtmlAttribute(
   const escaped = attribute.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
   const expression = new RegExp(
-    `(?:^|\\s)${escaped}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`,
+    `(?:^|\s)${escaped}\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))`,
     "i"
   );
 
@@ -187,7 +182,7 @@ function setHtmlAttribute(
   const escaped = attribute.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
   const expression = new RegExp(
-    `\\s${escaped}\\s*=\\s*(?:"[^"]*"|'[^']*'|[^\\s>]+)`,
+    `\s${escaped}\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)`,
     "i"
   );
 
@@ -339,25 +334,51 @@ function removeFeaturedImage(
   imageUrl: string
 ): string {
   const normalizedTarget = normalizeWordPressMediaUrl(imageUrl);
-
   if (!normalizedTarget) return html;
 
-  const escapedUrl = escapeRegExp(normalizedTarget);
+  const targetPath = (() => {
+    try {
+      return new URL(normalizedTarget).pathname.toLowerCase();
+    } catch {
+      return normalizedTarget.split(/[?#]/)[0].toLowerCase();
+    }
+  })();
 
+  const isFeaturedImageTag = (tag: string): boolean => {
+    const candidates = [
+      getHtmlAttribute(tag, "src"),
+      getHtmlAttribute(tag, "data-src"),
+      getHtmlAttribute(tag, "data-lazy-src"),
+      getHtmlAttribute(tag, "data-original"),
+      getHtmlAttribute(tag, "data-original-src"),
+    ].filter((value): value is string => Boolean(value));
+
+    return candidates.some((candidate) => {
+      const normalized = normalizeWordPressMediaUrl(candidate);
+      try {
+        return new URL(normalized).pathname.toLowerCase() === targetPath;
+      } catch {
+        return normalized.split(/[?#]/)[0].toLowerCase() === targetPath;
+      }
+    });
+  };
+
+  // Remove the complete wrapper first, so a featured image does not leave
+  // behind an empty figure or picture element in the article.
   let result = html.replace(
-    new RegExp(
-      `<img\\b(?=[^>]*\\bsrc=["']${escapedUrl}(?:[?#][^"']*)?["'])[^>]*\\/?>`,
-      "gi"
-    ),
-    ""
+    /<(figure|picture)\b[^>]*>[\s\S]*?<\/\1\s*>/gi,
+    (wrapper) =>
+      /<img\b[^>]*>/i.test(wrapper) &&
+      Array.from(wrapper.matchAll(/<img\b[^>]*>/gi)).some((match) =>
+        isFeaturedImageTag(match[0])
+      )
+        ? ""
+        : wrapper
   );
 
-  result = result.replace(
-    new RegExp(
-      `<figure\\b[^>]*>[\\s\\S]*?<img\\b(?=[^>]*\\bsrc=["']${escapedUrl}(?:[?#][^"']*)?["'])[^>]*>[\\s\\S]*?<\\/figure>`,
-      "gi"
-    ),
-    ""
+  // Also remove the exact featured image when WordPress has not wrapped it.
+  result = result.replace(/<img\b[^>]*>/gi, (tag) =>
+    isFeaturedImageTag(tag) ? "" : tag
   );
 
   return result;
@@ -401,61 +422,57 @@ function removeGettyEmbeds(html: string): string {
     (match) => match[1]
   );
 
-  // Only consider scripts that appear to contain Getty widget settings.
+  // Getty's embed configuration can be wrapped in gie(callback), and some
+  // versions omit the anchor ID from the configuration object. Do not require
+  // an id property just to recognise a valid widget configuration.
   const widgetScripts = scriptBodies.filter(
     (script) =>
-      /\b(?:gie|widgets\.load)\b/i.test(script) &&
-      /\bid\s*:/i.test(script) &&
+      /(?:gie\s*\(|widgets\s*\.\s*load\s*\()/i.test(script) &&
       /\bsig\s*:/i.test(script) &&
       /\bitems\s*:/i.test(script)
   );
 
   const usedScripts = new Set<number>();
-  const anchorCount = (html.match(
-    /<a\b(?=[^>]*\bclass=["'][^"']*\bgie-single\b[^"']*["'])[^>]*>[\s\S]*?<\/a\s*>/gi
-  ) ?? []).length;
   let anchorIndex = 0;
 
   let result = html.replace(
     /<a\b(?=[^>]*\bclass=["'][^"']*\bgie-single\b[^"']*["'])[^>]*>[\s\S]*?<\/a\s*>/gi,
     (anchorHtml) => {
       const currentAnchorIndex = anchorIndex++;
-      const id = getHtmlAttribute(anchorHtml, "id");
+      const anchorId = getHtmlAttribute(anchorHtml, "id") || "";
 
-      if (!id) {
-        console.warn("[GETTY EMBED] Getty anchor has no ID.", {
-          anchorIndex: currentAnchorIndex,
-        });
-        return "";
-      }
+      const hasId = (script: string, id: string) => {
+        if (!id) return false;
+        const escapedId = escapeRegExp(id);
+        return new RegExp(
+          String.raw`\bid\s*:\s*['"]${escapedId}['"]`,
+          "i"
+        ).test(script);
+      };
 
-      const escapedId = escapeRegExp(id);
       let scriptIndex = widgetScripts.findIndex(
         (script, index) =>
-          !usedScripts.has(index) &&
-          new RegExp(
-            `\\bid\\s*:\\s*['"]${escapedId}['"]`,
-            "i"
-          ).test(script)
+          !usedScripts.has(index) && hasId(script, anchorId)
       );
 
-      // Some older Getty snippets omit the matching ID from the settings.
-      // Use positional matching only when there is exactly one script per anchor.
-      if (
-        scriptIndex < 0 &&
-        widgetScripts.length === anchorCount &&
-        !usedScripts.has(currentAnchorIndex)
-      ) {
+      // Getty has used snippets where the config omits `id`. Pair those
+      // snippets with anchors by their document order when possible.
+      if (scriptIndex < 0 && widgetScripts[currentAnchorIndex] && !usedScripts.has(currentAnchorIndex)) {
         scriptIndex = currentAnchorIndex;
       }
 
+      // If there is only one valid config and one anchor, it is unambiguous.
+      if (scriptIndex < 0 && widgetScripts.length === 1 && !usedScripts.has(0)) {
+        scriptIndex = 0;
+      }
+
       if (scriptIndex < 0) {
-        console.warn("[GETTY EMBED] No matching widget script found.", {
-          id,
+        console.warn("[GETTY EMBED] No matching widget configuration; preserving Getty link.", {
+          id: anchorId || undefined,
           anchorIndex: currentAnchorIndex,
           availableWidgetScripts: widgetScripts.length,
         });
-        return "";
+        return anchorHtml;
       }
 
       usedScripts.add(scriptIndex);
@@ -465,25 +482,27 @@ function removeGettyEmbeds(html: string): string {
         const escapedKey = escapeRegExp(key);
         const match = script.match(
           new RegExp(
-            `\\b${escapedKey}\\s*:\\s*(?:"([^"]*)"|'([^']*)'|(true|false)|([\\d.]+))`,
+            String.raw`(?:['"])?${escapedKey}(?:['"])?\s*:\s*(?:"([^"]*)"|'([^']*)'|(true|false)|([\d.]+))`,
             "i"
           )
         );
-
         return match
           ? match[1] ?? match[2] ?? match[3] ?? match[4] ?? fallback
           : fallback;
       };
 
+      const id = anchorId || getValue("id");
       const sig = getValue("sig");
       const items = getValue("items");
 
-      if (!sig || !items) {
-        console.warn("[GETTY EMBED] Incomplete widget configuration.", {
-          id,
+      if (!id || !sig || !items) {
+        console.warn("[GETTY EMBED] Incomplete widget configuration; preserving Getty link.", {
+          id: id || undefined,
           anchorIndex: currentAnchorIndex,
+          hasSignature: Boolean(sig),
+          hasItems: Boolean(items),
         });
-        return "";
+        return anchorHtml;
       }
 
       const attributes: Record<string, string> = {
@@ -505,35 +524,28 @@ function removeGettyEmbeds(html: string): string {
           .replace(/>/g, "&gt;");
 
       const serializedAttributes = Object.entries(attributes)
-        .map(
-          ([key, value]) => `${key}="${escapeAttribute(value)}"`
-        )
+        .map(([key, value]) => `${key}="${escapeAttribute(value)}"`)
         .join(" ");
 
       return `<getty-embed ${serializedAttributes}></getty-embed>`;
     }
   );
 
-  // Scripts in article HTML are not executed by html-react-parser. Their
-  // Getty settings have now been extracted into one placeholder per anchor.
+  // The widget settings have been moved into React-rendered placeholders.
+  // Remove source scripts because html-react-parser does not execute them.
   result = result.replace(
     /<script\b[^>]*>[\s\S]*?<\/script\s*>/gi,
     ""
   );
 
-  // Preserve only secure Getty embed iframes. Leave unrelated iframes alone.
+  // Keep valid Getty iframes and leave unrelated iframe embeds untouched.
   result = result.replace(
-    /<iframe\b[^>]*\bsrc=["']([^"']+)["'][^>]*>[\s\S]*?<\/iframe\s*>/gi,
+    /<iframe\b[^>]*\bsrc=["']([^"']+)["'][^>]*>(?:[\s\S]*?<\/iframe\s*>)?/gi,
     (iframe, src: string) => {
       if (!/gettyimages\.com/i.test(src)) return iframe;
-
       const allowedUrl = getAllowedGettyEmbedUrl(src);
       if (!allowedUrl) return "";
-
-      return iframe.replace(
-        /(\bsrc=["'])[^"']+(["'])/i,
-        `$1${allowedUrl}$2`
-      );
+      return iframe.replace(/(\bsrc=["'])[^"']+(["'])/i, `$1${allowedUrl}$2`);
     }
   );
 
@@ -629,15 +641,19 @@ function buildGettyIframe(
     .replace(/&/g, "&amp;")
     .replace(/"/g, "&quot;");
 
-  // Preserve the dimensions Getty returns instead of forcing every asset
-  // into a 3:2 box. The iframe remains responsive without reserving an
-  // arbitrary minimum height.
+  // Keep the embed at Getty's supplied dimensions on wider article columns.
+  // It scales down on narrow screens without growing taller on desktop.
   const safeWidth = Number.isFinite(width) && width > 0 ? width : 594;
   const safeHeight = Number.isFinite(height) && height > 0 ? height : 396;
 
   return `
-    <figure class="getty-embed w-full overflow-hidden" style="margin:8px 0;max-width:100%;">
-      <div style="position:relative;width:100%;aspect-ratio:${safeWidth}/${safeHeight};">
+    <figure
+      class="getty-embed"
+      style="display:block;width:100%;max-width:${safeWidth}px;margin:0;padding:0;overflow:hidden;line-height:0;"
+    >
+      <div
+        style="position:relative;display:block;width:100%;max-width:${safeWidth}px;aspect-ratio:${safeWidth}/${safeHeight};margin:0;padding:0;"
+      >
         <iframe
           src="${safeUrl}"
           title="Getty Images photo"
@@ -646,7 +662,7 @@ function buildGettyIframe(
           loading="lazy"
           allowfullscreen
           referrerpolicy="strict-origin-when-cross-origin"
-          style="position:absolute;inset:0;display:block;width:100%;height:100%;border:0;"
+          style="position:absolute;inset:0;display:block;width:100%;height:100%;margin:0;padding:0;border:0;"
         ></iframe>
       </div>
     </figure>
@@ -713,6 +729,211 @@ function cleanEmptyContent(html: string): string {
     .replace(/<p>\s*(?:&nbsp;|\s)*<\/p>/gi, "")
     .replace(/<div>\s*(?:&nbsp;|\s)*<\/div>/gi, "")
     .trim();
+}
+
+function addRelatedStoryMarkers(html: string): string {
+  const readMoreMarker =
+    "<arsenaltalks-read-more></arsenaltalks-read-more>";
+  const moreStoriesMarker =
+    "<arsenaltalks-more-stories></arsenaltalks-more-stories>";
+
+  // Always remove previously inserted markers before recalculating positions.
+  const cleanHtml = html
+    .replace(/<arsenaltalks-read-more\s*><\/arsenaltalks-read-more>/gi, "")
+    .replace(/<arsenaltalks-more-stories\s*><\/arsenaltalks-more-stories>/gi, "");
+
+  const paragraphClosings = Array.from(cleanHtml.matchAll(/<\/p\s*>/gi));
+  const paragraphOpenings = Array.from(cleanHtml.matchAll(/<p\b[^>]*>/gi));
+
+  const insertions: Array<{ position: number; marker: string }> = [];
+
+  // READ MORE appears directly after paragraph four (after the featured image,
+  // which is rendered separately above the article body).
+  if (paragraphClosings.length >= 4) {
+    const fourthParagraphEnd = paragraphClosings[3];
+    insertions.push({
+      position: (fourthParagraphEnd.index ?? 0) + fourthParagraphEnd[0].length,
+      marker: readMoreMarker,
+    });
+  }
+
+  // Put MORE ARSENAL STORIES immediately before the penultimate paragraph.
+  // Six paragraphs are the minimum that allows it to follow READ MORE after
+  // paragraph four while still leaving the final two paragraphs untouched.
+  if (paragraphOpenings.length >= 6) {
+    const penultimateParagraphStart =
+      paragraphOpenings[paragraphOpenings.length - 2].index ?? -1;
+
+    if (penultimateParagraphStart >= 0) {
+      insertions.push({
+        position: penultimateParagraphStart,
+        marker: moreStoriesMarker,
+      });
+    }
+  }
+
+  // Insert from right to left so earlier HTML offsets remain valid.
+  // When positions coincide, MORE ARSENAL STORIES is inserted first so
+  // READ MORE remains first in the rendered document.
+  insertions.sort((a, b) => {
+    if (a.position !== b.position) return b.position - a.position;
+    if (a.marker === moreStoriesMarker) return -1;
+    if (b.marker === moreStoriesMarker) return 1;
+    return 0;
+  });
+
+  let result = cleanHtml;
+  for (const insertion of insertions) {
+    result =
+      result.slice(0, insertion.position) +
+      insertion.marker +
+      result.slice(insertion.position);
+  }
+
+  return result;
+}
+
+function getRelatedCategoryNames(rawPost: any): string[] {
+  const terms = rawPost?._embedded?.["wp:term"];
+  if (!Array.isArray(terms)) return [];
+
+  return terms
+    .flatMap((group: any) => (Array.isArray(group) ? group : []))
+    .filter((term: any) => term?.taxonomy === "category")
+    .map((term: any) => String(term?.name || term?.slug || "").toLowerCase())
+    .filter(Boolean);
+}
+
+/**
+ * Fetch raw WordPress posts directly for the related-story cards.
+ *
+ * The article page needs the original `_embedded.wp:featuredmedia` object.
+ * Using the normal post helper here can leave the mapped post without that
+ * raw media object, which means the card's conditional never renders an img.
+ */
+async function getLatestRelatedWordPressPosts(): Promise<any[]> {
+  const endpoint = new URL(
+    "/wp-json/wp/v2/posts",
+    WORDPRESS_MEDIA_HOST
+  );
+
+  endpoint.searchParams.set("per_page", "40");
+  endpoint.searchParams.set("_embed", "1");
+  endpoint.searchParams.set("status", "publish");
+
+  try {
+    const response = await fetch(endpoint.toString(), {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      console.error("[MORE ARSENAL STORIES] WordPress request failed", {
+        status: response.status,
+        endpoint: endpoint.toString(),
+      });
+      return [];
+    }
+
+    const data: unknown = await response.json();
+
+    if (!Array.isArray(data)) {
+      console.error("[MORE ARSENAL STORIES] WordPress returned an unexpected response");
+      return [];
+    }
+
+    console.info("[MORE ARSENAL STORIES] WordPress posts received", {
+      count: data.length,
+      postsWithFeaturedMedia: data.filter(
+        (item: any) =>
+          Number(item?.featured_media) > 0 ||
+          Boolean(item?._embedded?.["wp:featuredmedia"]?.[0]?.source_url)
+      ).length,
+    });
+
+    return data;
+  } catch (error) {
+    console.error("[MORE ARSENAL STORIES] Could not fetch WordPress posts", {
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+    return [];
+  }
+}
+
+async function getRelatedImageUrl(rawPost: any, mappedPost: any): Promise<string | null> {
+  const media = rawPost?._embedded?.["wp:featuredmedia"]?.[0];
+
+  // WordPress may expose the featured image in different places depending on
+  // the REST response and the mapper. Check all common fields before querying
+  // the media endpoint by featured_media ID.
+  const candidates = [
+    getFeaturedImage(rawPost),
+    mappedPost?.image?.url,
+    mappedPost?.image?.src,
+    mappedPost?.featuredImage?.url,
+    mappedPost?.featured_image_url,
+    media?.media_details?.sizes?.large?.source_url,
+    media?.media_details?.sizes?.medium_large?.source_url,
+    media?.media_details?.sizes?.full?.source_url,
+    media?.source_url,
+    rawPost?.featured_image_url,
+    rawPost?.featured_media_url,
+    rawPost?.jetpack_featured_media_url,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate !== "string" || !candidate.trim()) continue;
+    const normalized = normalizeWordPressMediaUrl(candidate);
+    if (normalized && !isPlaceholderImage(normalized)) return normalized;
+  }
+
+  // A featured_media ID is authoritative even when _embed failed to include
+  // the media object. Fetch the media record and prefer its largest available
+  // source URL, falling back to source_url.
+  const mediaId = Number(rawPost?.featured_media);
+  if (Number.isInteger(mediaId) && mediaId > 0) {
+    try {
+      const response = await fetch(
+        `${WORDPRESS_MEDIA_HOST}/wp-json/wp/v2/media/${mediaId}?_fields=source_url,media_details,guid`,
+        { next: { revalidate: 3600 } }
+      );
+
+      if (response.ok) {
+        const resolvedMedia = await response.json();
+        const resolvedSizes = resolvedMedia?.media_details?.sizes;
+        const resolvedCandidates = [
+          resolvedSizes?.large?.source_url,
+          resolvedSizes?.medium_large?.source_url,
+          resolvedSizes?.full?.source_url,
+          resolvedMedia?.source_url,
+          resolvedMedia?.guid?.rendered,
+        ];
+
+        for (const candidate of resolvedCandidates) {
+          if (typeof candidate !== "string" || !candidate.trim()) continue;
+          const normalized = normalizeWordPressMediaUrl(candidate);
+          if (normalized && !isPlaceholderImage(normalized)) return normalized;
+        }
+      } else {
+        console.warn("[RELATED STORY IMAGE] WordPress media lookup failed", {
+          postId: rawPost?.id,
+          mediaId,
+          status: response.status,
+        });
+      }
+    } catch (error) {
+      console.warn("[RELATED STORY IMAGE] Could not resolve featured media", {
+        postId: rawPost?.id,
+        mediaId,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  return null;
 }
 
 function logArticleImageStage(
@@ -876,21 +1097,83 @@ export default async function ArticlePage({ params }: Props) {
     );
   }
 
-  const rawLatest = await getPosts();
-
-  const latestPosts = Array.isArray(rawLatest)
-    ? mapWordPressPosts(rawLatest)
-    : [];
-
+  const rawLatest = await getLatestRelatedWordPressPosts();
   const post = mapWordPressPost(rawPost);
   const articleSlug = post.slug || slug;
   const articleUrl = getArticleUrl(articleSlug);
 
-  const relatedPosts = latestPosts
+  // Keep the raw WordPress records alongside their mapped versions so each
+  // recommendation can use the original featured-media data as an image fallback.
+  const relatedCandidates = Array.isArray(rawLatest)
+    ? await Promise.all(
+        rawLatest.map(async (rawRelated: any) => {
+          const mapped = mapWordPressPost(rawRelated);
+          const relatedImageUrl = await getRelatedImageUrl(rawRelated, mapped);
+          const categoryNames = [
+            ...getRelatedCategoryNames(rawRelated),
+            ...(Array.isArray(mapped?.categories)
+              ? mapped.categories.map((category: any) =>
+                  String(category?.name || category?.slug || category || "").toLowerCase()
+                )
+              : []),
+          ];
+          const isArsenalStory = categoryNames.some((name) =>
+            /\b(?:arsenal|transfer news|injury news|match reports|women|opinion)\b/i.test(name)
+          );
+          const popularity = [
+            rawRelated?.views,
+            rawRelated?.view_count,
+            rawRelated?.post_views_count,
+            rawRelated?.arsenaltalks_views,
+            rawRelated?.meta?.views,
+          ].map(Number).find((value) => Number.isFinite(value) && value > 0) || 0;
+
+          return {
+            ...mapped,
+            relatedImageUrl,
+            isArsenalStory,
+            popularity,
+            categoryNames,
+          };
+        })
+      )
+    : [];
+
+  const validRelatedCandidates = relatedCandidates.filter(
+    (item: any) => item?.slug && item.slug !== articleSlug
+  );
+
+  // Prefer Arsenal coverage and, when the source exposes a view count, rank
+  // more-read stories first. Otherwise preserve WordPress's newest-first order.
+  const eligibleRelatedPosts = [...validRelatedCandidates].sort(
+    (a: any, b: any) =>
+      Number(b.isArsenalStory) - Number(a.isArsenalStory) ||
+      b.popularity - a.popularity
+  );
+
+  const readMorePosts = eligibleRelatedPosts.slice(0, 2);
+  const readMoreIds = new Set(readMorePosts.map((item: any) => item.id));
+
+  // Select image-backed stories after reserving READ MORE. Filtering happens
+  // before the four-card limit so stories without images cannot consume slots.
+  const moreArsenalPosts = eligibleRelatedPosts
     .filter(
-      (item: any) => item?.slug && item.slug !== articleSlug
+      (item: any) =>
+        !readMoreIds.has(item.id) &&
+        typeof item.relatedImageUrl === "string" &&
+        item.relatedImageUrl.trim().length > 0
     )
-    .slice(0, 3);
+    .slice(0, 4);
+
+  // Temporary diagnostic: confirms which image URLs reach the related-story cards.
+  console.log(
+    "[MORE ARSENAL STORIES - SELECTED IMAGES]",
+    moreArsenalPosts.map((item: any) => ({
+      id: item.id,
+      title: item.title,
+      image: item.relatedImageUrl,
+    }))
+  );
 
   const mappedImageUrl =
     typeof post.image?.url === "string" && post.image.url.trim()
@@ -964,7 +1247,7 @@ export default async function ArticlePage({ params }: Props) {
         }}
       />
 
-      <div className="container mx-auto max-w-[480px] px-4 md:max-w-[800px]">
+      <div className="container mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
         <header className="article-header mb-8">
           <span className="article-category text-sm font-medium uppercase tracking-widest text-red-500">
             {categoryName}
@@ -991,14 +1274,40 @@ export default async function ArticlePage({ params }: Props) {
         )}
 
         <div className="article-layout flex flex-col gap-10 lg:flex-row">
-          <main className="article-main min-w-0 flex-1">
+          <main className="article-main min-w-0 flex-1 lg:max-w-[820px]">
             <XEmbedEnhancer className="article-body prose prose-base max-w-none md:prose-lg">
-              {parse(articleContent, {
+              {parse(addRelatedStoryMarkers(articleContent), {
                 replace: (domNode: any) => {
-                  if (
-                    domNode?.type !== "tag" ||
-                    domNode?.name !== "getty-embed"
-                  ) {
+                  if (domNode?.type !== "tag") {
+                    return undefined;
+                  }
+
+                  if (domNode.name === "arsenaltalks-read-more") {
+                    return (
+                      <RelatedStoryGrid
+                        heading="READ MORE"
+                        posts={readMorePosts}
+                        variant="links"
+                        getArticleUrl={getArticleUrl}
+                        cleanText={cleanText}
+                        normalizeImageUrl={normalizeWordPressMediaUrl}
+                      />
+                    );
+                  }
+
+                  if (domNode.name === "arsenaltalks-more-stories") {
+                    return (
+                      <RelatedStoryGrid
+                        heading="MORE ARSENAL STORIES"
+                        posts={moreArsenalPosts}
+                        getArticleUrl={getArticleUrl}
+                        cleanText={cleanText}
+                        normalizeImageUrl={normalizeWordPressMediaUrl}
+                      />
+                    );
+                  }
+
+                  if (domNode.name !== "getty-embed") {
                     return undefined;
                   }
 
@@ -1022,70 +1331,10 @@ export default async function ArticlePage({ params }: Props) {
 
             <ShareBar slug={articleSlug} title={post.title} />
 
-            {relatedPosts.length > 0 && (
-              <section
-                className="related-articles mt-12 border-t border-gray-200 pt-8"
-                aria-labelledby="related-articles-heading"
-              >
-                <h2
-                  id="related-articles-heading"
-                  className="mb-5 text-2xl font-bold"
-                >
-                  Related Articles
-                </h2>
-
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-                  {relatedPosts.map((related: any) => {
-                    const relatedImageValue =
-                      typeof related.image?.url === "string"
-                        ? related.image.url.trim()
-                        : "";
-
-                    const relatedImage = relatedImageValue
-                      ? normalizeWordPressMediaUrl(relatedImageValue)
-                      : null;
-
-                    return (
-                      <article
-                        key={related.id ?? related.slug}
-                        className="related-article-card min-w-0 overflow-hidden rounded-xl border border-gray-200"
-                      >
-                        <a
-                          href={getArticleUrl(related.slug)}
-                          className="block text-inherit no-underline"
-                        >
-                          {relatedImage && (
-                            <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
-                              <Image
-                                src={relatedImage}
-                                alt={
-                                  cleanText(related.title) ||
-                                  "Related Arsenal article"
-                                }
-                                fill
-                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 250px"
-                                className="object-cover"
-                              />
-                            </div>
-                          )}
-
-                          <div className="p-3">
-                            <h3 className="text-base font-semibold leading-snug">
-                              {cleanText(related.title) || "Read article"}
-                            </h3>
-                          </div>
-                        </a>
-                      </article>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-
             <AuthorBox />
           </main>
 
-          <aside className="article-sidebar hidden w-full lg:block lg:w-80">
+          <aside className="article-sidebar hidden w-full lg:block lg:w-80 lg:shrink-0">
             {/* Sidebar content */}
           </aside>
         </div>
