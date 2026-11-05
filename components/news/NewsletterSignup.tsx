@@ -1,5 +1,4 @@
-
-"use client";
+﻿"use client";
 
 import { useState, type FormEvent } from "react";
 
@@ -7,19 +6,11 @@ type SubmitState = "idle" | "submitting" | "success" | "error";
 
 export default function NewsletterSignup() {
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [consent, setConsent] = useState(false);
   const [state, setState] = useState<SubmitState>("idle");
   const [message, setMessage] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
-    if (!consent) {
-      setState("error");
-      setMessage("Please agree to receive ArsenalTalks emails.");
-      return;
-    }
 
     const formData = new FormData(event.currentTarget);
     const website = String(formData.get("website") ?? "");
@@ -30,8 +21,14 @@ export default function NewsletterSignup() {
     try {
       const response = await fetch("/api/newsletter/subscribe", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, consent, website }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          consent: true,
+          website,
+        }),
       });
 
       const result = (await response.json().catch(() => null)) as
@@ -40,18 +37,13 @@ export default function NewsletterSignup() {
 
       if (!response.ok) {
         throw new Error(
-          result?.message ||
-            "Subscription failed. Please try again."
+          result?.message || "Subscription failed. Please try again."
         );
       }
 
       setState("success");
-      setMessage(
-        result?.message || "You're subscribed to ArsenalTalks!"
-      );
+      setMessage(result?.message || "You're subscribed to ArsenalTalks!");
       setEmail("");
-      setName("");
-      setConsent(false);
     } catch (error) {
       setState("error");
       setMessage(
@@ -64,91 +56,82 @@ export default function NewsletterSignup() {
 
   return (
     <section
-      className="not-prose my-10 overflow-hidden rounded-md bg-black px-5 py-8 text-center sm:px-10 sm:py-10"
+      className="not-prose relative my-10 w-full overflow-hidden rounded-xl bg-[#171717] px-4 py-6 text-white shadow-lg sm:px-6 sm:py-7"
       aria-labelledby="newsletter-heading"
     >
+      <div className="mb-3 inline-flex rounded-full bg-[#3A2020] px-3 py-1">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-[#F06A6A]">
+          ArsenalTalks Newsletter
+        </span>
+      </div>
+
       <h2
         id="newsletter-heading"
-        className="text-2xl font-extrabold uppercase tracking-tight text-white"
+        className="text-xl font-extrabold leading-tight tracking-tight text-[#FFFFFF] sm:text-2xl"
       >
-        Join Our Newsletter
+        The latest Arsenal news, straight to your inbox.
       </h2>
 
-      <p className="mx-auto mt-7 max-w-xl text-sm leading-6 text-white sm:text-base">
-        Receive the latest Arsenal news, transfer updates and match reports
-        straight to your inbox.
+      <p className="mt-2 text-sm leading-6 text-[#D1D1D1]">
+        Get the biggest transfer stories, match reports and breaking Arsenal
+        updates delivered directly to you.
       </p>
 
       {state === "success" ? (
-        <p
-          className="mt-6 rounded-md bg-white px-4 py-4 text-sm font-semibold text-green-700"
+        <div
+          className="mt-5 rounded-xl border border-[#285C3C] bg-[#17291E] p-5"
           role="status"
           aria-live="polite"
         >
-          {message}
-        </p>
+          <p className="font-semibold text-[#8ED6A5]">
+            Subscription update
+          </p>
+          <p className="mt-2 text-sm leading-6 text-[#D1D1D1]">
+            {message}
+          </p>
+        </div>
       ) : (
-        <form onSubmit={handleSubmit} className="mt-4">
-          <div className="space-y-4">
-            <label htmlFor="newsletter-name" className="sr-only">
-              Your name
-            </label>
-
-            <input
-              id="newsletter-name"
-              type="text"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="Your Name"
-              disabled={state === "submitting"}
-              className="h-12 w-full rounded-md border-0 bg-white px-3 text-sm text-gray-900 outline-none placeholder:text-gray-500 focus:ring-2 focus:ring-red-200"
-            />
-
-            <label htmlFor="newsletter-email" className="sr-only">
-              Your email
-            </label>
-
-            <input
-              id="newsletter-email"
-              name="email"
-              type="email"
-              required
-              maxLength={254}
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="Your Email"
-              disabled={state === "submitting"}
-              className="h-12 w-full rounded-md border-0 bg-white px-3 text-sm text-gray-900 outline-none placeholder:text-gray-500 focus:ring-2 focus:ring-red-200"
-            />
-          </div>
-
-          <label className="mt-4 inline-flex cursor-pointer items-center justify-center gap-2 text-xs text-white">
-            <input
-              type="checkbox"
-              checked={consent}
-              onChange={(event) => setConsent(event.target.checked)}
-              disabled={state === "submitting"}
-              className="h-4 w-4 accent-[#d10000]"
-            />
-            I agree to receive ArsenalTalks emails
+        <form
+          onSubmit={handleSubmit}
+          className="relative mt-5 rounded-xl bg-[#292929] p-3 sm:p-4"
+        >
+          <label
+            htmlFor="newsletter-email"
+            className="mb-2 block text-sm font-semibold text-[#FFFFFF]"
+          >
+            Your email address
           </label>
 
-          <p className="mt-8 text-sm text-white">
-            <a
-              href="/privacy-policy/"
-              className="underline underline-offset-2 hover:text-red-400"
-            >
-              Privacy policy
-            </a>
-          </p>
+          <input
+            id="newsletter-email"
+            name="email"
+            type="email"
+            required
+            maxLength={254}
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="Enter your email address"
+            disabled={state === "submitting"}
+            className="h-12 w-full rounded-lg border border-[#E5E5E5] bg-[#FFFFFF] px-4 text-sm text-[#171717] outline-none placeholder:text-[#888888] focus:border-[#D00000] focus:ring-2 focus:ring-[#D00000]/25 disabled:opacity-60"
+          />
 
-          {/* Honeypot spam protection */}
+          <button
+            type="submit"
+            disabled={state === "submitting" || !email.trim()}
+            className="mt-2.5 flex h-12 w-full items-center justify-center rounded-lg bg-[#D00000] px-5 text-sm font-bold uppercase text-[#FFFFFF] transition-colors duration-200 hover:bg-[#A80000] focus:outline-none focus:ring-2 focus:ring-[#D00000] focus:ring-offset-2 focus:ring-offset-[#292929] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {state === "submitting" ? "Subscribing..." : "Subscribe Now"}
+          </button>
+
+          {/* Honeypot field for spam protection */}
           <div
-            className="absolute -left-[10000px] h-px w-px overflow-hidden"
+            className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden"
             aria-hidden="true"
           >
-            <label htmlFor="newsletter-website">Leave empty</label>
+            <label htmlFor="newsletter-website">
+              Leave this field empty
+            </label>
             <input
               id="newsletter-website"
               name="website"
@@ -159,23 +142,22 @@ export default function NewsletterSignup() {
           </div>
 
           {state === "error" && (
-            <p className="mt-4 text-sm text-red-300" role="alert">
+            <p className="mt-3 text-sm leading-5 text-[#FF7777]" role="alert">
               {message}
             </p>
           )}
-
-          <button
-            type="submit"
-            disabled={state === "submitting" || !email.trim() || !consent}
-            className="mt-5 h-11 w-full rounded-md bg-[#d10000] px-5 text-sm font-semibold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {state === "submitting" ? "Subscribing..." : "Subscribe"}
-          </button>
         </form>
       )}
 
-      <p className="mt-4 text-xs text-gray-400">
-        No spam. Unsubscribe whenever you want.
+      <p className="mt-4 text-xs leading-5 text-[#BDBDBD]">
+        By subscribing, you agree to our{" "}
+        <a
+          href="/legal/privacy-policy"
+          className="font-medium text-[#FFFFFF] underline underline-offset-2 transition-colors hover:text-[#F06A6A]"
+        >
+          Privacy Policy
+        </a>
+        . You can unsubscribe at any time.
       </p>
     </section>
   );
