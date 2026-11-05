@@ -1,3 +1,4 @@
+
 import { API_BASE } from "./core/apiBase";
 import { ssrFetch } from "./core/ssrFetch";
 import type { WordPressPostWithMedia } from "@/types/wordpress-media";
@@ -20,16 +21,11 @@ const DEFAULT_POST_LIMIT = 20;
 export async function getPosts(
   limit = DEFAULT_POST_LIMIT
 ): Promise<WordPressPostWithMedia[]> {
-  const posts =
-    await ssrFetch<
-      WordPressPostWithMedia[]
-    >(
-      `${API_BASE}/posts?per_page=${limit}&${WP_EMBED}`
-    );
+  const posts = await ssrFetch<WordPressPostWithMedia[]>(
+    `${API_BASE}/posts?per_page=${limit}&${WP_EMBED}`
+  );
 
-  return Array.isArray(posts)
-    ? posts
-    : [];
+  return Array.isArray(posts) ? posts : [];
 }
 
 /**
@@ -40,16 +36,11 @@ export async function getPosts(
 export async function getPostBySlug(
   slug: string
 ): Promise<WordPressPostWithMedia | null> {
-  const posts =
-    await ssrFetch<
-      WordPressPostWithMedia[]
-    >(
-      `${API_BASE}/posts?slug=${slug}&${WP_EMBED}`
-    );
+  const posts = await ssrFetch<WordPressPostWithMedia[]>(
+    `${API_BASE}/posts?slug=${encodeURIComponent(slug)}&${WP_EMBED}`
+  );
 
-  return Array.isArray(posts)
-    ? posts[0] ?? null
-    : null;
+  return Array.isArray(posts) ? posts[0] ?? null : null;
 }
 
 /**
@@ -57,19 +48,12 @@ export async function getPostBySlug(
  * STICKY POSTS
  * =========================
  */
-export async function getStickyPosts(): Promise<
-  WordPressPostWithMedia[]
-> {
-  const posts =
-    await ssrFetch<
-      WordPressPostWithMedia[]
-    >(
-      `${API_BASE}/posts?sticky=true&${WP_EMBED}`
-    );
+export async function getStickyPosts(): Promise<WordPressPostWithMedia[]> {
+  const posts = await ssrFetch<WordPressPostWithMedia[]>(
+    `${API_BASE}/posts?sticky=true&${WP_EMBED}`
+  );
 
-  return Array.isArray(posts)
-    ? posts
-    : [];
+  return Array.isArray(posts) ? posts : [];
 }
 
 /**
@@ -78,49 +62,64 @@ export async function getStickyPosts(): Promise<
  * =========================
  */
 export async function getCategories(): Promise<any[]> {
-  const data =
-    await ssrFetch<any[]>(
-      `${API_BASE}/categories?per_page=100`
-    );
+  const data = await ssrFetch<any[]>(
+    `${API_BASE}/categories?per_page=100`
+  );
 
-  return Array.isArray(data)
-    ? data
-    : [];
+  return Array.isArray(data) ? data : [];
+}
+
+/**
+ * =========================
+ * CATEGORY FEED
+ * Returns the category ID and its posts.
+ * Used by category pages with infinite scrolling.
+ * =========================
+ */
+export async function getCategoryFeed(
+  slug: string,
+  limit = DEFAULT_POST_LIMIT
+): Promise<{
+  categoryId: number | null;
+  posts: WordPressPostWithMedia[];
+}> {
+  const categories = await ssrFetch<any[]>(
+    `${API_BASE}/categories?slug=${encodeURIComponent(slug)}`
+  );
+
+  const rawCategoryId = categories?.[0]?.id;
+  const categoryId = Number(rawCategoryId);
+
+  if (!Number.isFinite(categoryId) || categoryId <= 0) {
+    return {
+      categoryId: null,
+      posts: [],
+    };
+  }
+
+  const posts = await ssrFetch<WordPressPostWithMedia[]>(
+    `${API_BASE}/posts?categories=${categoryId}&per_page=${limit}&${WP_EMBED}`
+  );
+
+  return {
+    categoryId,
+    posts: Array.isArray(posts) ? posts : [],
+  };
 }
 
 /**
  * =========================
  * CATEGORY POSTS
+ * Backward-compatible helper.
  * =========================
  */
 export async function getCategoryPosts(
   slug: string,
   limit = DEFAULT_POST_LIMIT
-): Promise<
-  WordPressPostWithMedia[]
-> {
-  const categories =
-    await ssrFetch<any[]>(
-      `${API_BASE}/categories?slug=${slug}`
-    );
+): Promise<WordPressPostWithMedia[]> {
+  const { posts } = await getCategoryFeed(slug, limit);
 
-  const categoryId =
-    categories?.[0]?.id;
-
-  if (!categoryId) {
-    return [];
-  }
-
-  const posts =
-    await ssrFetch<
-      WordPressPostWithMedia[]
-    >(
-      `${API_BASE}/posts?categories=${categoryId}&per_page=${limit}&${WP_EMBED}`
-    );
-
-  return Array.isArray(posts)
-    ? posts
-    : [];
+  return posts;
 }
 
 /**
@@ -130,19 +129,12 @@ export async function getCategoryPosts(
  */
 export async function getRecentlyModifiedPosts(
   limit = 20
-): Promise<
-  WordPressPostWithMedia[]
-> {
-  const posts =
-    await ssrFetch<
-      WordPressPostWithMedia[]
-    >(
-      `${API_BASE}/posts?orderby=modified&order=desc&per_page=${limit}&${WP_EMBED}`
-    );
+): Promise<WordPressPostWithMedia[]> {
+  const posts = await ssrFetch<WordPressPostWithMedia[]>(
+    `${API_BASE}/posts?orderby=modified&order=desc&per_page=${limit}&${WP_EMBED}`
+  );
 
-  return Array.isArray(posts)
-    ? posts
-    : [];
+  return Array.isArray(posts) ? posts : [];
 }
 
 /**
@@ -164,12 +156,7 @@ export async function getScores() {
     return [];
   }
 
-  const data =
-    await res.json();
+  const data = await res.json();
 
-  return Array.isArray(
-    data?.events
-  )
-    ? data.events
-    : [];
+  return Array.isArray(data?.events) ? data.events : [];
 }

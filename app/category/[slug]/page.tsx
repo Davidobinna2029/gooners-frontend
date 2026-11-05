@@ -1,15 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import NewsCard from "@/components/news/NewsCard";
-
-import {
-  getCategoryPosts,
-} from "@/lib/api/wordpress";
-
-import {
-  mapWordPressPosts,
-} from "@/lib/mappers/wordpressMapper";
+import CategoryInfiniteScroll from "@/components/category/CategoryInfiniteScroll";
+import { getCategoryFeed } from "@/lib/api/wordpress";
+import { mapWordPressPosts } from "@/lib/mappers/wordpressMapper";
 
 interface Props {
   params: Promise<{
@@ -25,10 +19,7 @@ type CategoryInfo = {
   description: string;
 };
 
-const CATEGORY_INFO: Record<
-  string,
-  CategoryInfo
-> = {
+const CATEGORY_INFO: Record<string, CategoryInfo> = {
   arsenal: {
     name: "Arsenal",
     description:
@@ -66,34 +57,24 @@ const CATEGORY_INFO: Record<
   },
 };
 
-function formatCategoryName(
-  slug: string
-): string {
-  const info = CATEGORY_INFO[slug];
-
-  if (info) {
-    return info.name;
-  }
-
-  return slug
-    .split("-")
-    .map((word) =>
-      word.length
-        ? word.charAt(0).toUpperCase() +
-          word.slice(1)
-        : word
-    )
-    .join(" ");
+function formatCategoryName(slug: string): string {
+  return (
+    CATEGORY_INFO[slug]?.name ??
+    slug
+      .split("-")
+      .map((word) =>
+        word.length
+          ? word.charAt(0).toUpperCase() + word.slice(1)
+          : word
+      )
+      .join(" ")
+  );
 }
 
-function getCategoryDescription(
-  slug: string
-): string {
+function getCategoryDescription(slug: string): string {
   return (
-    CATEGORY_INFO[slug]?.description ||
-    `The latest ${formatCategoryName(
-      slug
-    )} news, updates and stories from ArsenalTalks.`
+    CATEGORY_INFO[slug]?.description ??
+    `The latest ${formatCategoryName(slug)} news, updates and stories from ArsenalTalks.`
   );
 }
 
@@ -102,23 +83,14 @@ export async function generateMetadata({
 }: Props): Promise<Metadata> {
   const { slug } = await params;
 
-  const categoryName =
-    formatCategoryName(slug);
-
-  const description =
-    getCategoryDescription(slug);
-
-  const canonicalUrl =
-    `${SITE_URL}/category/${slug}`;
+  const categoryName = formatCategoryName(slug);
+  const description = getCategoryDescription(slug);
+  const canonicalUrl = `${SITE_URL}/category/${slug}`;
 
   return {
-    title:
-      `${categoryName} News | ArsenalTalks`,
-
+    title: `${categoryName} News | ArsenalTalks`,
     description,
-
-    metadataBase:
-      new URL(SITE_URL),
+    metadataBase: new URL(SITE_URL),
 
     alternates: {
       canonical: canonicalUrl,
@@ -127,7 +99,6 @@ export async function generateMetadata({
     robots: {
       index: true,
       follow: true,
-
       googleBot: {
         index: true,
         follow: true,
@@ -139,82 +110,44 @@ export async function generateMetadata({
 
     openGraph: {
       type: "website",
-
       locale: "en_GB",
-
       url: canonicalUrl,
-
       siteName: SITE_NAME,
-
-      title:
-        `${categoryName} News | ArsenalTalks`,
-
+      title: `${categoryName} News | ArsenalTalks`,
       description,
     },
 
     twitter: {
       card: "summary",
-
-      title:
-        `${categoryName} News | ArsenalTalks`,
-
+      title: `${categoryName} News | ArsenalTalks`,
       description,
     },
   };
 }
 
-export default async function CategoryPage({
-  params,
-}: Props) {
+export default async function CategoryPage({ params }: Props) {
   const { slug } = await params;
 
-  /*
-   * Only allow categories that actually exist
-   * in the ArsenalTalks WordPress taxonomy.
-   */
   if (!CATEGORY_INFO[slug]) {
     notFound();
   }
 
-  /*
-   * Fetch posts belonging to the requested
-   * WordPress category.
-   */
-  const rawPosts =
-    await getCategoryPosts(slug);
+  const feed = await getCategoryFeed(slug, 20);
 
-  /*
-   * If WordPress has no posts for the category,
-   * return a 404 rather than an empty SEO page.
-   */
-  if (
-    !rawPosts ||
-    rawPosts.length === 0
-  ) {
+  if (!feed.categoryId || feed.posts.length === 0) {
     notFound();
   }
 
-  /*
-   * Convert WordPress data into the structure
-   * expected by NewsCard.
-   */
-  const posts =
-    mapWordPressPosts(rawPosts);
+  const posts = mapWordPressPosts(feed.posts);
 
-  const categoryName =
-    formatCategoryName(slug);
-
-  const description =
-    getCategoryDescription(slug);
+  const categoryName = formatCategoryName(slug);
+  const description = getCategoryDescription(slug);
 
   return (
     <main className="category-page">
       <div className="container">
-
         <header className="category-header">
-          <p className="category-eyebrow">
-            {SITE_NAME}
-          </p>
+          <p className="category-eyebrow">{SITE_NAME}</p>
 
           <h1 className="category-title">
             {categoryName} News
@@ -225,15 +158,10 @@ export default async function CategoryPage({
           </p>
         </header>
 
-        <div className="news-grid">
-          {posts.map((post) => (
-            <NewsCard
-              key={post.id}
-              post={post}
-            />
-          ))}
-        </div>
-
+        <CategoryInfiniteScroll
+          initialPosts={posts}
+          categoryId={feed.categoryId}
+        />
       </div>
     </main>
   );

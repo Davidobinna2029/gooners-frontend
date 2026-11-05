@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -45,9 +44,7 @@ export default function Header() {
   }, [open]);
 
   const isActive = (href: string) => {
-    if (href === "/") {
-      return pathname === "/";
-    }
+    if (href === "/") return pathname === "/";
 
     return pathname === href || pathname.startsWith(`${href}/`);
   };
@@ -77,7 +74,6 @@ export default function Header() {
   return (
     <header className="site-header">
       <div className="header-inner">
-        {/* BRAND */}
         <Link
           href="/"
           className="logo"
@@ -87,7 +83,37 @@ export default function Header() {
           ArsenalTalks
         </Link>
 
-        {/* MENU BUTTON */}
+        <form
+          action="/search"
+          method="GET"
+          className="header-search"
+          role="search"
+        >
+          <input
+            type="search"
+            name="q"
+            placeholder="Search ArsenalTalks..."
+            aria-label="Search ArsenalTalks"
+          />
+
+          <button type="submit" aria-label="Submit search">
+            <svg
+              viewBox="0 0 24 24"
+              width="19"
+              height="19"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-4-4" />
+            </svg>
+          </button>
+        </form>
+
         <button
           type="button"
           className={`menu-btn ${open ? "open" : ""}`}
@@ -104,7 +130,6 @@ export default function Header() {
         </button>
       </div>
 
-      {/* NAVIGATION MENU */}
       <div
         id="mobile-navigation"
         className={`mobile-menu ${open ? "open" : ""}`}
@@ -122,7 +147,6 @@ export default function Header() {
         </nav>
       </div>
 
-      {/* BACKDROP */}
       {open && (
         <button
           type="button"
