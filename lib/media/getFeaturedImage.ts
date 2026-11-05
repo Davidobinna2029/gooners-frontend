@@ -1,4 +1,4 @@
-import type { WordPressPostWithMedia } from "@/types/wordpress-media";
+﻿import type { WordPressPostWithMedia } from "@/types/wordpress-media";
 
 const MEDIA_HOST = "https://api.arsenaltalks.com";
 
@@ -29,7 +29,6 @@ function normalizeImageUrl(value: unknown): string | null {
       url.hostname = "api.arsenaltalks.com";
     }
 
-    // Keep the site's media host canonical and HTTPS.
     url.protocol = "https:";
 
     return url.toString();
@@ -43,9 +42,13 @@ export function getFeaturedImage(
 ): string | null {
   if (!post) return null;
 
-  const media = post?._embedded?.["wp:featuredmedia"]?.[0] as
+  // Treat optional custom WordPress fields as unknown data.
+  const record = post as UnknownRecord;
+
+  const media = record._embedded?.["wp:featuredmedia"]?.[0] as
     | UnknownRecord
     | undefined;
+
   const sizes = media?.media_details?.sizes as
     | Record<string, { source_url?: unknown }>
     | undefined;
@@ -59,9 +62,9 @@ export function getFeaturedImage(
     media?.source_url,
     sizes?.medium?.source_url,
     sizes?.thumbnail?.source_url,
-    post?.featured_image_url,
-    post?.featured_media_url,
-    post?.jetpack_featured_media_url,
+    record.featured_image_url,
+    record.featured_media_url,
+    record.jetpack_featured_media_url,
   ];
 
   for (const candidate of candidates) {
