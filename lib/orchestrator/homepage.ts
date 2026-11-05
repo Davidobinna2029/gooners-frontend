@@ -21,8 +21,6 @@ import {
 
 import { rankPosts } from "@/lib/engine/ranking";
 
-let databaseQuotaWarningLogged = false;
-
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
@@ -31,13 +29,43 @@ function getErrorMessage(error: unknown): string {
   return String(error);
 }
 
-function isDatabaseQuotaError(error: unknown): boolean {
+function getErrorCode(error: unknown): string {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error
+  ) {
+    return String((error as { code: unknown }).code);
+  }
+
+  return "";
+}
+
+function isDatabaseUnavailableError(error: unknown): boolean {
   const message = getErrorMessage(error).toLowerCase();
+  const code = getErrorCode(error).toUpperCase();
 
   return (
+    // Neon quota / usage restrictions.
     message.includes("exceeded the quota") ||
     message.includes("quota exceeded") ||
-    message.includes("usage limit exceeded")
+    message.includes("usage limit exceeded") ||
+
+    // Prisma connection and initialization errors.
+    error instanceof Error &&
+      error.name === "PrismaClientInitializationError" ||
+
+    // Common Prisma connection error codes.
+    ["P1001", "P1002", "P1017"].includes(code) ||
+
+    // Network-level connection failures.
+    message.includes("can't reach database server") ||
+    message.includes("cannot reach database server") ||
+    message.includes("connection refused") ||
+    message.includes("connection timed out") ||
+    message.includes("connect timeout") ||
+    message.includes("econnrefused") ||
+    message.includes("etimedout")
   );
 }
 
@@ -49,23 +77,9 @@ async function safeFetch<T>(
   try {
     return await operation();
   } catch (error) {
-    if (isDatabaseQuotaError(error)) {
-      if (!databaseQuotaWarningLogged) {
-        console.warn(
-          "[HOMEPAGE] Database quota exceeded. " +
-            "Continuing with available fallback data. " +
-            "Restore database access in the Neon Console."
-        );
-
-        databaseQuotaWarningLogged = true;
-      }
-
-      return fallback;
-    }
-
     console.error(
       `[HOMEPAGE] ${label} failed. Using fallback.`,
-      error
+      getErrorMessage(error)
     );
 
     return fallback;
@@ -75,6 +89,48 @@ async function safeFetch<T>(
 export type HomepageFeed = HomepageLayout;
 
 export async function buildHomepageFeed(): Promise<HomepageFeed> {
+  // Database status is local to this request.
+  // A later request can reconnect if Neon becomes available.
+  let databaseUnavailable = false;
+  let databaseWarningLogged = false;
+
+  async function safeDatabaseFetch<T>(
+    label: string,
+    operation: () => Promise<T>,
+    fallback: T
+  ): Promise<T> {
+    if (databaseUnavailable) {
+      return fallback;
+    }
+
+    try {
+      return await operation();
+    } catch (error) {
+      if (isDatabaseUnavailableError(error)) {
+        databaseUnavailable = true;
+
+        if (!databaseWarningLogged) {
+          console.warn(
+            "[HOMEPAGE] Neon database is unavailable. " +
+              "Continuing with WordPress content and fallback data. " +
+              "Check your Neon project, endpoint and DATABASE_URL."
+          );
+
+          databaseWarningLogged = true;
+        }
+
+        return fallback;
+      }
+
+      console.error(
+        `[HOMEPAGE] ${label} failed. Using fallback.`,
+        getErrorMessage(error)
+      );
+
+      return fallback;
+    }
+  }
+
   // 1. Fetch WordPress posts.
   const rawPosts = await safeFetch(
     "WordPress posts",
@@ -90,7 +146,7 @@ export async function buildHomepageFeed(): Promise<HomepageFeed> {
   console.log("[HOMEPAGE] WordPress posts:", posts.length);
 
   // 3. Load active editorial overrides.
-  const overrides = await safeFetch(
+  const overrides = await safeDatabaseFetch(
     "Editorial overrides",
     () =>
       prisma.override.findMany({
@@ -108,7 +164,7 @@ export async function buildHomepageFeed(): Promise<HomepageFeed> {
   );
 
   // 4. Load editorial workflows.
-  const workflows = await safeFetch(
+  const workflows = await safeDatabaseFetch(
     "Editorial workflows",
     () => prisma.workflow.findMany(),
     []
@@ -162,9 +218,8 @@ export async function buildHomepageFeed(): Promise<HomepageFeed> {
     all: ranked,
   });
 
-  // 12. Load the published homepage.
-  // A database failure falls back to null.
-  const published = await safeFetch<HomepageLayout | null>(
+  // 12. Load the published homepage if Neon is available.
+  const published = await safeDatabaseFetch<HomepageLayout | null>(
     "Published homepage",
     () => getPublishedHomepage(),
     null

@@ -1,4 +1,8 @@
-import { fetchWithTimeout } from "./fetchWithTimeout";
+
+import {
+  fetchWithTimeout,
+  FetchTimeoutError,
+} from "./fetchWithTimeout";
 
 export async function ssrFetch<T>(
   url: string,
@@ -24,9 +28,19 @@ export async function ssrFetch<T>(
 
     return (await res.json()) as T;
   } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : String(error);
+
     console.error("[SSR FETCH ERROR]", {
       url,
-      error,
+      name:
+        error instanceof Error
+          ? error.name
+          : "UnknownError",
+      message,
+      timedOut: error instanceof FetchTimeoutError,
     });
 
     throw error;

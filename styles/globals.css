@@ -3163,37 +3163,48 @@ img {
 }
 
 
-/* =========================================================
-   ARSENALTALKS — ARTICLE MEDIA & RESPONSIVE EMBEDS
-   ========================================================= */
-
-/* Article content container */
-.article-content {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  overflow-wrap: anywhere;
-}
-
-/* Responsive article media */
+/* Responsive embeds inside article content */
 .article-content img,
 .article-content iframe,
 .article-content video,
 .article-content embed,
 .article-content object {
   max-width: 100% !important;
-  box-sizing: border-box;
 }
 
-/* Preserve image proportions */
 .article-content img {
+  width: auto;
+  height: auto;
+  max-height: none;
+  object-fit: contain;
+}
+
+/* Getty Images embeds */
+.article-content .getty-embed {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto;
+  margin: 1.5rem auto;
+  overflow: hidden;
+}
+
+.article-content .getty-embed iframe {
   display: block;
-  width: auto !important;
-  height: auto !important;
-  max-height: none !important;
-  object-fit: contain !important;
-  margin: 8px auto !important;
+  max-width: 100% !important;
+  margin-inline: auto;
+}
+
+
+/* =========================================================
+   ARSENALTALKS â€” ARTICLE MEDIA & COMPACT EMBED SPACING
+   ========================================================= */
+
+.article-content {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
 }
 
 /* Responsive WordPress media wrappers */
@@ -3219,67 +3230,67 @@ img {
   margin-bottom: 8px !important;
 }
 
-/* Responsive videos */
+/* Responsive images â€” override the older article-body image margins */
+.article-content img {
+  display: block;
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  margin: 8px auto !important;
+  box-sizing: border-box;
+}
+
+/* Responsive embedded media */
+.article-content iframe,
+.article-content video,
+.article-content embed,
+.article-content object {
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
 .article-content video {
   display: block;
   height: auto;
 }
 
-/* =========================================================
-   GETTY IMAGES — EMBEDPRESS
-   Preserve Getty's own dimensions and proportions
-   ========================================================= */
-
-/* Getty wrapper used by EmbedPress */
-.article-body .ose-gettyimages.ose-embedpress-responsive,
+/* Getty Images embed container */
 .article-content .getty-embed {
-  display: block !important;
-  position: relative !important;
+  display: block;
   width: 100% !important;
   max-width: 100% !important;
-  min-width: 0 !important;
-  height: auto !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  margin: 4px auto !important;
+  min-width: 0;
+  height: auto;
+  margin: 8px 0 !important;
   padding: 0 !important;
-  border: 0 !important;
-  box-sizing: border-box !important;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
-/* Keep Getty iframes within the article.
-   Do not force their width or height; Getty controls
-   the embedded image's dimensions and aspect ratio. */
-.article-body .ose-gettyimages.ose-embedpress-responsive iframe,
+/* Getty responsive frame */
+.article-content .getty-embed-frame {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Getty iframe */
 .article-content .getty-embed iframe {
-  display: block !important;
+  display: block;
+  width: 100% !important;
   max-width: 100% !important;
-  margin: 0 auto !important;
-  padding: 0 !important;
-  border: 0 !important;
-  box-sizing: border-box !important;
-}
-
-/* Remove empty paragraphs immediately after Getty embeds */
-.article-body .ose-gettyimages.ose-embedpress-responsive + p:empty,
-.article-content .getty-embed + p:empty {
-  display: none !important;
   margin: 0 !important;
   padding: 0 !important;
+  border: 0;
 }
 
-/* Remove empty paragraphs inside Getty wrappers */
-.article-body .ose-gettyimages.ose-embedpress-responsive p:empty,
-.article-content .getty-embed p:empty {
-  display: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* =========================================================
-   ARTICLE PARAGRAPHS
-   ========================================================= */
-
+/* Keep article text visible and spacing compact */
 .article-content p {
   display: block;
   margin-top: 8px;
@@ -3293,7 +3304,15 @@ img {
   padding: 0 !important;
 }
 
-/* Prevent extra spacing at article boundaries */
+/* Responsive tables */
+.article-content table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Correct article boundary selectors */
 .article-content > :first-child {
   margin-top: 0 !important;
 }
@@ -3302,40 +3321,270 @@ img {
   margin-bottom: 0 !important;
 }
 
-/* =========================================================
-   RESPONSIVE TABLES
-   ========================================================= */
-
-.article-content table {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-/* =========================================================
-   MOBILE LAYOUT
-   ========================================================= */
-
+/* Mobile layout */
 @media (max-width: 640px) {
   .article-content figure,
   .article-content .wp-block-image,
   .article-content .wp-block-embed,
   .article-content .wp-block-embed__wrapper,
-  .article-content .embedpress-embed {
+  .article-content .embedpress-embed,
+  .article-content .getty-embed {
     margin-top: 8px !important;
     margin-bottom: 8px !important;
   }
 
-  .article-body .ose-gettyimages.ose-embedpress-responsive,
-  .article-content .getty-embed {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 4px auto !important;
-  }
-
-  .article-body .ose-gettyimages.ose-embedpress-responsive iframe,
-  .article-content .getty-embed iframe {
+  .article-content img,
+  .article-content iframe,
+  .article-content video,
+  .article-content embed,
+  .article-content object {
     max-width: 100% !important;
   }
 }
+
+/* Getty embed: remove excess external spacing */
+.article-content .getty-embed {
+  margin-top: 4px !important;
+  margin-bottom: 4px !important;
+  padding: 0 !important;
+}
+
+/* Do not override Getty's internal iframe sizing */
+.article-content .getty-embed iframe {
+  border: 0;
+}
+
+
+/* Getty Images / EmbedPress: prevent oversized mobile embed gaps */
+.article-body .ose-gettyimages.ose-embedpress-responsive {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  margin: 20px auto !important;
+  box-sizing: border-box !important;
+  overflow: visible;
+}
+
+.article-body .ose-gettyimages.ose-embedpress-responsive iframe {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+}
+
+/* Keep Getty embeds within the mobile article width */
+@media (max-width: 640px) {
+  .article-body .ose-gettyimages.ose-embedpress-responsive {
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .article-body .ose-gettyimages.ose-embedpress-responsive iframe {
+    max-width: 100% !important;
+  }
+
+  .article-body .ose-gettyimages.ose-embedpress-responsive + p:empty {
+    display: none !important;
+  }
+}
+
+
+/* ============================================================
+   ARTICLE RECOMMENDATIONS
+   Scoped to the two sections rendered by the article page.
+   Existing article media and Getty embed rules are untouched.
+   ============================================================ */
+
+.article-page .article-body section[aria-labelledby="read-more-heading"] {
+  display: block;
+  width: 100%;
+  margin: 32px 0 !important;
+  padding: 18px 20px !important;
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid #d10000;
+  border-radius: 8px;
+  background: #f8f9fb;
+  box-sizing: border-box;
+}
+
+.article-page .article-body #read-more-heading {
+  margin: 0 0 12px !important;
+  color: #171717;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: 0.12em;
+}
+
+.article-page .article-body section[aria-labelledby="read-more-heading"] ul {
+  display: grid;
+  gap: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none;
+}
+
+.article-page .article-body section[aria-labelledby="read-more-heading"] li {
+  margin: 0 !important;
+  padding: 10px 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.article-page .article-body section[aria-labelledby="read-more-heading"] li:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.article-page .article-body section[aria-labelledby="read-more-heading"] li:last-child {
+  padding-bottom: 0;
+}
+
+.article-page .article-body section[aria-labelledby="read-more-heading"] a {
+  display: inline-block;
+  color: #262626 !important;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-decoration: none !important;
+  transition: color 160ms ease;
+}
+
+.article-page .article-body section[aria-labelledby="read-more-heading"] a:hover {
+  color: #d10000 !important;
+}
+
+.article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] {
+  display: block;
+  width: 100%;
+  margin: 36px 0 !important;
+  padding: 24px 0 !important;
+  border-top: 2px solid #171717;
+  border-bottom: 1px solid #e5e7eb;
+  box-sizing: border-box;
+}
+
+.article-page .article-body #more-arsenal-stories-heading {
+  margin: 0 !important;
+  color: #171717;
+  font-size: 19px;
+  font-weight: 900;
+  line-height: 1.25;
+  letter-spacing: 0.045em;
+}
+
+.article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] > div:last-child {
+  display: grid;
+  gap: 12px;
+}
+
+.article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] article {
+  min-height: 112px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] article:hover {
+  border-color: #d10000;
+  box-shadow: 0 3px 12px rgb(0 0 0 / 5%);
+}
+
+.article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] article > a:first-child {
+  width: 128px;
+  min-width: 128px;
+  min-height: 112px;
+  background: #f1f2f4;
+}
+
+.article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] article > div {
+  min-width: 0;
+  padding: 12px 16px;
+}
+
+.article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] article > div > span:first-child {
+  display: block;
+  margin: 0 0 5px !important;
+  color: #d10000;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: 0.13em;
+}
+
+.article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] article > div > a {
+  display: block;
+  color: #171717 !important;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.4;
+  text-decoration: none !important;
+  transition: color 160ms ease;
+}
+
+.article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] article > div > a:hover {
+  color: #d10000 !important;
+}
+
+.article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] article > div > span:last-child {
+  display: inline-block;
+  margin-top: 8px !important;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+@media (max-width: 640px) {
+  .article-page .article-body section[aria-labelledby="read-more-heading"] {
+    margin: 26px 0 !important;
+    padding: 15px 14px !important;
+  }
+
+  .article-page .article-body section[aria-labelledby="read-more-heading"] a {
+    font-size: 14px;
+  }
+
+  .article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] {
+    margin: 28px 0 !important;
+    padding: 20px 0 !important;
+  }
+
+  .article-page .article-body #more-arsenal-stories-heading {
+    font-size: 16px;
+  }
+
+  .article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] > div:first-child {
+    margin-bottom: 14px !important;
+    gap: 9px;
+  }
+
+  .article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] article {
+    min-height: 94px;
+  }
+
+  .article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] article > a:first-child {
+    width: 104px;
+    min-width: 104px;
+    min-height: 94px;
+  }
+
+  .article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] article > div {
+    padding: 9px 10px;
+  }
+
+  .article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] article > div > a {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .article-page .article-body section[aria-labelledby="more-arsenal-stories-heading"] article > div > span:last-child {
+    margin-top: 5px !important;
+    font-size: 10px;
+  }
+}
+
