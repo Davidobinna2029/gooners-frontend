@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -138,9 +139,14 @@ export default async function CategoryPage({ params }: Props) {
     notFound();
   }
 
-  const posts = mapWordPressPosts(feed.posts);
-
   const categoryName = formatCategoryName(slug);
+
+  const posts = mapWordPressPosts(feed.posts).map((post) => ({
+    ...post,
+    categoryName,
+    categoryNames: [categoryName],
+  }));
+
   const description = getCategoryDescription(slug);
 
   return (
@@ -161,6 +167,7 @@ export default async function CategoryPage({ params }: Props) {
         <CategoryInfiniteScroll
           initialPosts={posts}
           categoryId={feed.categoryId}
+          categoryName={categoryName}
         />
       </div>
     </main>

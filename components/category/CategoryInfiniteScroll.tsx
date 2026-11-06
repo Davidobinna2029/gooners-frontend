@@ -1,6 +1,8 @@
+
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+
 import NewsCard from "@/components/news/NewsCard";
 import type { CanonicalPost } from "@/types/content";
 
@@ -19,6 +21,7 @@ interface PostsResponse {
 interface Props {
   initialPosts: CanonicalPost[];
   categoryId: number;
+  categoryName: string;
 }
 
 const POSTS_PER_PAGE = 20;
@@ -26,12 +29,15 @@ const POSTS_PER_PAGE = 20;
 export default function CategoryInfiniteScroll({
   initialPosts,
   categoryId,
+  categoryName,
 }: Props) {
   const [posts, setPosts] = useState<CanonicalPost[]>(initialPosts);
   const [page, setPage] = useState(1);
+
   const [hasMore, setHasMore] = useState(
     initialPosts.length === POSTS_PER_PAGE
   );
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -63,22 +69,30 @@ export default function CategoryInfiniteScroll({
       });
 
       if (!response.ok) {
-        throw new Error(`Unable to load articles (${response.status}).`);
+        throw new Error(
+          `Unable to load articles (${response.status}).`
+        );
       }
 
       const data = (await response.json()) as PostsResponse;
 
       if (!Array.isArray(data.posts)) {
-        throw new Error("The server returned an invalid article list.");
+        throw new Error(
+          "The server returned an invalid article list."
+        );
       }
 
       const incomingPosts: CanonicalPost[] = data.posts.map((post) => ({
         ...post,
         score: post.score ?? 0,
+        categoryName,
+        categoryNames: [categoryName],
       }));
 
       setPosts((currentPosts) => {
-        const existingIds = new Set(currentPosts.map((post) => post.id));
+        const existingIds = new Set(
+          currentPosts.map((post) => post.id)
+        );
 
         const newPosts = incomingPosts.filter(
           (post) => !existingIds.has(post.id)
@@ -88,7 +102,7 @@ export default function CategoryInfiniteScroll({
       });
 
       setPage(nextPage);
-      setHasMore(data.hasMore && incomingPosts.length > 0);
+      setHasMore(Boolean(data.hasMore) && incomingPosts.length > 0);
     } catch (err) {
       setError(
         err instanceof Error
@@ -99,7 +113,7 @@ export default function CategoryInfiniteScroll({
       loadingRef.current = false;
       setLoading(false);
     }
-  }, [categoryId, hasMore, page]);
+  }, [categoryId, categoryName, hasMore, page]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -140,7 +154,11 @@ export default function CategoryInfiniteScroll({
         {error && (
           <div className="category-load-error">
             <p>{error}</p>
-            <button type="button" onClick={() => void loadMore()}>
+
+            <button
+              type="button"
+              onClick={() => void loadMore()}
+            >
               Try again
             </button>
           </div>
