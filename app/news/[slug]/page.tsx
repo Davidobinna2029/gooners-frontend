@@ -20,6 +20,7 @@ import { getFeaturedImage } from "@/lib/media/getFeaturedImage";
 import ArticleMeta from "@/components/news/ArticleMeta";
 import ShareBar from "@/components/news/ShareBar";
 import AuthorBox from "@/components/news/AuthorBox";
+import ArticleComments from "@/components/news/ArticleComments";
 
 interface Props {
   params: Promise<{
@@ -1436,6 +1437,8 @@ export default async function ArticlePage({ params }: Props) {
             <ShareBar slug={articleSlug} title={post.title} />
 
             <AuthorBox />
+
+            <ArticleComments postId={Number(rawPost.id)} />
           </main>
 
           <aside className="article-sidebar hidden w-full lg:block lg:w-80">
