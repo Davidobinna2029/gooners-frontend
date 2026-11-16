@@ -1,11 +1,11 @@
-import "../styles/globals.css";
+﻿import "../styles/globals.css";
 
 import type { Metadata } from "next";
-import Script from "next/script";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import AuthProvider from "@/components/providers/SessionProvider";
+import CookieConsentProvider from "@/components/providers/CookieConsentProvider";
 
 const SITE_URL = "https://arsenaltalks.com";
 const SITE_NAME = "ArsenalTalks";
@@ -101,20 +101,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthProvider>
-          <Script
-            async
-            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7096777123439259"
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
+        <CookieConsentProvider>
+          <AuthProvider>
+            <Header />
 
-          <Header />
+            <main>{children}</main>
 
-          <main>{children}</main>
-
-          <Footer />
-        </AuthProvider>
+            <Footer />
+          </AuthProvider>
+        </CookieConsentProvider>
       </body>
     </html>
   );

@@ -1,4 +1,5 @@
-import Link from "next/link";
+﻿import Link from "next/link";
+import CookieSettingsButton from "@/components/layout/CookieSettingsButton";
 
 export default function Footer() {
   return (
@@ -16,6 +17,7 @@ export default function Footer() {
           <Link href="/legal/privacy-policy">Privacy Policy</Link>
           <Link href="/legal/about">About</Link>
           <Link href="/contact">Contact</Link>
+          <CookieSettingsButton />
         </nav>
 
         {/* Social Icons */}
